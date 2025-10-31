@@ -1,4 +1,3 @@
-// This is a new file.
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -23,8 +22,8 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-20 border-t bg-background/95 backdrop-blur-sm md:hidden">
-      <div className="flex h-16 items-center justify-around">
+    <nav className="fixed bottom-0 left-0 right-0 z-20 border-t bg-background/95 backdrop-blur-sm">
+      <div className="mx-auto flex h-16 max-w-md items-center justify-around">
         {menuItems.map((item) => {
           const isActive = pathname.startsWith(item.href);
           return (
