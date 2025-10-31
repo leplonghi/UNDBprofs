@@ -38,18 +38,26 @@ export function RecentCourses() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {placeholderRecentCourses.map((course) => (
-              <TableRow key={course.id}>
-                <TableCell>
-                  <div className="font-medium">{course.name}</div>
+            {placeholderRecentCourses.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4} className="h-24 text-center">
+                  Nenhuma disciplina recente.
                 </TableCell>
-                <TableCell>
-                  <Badge variant="outline">{course.code}</Badge>
-                </TableCell>
-                <TableCell className="text-right">{course.students}</TableCell>
-                <TableCell className="text-right">{course.classroom}</TableCell>
               </TableRow>
-            ))}
+            ) : (
+              placeholderRecentCourses.map((course) => (
+                <TableRow key={course.id}>
+                  <TableCell>
+                    <div className="font-medium">{course.name}</div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{course.code}</Badge>
+                  </TableCell>
+                  <TableCell className="text-right">{course.students}</TableCell>
+                  <TableCell className="text-right">{course.classroom}</TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </CardContent>
