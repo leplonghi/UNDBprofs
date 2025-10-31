@@ -54,7 +54,7 @@ export function ClassroomsList({ filter }: ClassroomsListProps) {
             coursesMap.set(doc.id, { name: doc.data().name, code: doc.data().code });
         });
 
-        // 2. Query the classrooms collection group
+        // 2. Query the classrooms collection group for the specific professor
         const classroomsQuery = query(
             collectionGroup(firestore, 'classrooms'),
             where('professorId', '==', user.uid)
