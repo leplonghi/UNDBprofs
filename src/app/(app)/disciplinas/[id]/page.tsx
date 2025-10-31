@@ -1,4 +1,5 @@
 'use client';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -74,18 +75,18 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
             <CardHeader>
                 <CardTitle>{course.name} ({course.code})</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6 whitespace-pre-wrap">
+            <CardContent className="space-y-6">
                 <div>
                     <h3 className="font-semibold text-lg mb-2">Ementa</h3>
-                    <p className="text-muted-foreground">{course.syllabus}</p>
+                    <p className="text-muted-foreground whitespace-pre-wrap">{course.syllabus}</p>
                 </div>
                 <div>
                     <h3 className="font-semibold text-lg mb-2">Objetivos</h3>
-                    <p className="text-muted-foreground">{course.objectives}</p>
+                    <p className="text-muted-foreground whitespace-pre-wrap">{course.objectives}</p>
                 </div>
                 <div>
                     <h3 className="font-semibold text-lg mb-2">Competências</h3>
-                    <p className="text-muted-foreground">{course.competencies}</p>
+                    <p className="text-muted-foreground whitespace-pre-wrap">{course.competencies}</p>
                 </div>
                 
                 {course.thematicTree && course.thematicTree.length > 0 && (
@@ -137,7 +138,7 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
 
                 <div>
                     <h3 className="font-semibold text-lg mb-2">Bibliografia</h3>
-                    <p className="text-muted-foreground">{course.bibliography}</p>
+                    <p className="text-muted-foreground whitespace-pre-wrap">{course.bibliography}</p>
                 </div>
             </CardContent>
         </Card>
