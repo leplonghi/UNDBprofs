@@ -7,6 +7,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useFirestore, useUser } from '@/firebase';
 import { collection, doc, setDoc } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
+import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,6 +30,11 @@ export default function NewClassroomPage() {
   const { toast } = useToast();
   const firestore = useFirestore();
   const { user } = useUser();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   
   const courseId = params.id as string;
 
@@ -93,6 +99,10 @@ export default function NewClassroomPage() {
         description: 'Não foi possível criar a turma. Tente novamente.',
       });
     }
+  }
+
+  if (!isClient) {
+    return null; // ou um componente de loading
   }
 
   return (
