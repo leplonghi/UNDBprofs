@@ -31,6 +31,7 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
+// TODO: Passar o courseId/classId como prop
 export function ImportForm() {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
@@ -103,6 +104,7 @@ export function ImportForm() {
       return;
     }
 
+    // TODO: Update existing course/class instead of creating a new one
     const courseData = {
       professorId: user.uid,
       name: values.courseName,
@@ -115,13 +117,14 @@ export function ImportForm() {
     
     try {
       const coursesCollection = collection(firestore, `professors/${user.uid}/courses`);
-      await addDocumentNonBlocking(coursesCollection, courseData);
+      const docRef = await addDocumentNonBlocking(coursesCollection, courseData);
 
       toast({
-        title: 'Disciplina Criada com Sucesso!',
-        description: `A disciplina "${values.courseName}" foi adicionada.`,
+        title: 'Informações Salvas com Sucesso!',
+        description: `Os dados da disciplina "${values.courseName}" foram atualizados.`,
       });
       
+      // TODO: Navigate to the class page
       router.push('/disciplinas');
 
     } catch (error) {
@@ -129,22 +132,14 @@ export function ImportForm() {
       toast({
         variant: 'destructive',
         title: 'Erro ao Salvar',
-        description: 'Não foi possível criar a disciplina. Tente novamente.',
+        description: 'Não foi possível salvar as informações. Tente novamente.',
       });
     }
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Importar de Plano de Ensino</CardTitle>
-        <CardDescription>
-          Faça o upload do arquivo PDF do plano de ensino. A IA irá extrair as informações para você.
-        </CardDescription>
-      </CardHeader>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <CardContent className="space-y-6">
+        <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="flex flex-col items-center justify-center space-y-2 rounded-lg border-2 border-dashed border-border p-8 text-center">
               <Upload className="h-12 w-12 text-muted-foreground" />
               <Label
@@ -256,21 +251,15 @@ export function ImportForm() {
                     </FormItem>
                   )}
                 />
+                 <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                    {form.formState.isSubmitting ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : null}
+                    Confirmar e Salvar
+                </Button>
               </div>
             )}
-          </CardContent>
-          <CardFooter>
-            {extractedData && (
-              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : null}
-                Confirmar e Criar Disciplina
-              </Button>
-            )}
-          </CardFooter>
         </form>
       </Form>
-    </Card>
   );
 }

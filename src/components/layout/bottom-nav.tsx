@@ -4,7 +4,6 @@ import { usePathname } from 'next/navigation';
 import {
   BookCopy,
   Calendar,
-  FileUp,
   Folder,
   LayoutDashboard,
 } from 'lucide-react';
@@ -13,7 +12,6 @@ import { cn } from '@/lib/utils';
 const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/disciplinas', label: 'Disciplinas', icon: BookCopy },
-  { href: '/importar', label: 'Importar', icon: FileUp },
   { href: '/documentos', label: 'Documentos', icon: Folder },
   { href: '/calendario', label: 'Calendário', icon: Calendar },
 ];

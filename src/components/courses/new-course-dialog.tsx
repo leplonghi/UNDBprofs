@@ -28,13 +28,9 @@ export function NewCourseDialog() {
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <Button variant="outline" size="lg">
-            Criação Manual
-          </Button>
-          <Button asChild size="lg">
-            <Link href="/importar">
-              <FileUp className="mr-2 h-4 w-4" />
-              Importar Plano de Ensino (IA)
+           <Button asChild variant="outline" size="lg">
+            <Link href="/disciplinas/nova">
+              Criação Manual
             </Link>
           </Button>
         </div>
