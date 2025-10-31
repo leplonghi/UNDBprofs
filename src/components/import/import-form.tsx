@@ -25,6 +25,7 @@ const formSchema = z.object({
   objectives: z.string().min(1, 'Objetivos são obrigatórios.'),
   workload: z.string().min(1, 'Carga horária é obrigatória.'),
   semester: z.string().min(1, 'Semestre é obrigatório.'),
+  competencies: z.string().min(1, 'Competências são obrigatórias.'),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -46,6 +47,7 @@ export function ImportForm() {
       objectives: '',
       workload: '',
       semester: '',
+      competencies: '',
     },
   });
 
@@ -62,6 +64,7 @@ export function ImportForm() {
             objectives: data.objectives,
             workload: data.workload,
             semester: data.semester,
+            competencies: data.competencies,
         });
         // Clean up session storage after use
         sessionStorage.removeItem('importedData');
@@ -98,6 +101,7 @@ export function ImportForm() {
           code: values.courseCode,
           syllabus: values.syllabus,
           objectives: values.objectives,
+          competencies: values.competencies,
         };
     
         const classroomData = {
@@ -225,6 +229,19 @@ export function ImportForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Objetivos</FormLabel>
+                      <FormControl>
+                        <Textarea rows={5} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="competencies"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Competências</FormLabel>
                       <FormControl>
                         <Textarea rows={5} {...field} />
                       </FormControl>

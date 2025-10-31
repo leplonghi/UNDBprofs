@@ -44,6 +44,10 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
                         <Skeleton className="h-6 w-24 mb-2" />
                         <Skeleton className="h-16 w-full" />
                     </div>
+                     <div>
+                        <Skeleton className="h-6 w-24 mb-2" />
+                        <Skeleton className="h-16 w-full" />
+                    </div>
                 </CardContent>
             </Card>
              <Card>
@@ -77,6 +81,10 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
                 <div>
                     <h3 className="font-semibold">Objetivos</h3>
                     <p className="text-muted-foreground">{course.objectives}</p>
+                </div>
+                <div>
+                    <h3 className="font-semibold">Competências</h3>
+                    <p className="text-muted-foreground">{course.competencies}</p>
                 </div>
             </CardContent>
         </Card>

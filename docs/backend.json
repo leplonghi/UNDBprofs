@@ -61,6 +61,10 @@
         "objectives": {
           "type": "string",
           "description": "The objectives of the course."
+        },
+        "competencies": {
+          "type": "string",
+          "description": "The competencies of the course."
         }
       },
       "required": [
