@@ -1,4 +1,6 @@
 'use client';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -10,11 +12,18 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { FilePlus, PlusCircle } from 'lucide-react';
-import Link from 'next/link';
 
 export function NewClassroomDialog() {
+  const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
+
+  const handleNavigate = (path: string) => {
+    router.push(path);
+    setIsOpen(false);
+  };
+
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
@@ -30,17 +39,13 @@ export function NewClassroomDialog() {
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <Button variant="outline" asChild>
-            <Link href="/disciplinas/turmas/nova">
-              <PlusCircle className="mr-2" />
-              Criar Manualmente
-            </Link>
+          <Button variant="outline" onClick={() => handleNavigate('/disciplinas/turmas/nova')}>
+            <PlusCircle className="mr-2" />
+            Criar Manualmente
           </Button>
-          <Button asChild>
-            <Link href="/disciplinas/importar">
-              <FilePlus className="mr-2" />
-              Importar de PDF
-            </Link>
+          <Button onClick={() => handleNavigate('/disciplinas/importar')}>
+            <FilePlus className="mr-2" />
+            Importar de PDF
           </Button>
         </div>
         <DialogFooter>
