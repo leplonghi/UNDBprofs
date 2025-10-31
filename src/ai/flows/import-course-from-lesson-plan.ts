@@ -47,25 +47,63 @@ const prompt = ai.definePrompt({
   name: 'importCourseFromLessonPlanPrompt',
   input: {schema: ImportCourseFromLessonPlanInputSchema},
   output: {schema: ImportCourseFromLessonPlanOutputSchema},
-  prompt: `You are an expert in extracting course information from lesson plans.
+  prompt: `
+  OBJETIVO
 
-  Extract the following information from the lesson plan provided as a PDF document:
+A leitura deve identificar automaticamente:
 
-  - Course Name (extract from 'UNIDADE CURRICULAR')
-  - Course Code (if not available, generate a plausible one based on the course name)
-  - Syllabus (extract from 'EMENTA')
-  - Objectives (extract from 'OBJETIVOS')
-  - Workload (extract from 'CARGA HORÁRIA')
-  - Semester (extract from 'SEMESTRE')
-  - Competencies (extract from 'COMPETÊNCIAS')
-  - Thematic Tree (extract from 'ÁRVORE TEMÁTICA')
-  - Bibliography (extract from 'BIBLIOGRAFIA BÁSICA E COMPLEMENTAR')
-  - Class Schedule (extract from 'CRONOGRAMA DAS AULAS')
+Dados gerais da disciplina e do professor.
 
+Estrutura das Unidades de Aprendizagem (UAs).
 
-  Return the information in a structured JSON format.
+Cronograma de aulas com datas e contextos.
 
-  Lesson Plan: {{media url=lessonPlanDataUri}}`,
+Atividades avaliativas e respectivas pontuações.
+
+Bibliografia básica e complementar.
+
+Dados administrativos (CH, curso, semestre, coordenação, aprovação, etc.).
+
+2. ESTRUTURA DE SAÍDA ESPERADA
+
+Organize os dados encontrados em uma estrutura JSON.
+
+3. REGRAS DE INTERPRETAÇÃO
+
+Datas abreviadas (ex: 04/08/25) -> converter para formato completo: 2025-08-04.
+
+Siglas de avaliação:
+
+ST = Somativa Teórica (Apresentação ou Entrega Final)
+
+FT = Formativa Técnica (Relatórios, pranchas, processos)
+
+AV QUALIS = Avaliação Parcial Intermediária
+
+N1 e N2:
+
+N1 corresponde à primeira metade do semestre.
+
+N2 à segunda metade, geralmente culminando na entrega final.
+
+Feriados: manter a data e descrição exatamente como no documento.
+
+Códigos: se não constarem, deixar o campo vazio.
+
+CH Total: deve ser o somatório das cargas horárias das UAs.
+
+Manter acentuação e formatação original.
+
+Excluir legendas repetidas, mas manter subtítulos que indiquem mudança de seção.
+
+Não resumir nem alterar textos técnicos.
+
+✅ Instrução final:
+
+Extraia tudo o que for relevante do plano de ensino mantendo fidelidade total aos textos originais, e organize conforme a estrutura.
+Cada campo deve estar completo, inteligível e coerente, pronto para integração automática no sistema acadêmico.
+
+Lesson Plan: {{media url=lessonPlanDataUri}}`,
 });
 
 const importCourseFromLessonPlanFlow = ai.defineFlow(
