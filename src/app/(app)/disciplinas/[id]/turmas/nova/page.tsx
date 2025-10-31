@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
-import { useFirestore, useUser } from '@/firebase';
+import { useFirestore, useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { collection, doc, setDoc } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import { useEffect, useState } from 'react';
@@ -63,6 +63,8 @@ export default function NewClassroomPage({ params }: { params: { id: string } })
       return;
     }
 
+    form.control.disabled = true;
+
     const classroomId = uuidv4();
     const classroomData = {
         id: classroomId,
@@ -75,28 +77,25 @@ export default function NewClassroomPage({ params }: { params: { id: string } })
         gradingRule: '', // Default value
     };
     
-    try {
-      const classroomCollection = collection(firestore, `professors/${user.uid}/courses/${courseId}/classrooms`);
-      const classroomDocRef = doc(classroomCollection, classroomId);
-      
-      // We don't await this to make the UI faster
-      setDoc(classroomDocRef, classroomData);
-
-      toast({
-        title: 'Turma Criada com Sucesso!',
-        description: `A turma "${values.name}" foi adicionada.`,
+    const classroomCollection = collection(firestore, `professors/${user.uid}/courses/${courseId}/classrooms`);
+    const classroomDocRef = doc(classroomCollection, classroomId);
+    
+    // We don't await this to make the UI faster
+    setDoc(classroomDocRef, classroomData).catch(error => {
+      const contextualError = new FirestorePermissionError({
+          operation: 'create',
+          path: classroomDocRef.path,
+          requestResourceData: classroomData,
       });
-      
-      router.push(`/disciplinas`);
+      errorEmitter.emit('permission-error', contextualError);
+    });
 
-    } catch (error) {
-      console.error('Error creating classroom: ', error);
-      toast({
-        variant: 'destructive',
-        title: 'Erro ao Salvar',
-        description: 'Não foi possível criar a turma. Tente novamente.',
-      });
-    }
+    toast({
+      title: 'Turma Criada com Sucesso!',
+      description: `A turma "${values.name}" foi adicionada.`,
+    });
+    
+    router.push(`/disciplinas`);
   }
 
   if (!isClient) {
@@ -121,7 +120,7 @@ export default function NewClassroomPage({ params }: { params: { id: string } })
                 <FormItem>
                     <FormLabel>Nome da Turma</FormLabel>
                     <FormControl>
-                    <Input {...field} placeholder="Ex: Turma A" />
+                    <Input {...field} placeholder="Ex: Turma A" disabled={form.formState.isSubmitting} />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
@@ -134,7 +133,7 @@ export default function NewClassroomPage({ params }: { params: { id: string } })
                 <FormItem>
                     <FormLabel>Semestre</FormLabel>
                     <FormControl>
-                    <Input {...field} placeholder="Ex: 2024.2" />
+                    <Input {...field} placeholder="Ex: 2024.2" disabled={form.formState.isSubmitting}/>
                     </FormControl>
                     <FormMessage />
                 </FormItem>
@@ -147,7 +146,7 @@ export default function NewClassroomPage({ params }: { params: { id: string } })
                 <FormItem>
                     <FormLabel>Carga Horária</FormLabel>
                     <FormControl>
-                    <Input {...field} placeholder="Ex: 72h" />
+                    <Input {...field} placeholder="Ex: 72h" disabled={form.formState.isSubmitting}/>
                     </FormControl>
                     <FormMessage />
                 </FormItem>
