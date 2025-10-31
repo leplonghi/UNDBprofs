@@ -22,16 +22,19 @@ interface ClassroomsListProps {
   filter: 'active' | 'past';
 }
 
-function getCurrentSemester() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth(); // 0-11
-
-  // January to June is semester 1, July to December is semester 2
-  const semester = month < 6 ? 1 : 2;
-
-  return `${year}.${semester}`;
+function getSemesterValue(semesterString: string): number {
+  const [year, semester] = semesterString.split('.').map(Number);
+  return year * 10 + semester;
 }
+
+function getCurrentSemesterValue(): number {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth(); // 0-11
+    const semester = month < 6 ? 1 : 2;
+    return year * 10 + semester;
+}
+
 
 export function ClassroomsList({ filter }: ClassroomsListProps) {
   const { user } = useUser();
@@ -46,13 +49,11 @@ export function ClassroomsList({ filter }: ClassroomsListProps) {
       setIsLoading(true);
       
       try {
-        // 1. Fetch all courses for the professor
         const coursesRef = collection(firestore, `professors/${user.uid}/courses`);
         const coursesSnapshot = await getDocs(coursesRef);
         
         const allClassrooms: Classroom[] = [];
         
-        // 2. For each course, fetch its classrooms
         for (const courseDoc of coursesSnapshot.docs) {
           const courseData = courseDoc.data();
           const classroomsRef = collection(firestore, `professors/${user.uid}/courses/${courseDoc.id}/classrooms`);
@@ -70,16 +71,17 @@ export function ClassroomsList({ filter }: ClassroomsListProps) {
             });
           });
         }
-
-        // 3. Filter classrooms based on the current semester
-        const currentSemester = getCurrentSemester();
+        
+        const currentSemesterValue = getCurrentSemesterValue();
         const filteredClassrooms = allClassrooms.filter(c => {
+          const classroomSemesterValue = getSemesterValue(c.semester);
           if (filter === 'active') {
-            return c.semester === currentSemester;
-          } else {
-            return c.semester !== currentSemester;
+            return classroomSemesterValue >= currentSemesterValue;
+          } else { // filter === 'past'
+            return classroomSemesterValue < currentSemesterValue;
           }
         });
+
 
         setClassrooms(filteredClassrooms);
 
