@@ -7,11 +7,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function ClassDetailPage({ params }: { params: { id: string, turmaId: string } }) {
     const { user } = useUser();
     const firestore = useFirestore();
+    const courseId = params.id;
+    const classroomId = params.turmaId;
 
     const classroomRef = useMemoFirebase(() => {
-        if (!user || !firestore) return null;
-        return doc(firestore, `professors/${user.uid}/courses/${params.id}/classrooms/${params.turmaId}`);
-    }, [user, firestore, params.id, params.turmaId]);
+        if (!user || !firestore || !courseId || !classroomId) return null;
+        return doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}`);
+    }, [user, firestore, courseId, classroomId]);
 
     const { data: classroom, isLoading } = useDoc(classroomRef);
     

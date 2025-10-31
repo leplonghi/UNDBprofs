@@ -10,18 +10,19 @@ import Link from 'next/link';
 export default function CourseDetailPage({ params }: { params: { id: string } }) {
   const { user } = useUser();
   const firestore = useFirestore();
+  const courseId = params.id;
 
   const courseRef = useMemoFirebase(() => {
-    if (!user || !firestore) return null;
-    return doc(firestore, `professors/${user.uid}/courses/${params.id}`);
-  }, [user, firestore, params.id]);
+    if (!user || !firestore || !courseId) return null;
+    return doc(firestore, `professors/${user.uid}/courses/${courseId}`);
+  }, [user, firestore, courseId]);
 
   const { data: course, isLoading: isCourseLoading } = useDoc(courseRef);
 
   const classesRef = useMemoFirebase(() => {
-    if (!user || !firestore) return null;
-    return collection(firestore, `professors/${user.uid}/courses/${params.id}/classrooms`);
-  }, [user, firestore, params.id]);
+    if (!user || !firestore || !courseId) return null;
+    return collection(firestore, `professors/${user.uid}/courses/${courseId}/classrooms`);
+  }, [user, firestore, courseId]);
 
   const { data: classes, isLoading: areClassesLoading } = useCollection(classesRef);
 
@@ -91,7 +92,7 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
           <div className="flex items-center justify-between">
             <CardTitle>Turmas</CardTitle>
             <Button variant="outline" size="sm" asChild>
-                <Link href={`/disciplinas/${params.id}/turmas/nova`}>
+                <Link href={`/disciplinas/${courseId}/turmas/nova`}>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Nova Turma
                 </Link>
@@ -110,7 +111,7 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
                             <p className="text-sm text-muted-foreground">{c.semester} - {c.workload}</p>
                         </div>
                         <Button variant="ghost" size="sm" asChild>
-                            <Link href={`/disciplinas/${params.id}/turmas/${c.id}`}>
+                            <Link href={`/disciplinas/${courseId}/turmas/${c.id}`}>
                                 Gerenciar
                             </Link>
                         </Button>
