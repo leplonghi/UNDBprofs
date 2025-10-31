@@ -1,7 +1,8 @@
 'use client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-export default function CourseStudentsPage({ params: { id } }: { params: { id: string } }) {
+export default function CourseStudentsPage({ params }: { params: { id: string } }) {
+  const id = params.id;
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-bold text-primary">Alunos da Disciplina {id}</h1>

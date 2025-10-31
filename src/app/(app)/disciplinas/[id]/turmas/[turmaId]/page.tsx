@@ -4,7 +4,8 @@ import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function ClassDetailPage({ params: { id: courseId, turmaId: classroomId } }: { params: { id: string, turmaId: string } }) {
+export default function ClassDetailPage({ params }: { params: { id: string, turmaId: string } }) {
+    const { id: courseId, turmaId: classroomId } = params;
     const { user } = useUser();
     const firestore = useFirestore();
 

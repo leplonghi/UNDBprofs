@@ -26,7 +26,8 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-export default function NewClassroomPage({ params: { id: courseId } }: { params: { id: string } }) {
+export default function NewClassroomPage({ params }: { params: { id: string } }) {
+  const courseId = params.id;
   const router = useRouter();
   const { toast } = useToast();
   const firestore = useFirestore();
