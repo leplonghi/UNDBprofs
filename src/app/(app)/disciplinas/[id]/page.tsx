@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, ChevronsRight } from 'lucide-react';
+import { PlusCircle, ChevronsRight, ArrowLeft } from 'lucide-react';
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -67,7 +67,15 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-primary">Detalhes da Disciplina</h1>
+        <div className='flex items-center gap-4'>
+            <Button variant="outline" size="icon" asChild>
+                <Link href="/disciplinas">
+                    <ArrowLeft className="h-4 w-4" />
+                    <span className='sr-only'>Voltar</span>
+                </Link>
+            </Button>
+            <h1 className="text-2xl font-bold text-primary">Detalhes da Disciplina</h1>
+        </div>
       </div>
 
       {course ? (
@@ -115,7 +123,7 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
                 {course.bibliography && (
                     <div>
                         <h3 className="font-semibold text-lg mb-2">Bibliografia</h3>
-                        <div className="text-muted-foreground space-y-2">
+                        <div className="text-muted-foreground space-y-2 whitespace-pre-wrap">
                            {course.bibliography.split('\n').filter((item: string) => item.trim() !== '').map((item: string, index: number) => (
                                 <p key={index}>{item}</p>
                             ))}

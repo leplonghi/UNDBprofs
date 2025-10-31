@@ -103,7 +103,11 @@ export function CoursesTable() {
           ) : (
             courses.map((course) => (
               <TableRow key={course.id}>
-                <TableCell className="font-medium">{course.name}</TableCell>
+                <TableCell className="font-medium">
+                  <Link href={`/disciplinas/${course.id}`} className="hover:underline">
+                    {course.name}
+                  </Link>
+                </TableCell>
                 <TableCell>
                   <Badge variant="outline">{course.code}</Badge>
                 </TableCell>
