@@ -26,9 +26,9 @@ const formSchema = z.object({
   workload: z.string().min(1, 'Carga horária é obrigatória.'),
   semester: z.string().min(1, 'Semestre é obrigatório.'),
   competencies: z.string().min(1, 'Competências são obrigatórias.'),
-  thematicTree: z.string().min(1, 'Árvore temática é obrigatória.'),
+  thematicTree: z.array(z.object({ name: z.string(), description: z.string() })).optional(),
   bibliography: z.string().min(1, 'Bibliografia é obrigatória.'),
-  classSchedule: z.string().min(1, 'Cronograma é obrigatório.'),
+  classSchedule: z.array(z.object({ date: z.string(), content: z.string(), activity: z.string() })).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -51,9 +51,9 @@ export function ImportForm() {
       workload: '',
       semester: '',
       competencies: '',
-      thematicTree: '',
+      thematicTree: [],
       bibliography: '',
-      classSchedule: '',
+      classSchedule: [],
     },
   });
 
@@ -268,7 +268,13 @@ export function ImportForm() {
                     <FormItem>
                       <FormLabel>Árvore Temática</FormLabel>
                       <FormControl>
-                        <Textarea rows={5} {...field} />
+                        <Textarea rows={5} value={field.value?.map(v => `${v.name}: ${v.description}`).join('\n')} onChange={(e) => {
+                          const value = e.target.value.split('\n').map(line => {
+                            const [name, ...description] = line.split(':');
+                            return {name: name.trim(), description: description.join(':').trim()};
+                          });
+                          field.onChange(value);
+                        }} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -294,7 +300,14 @@ export function ImportForm() {
                     <FormItem>
                       <FormLabel>Cronograma de Aulas</FormLabel>
                       <FormControl>
-                        <Textarea rows={8} {...field} />
+                          <Textarea rows={8} value={field.value?.map(v => `${v.date} - ${v.content}: ${v.activity}`).join('\n')} onChange={(e) => {
+                          const value = e.target.value.split('\n').map(line => {
+                            const [date, rest] = line.split(' - ');
+                            const [content, ...activity] = rest.split(':');
+                            return {date: date.trim(), content: content.trim(), activity: activity.join(':').trim()};
+                          });
+                          field.onChange(value);
+                        }} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

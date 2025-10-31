@@ -67,16 +67,33 @@
           "description": "The competencies of the course."
         },
         "thematicTree": {
-          "type": "string",
-          "description": "The thematic tree of the course."
+          "type": "array",
+          "description": "The thematic tree of the course.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "description": { "type": "string" }
+            },
+            "required": ["name", "description"]
+          }
         },
         "bibliography": {
           "type": "string",
           "description": "The bibliography of the course."
         },
         "classSchedule": {
-          "type": "string",
-          "description": "The class schedule of the course."
+          "type": "array",
+          "description": "The class schedule of the course.",
+           "items": {
+            "type": "object",
+            "properties": {
+              "date": { "type": "string" },
+              "content": { "type": "string" },
+              "activity": { "type": "string" }
+            },
+            "required": ["date", "content", "activity"]
+          }
         }
       },
       "required": [

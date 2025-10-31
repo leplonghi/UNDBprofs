@@ -1,7 +1,8 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { PlusCircle, ChevronsRight } from 'lucide-react';
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -73,30 +74,70 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
             <CardHeader>
                 <CardTitle>{course.name} ({course.code})</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 whitespace-pre-wrap">
+            <CardContent className="space-y-6 whitespace-pre-wrap">
                 <div>
-                    <h3 className="font-semibold">Ementa</h3>
+                    <h3 className="font-semibold text-lg mb-2">Ementa</h3>
                     <p className="text-muted-foreground">{course.syllabus}</p>
                 </div>
                 <div>
-                    <h3 className="font-semibold">Objetivos</h3>
+                    <h3 className="font-semibold text-lg mb-2">Objetivos</h3>
                     <p className="text-muted-foreground">{course.objectives}</p>
                 </div>
                 <div>
-                    <h3 className="font-semibold">Competências</h3>
+                    <h3 className="font-semibold text-lg mb-2">Competências</h3>
                     <p className="text-muted-foreground">{course.competencies}</p>
                 </div>
+                
+                {course.thematicTree && course.thematicTree.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold text-lg mb-4">Árvore Temática</h3>
+                    <div className="flex flex-col md:flex-row items-center justify-center gap-4 overflow-x-auto pb-4">
+                      {course.thematicTree.map((step: any, index: number) => (
+                        <React.Fragment key={index}>
+                          <div className="flex flex-col items-center text-center">
+                            <div className="bg-card border rounded-lg shadow-sm p-4 w-48 min-h-[100px] flex flex-col justify-center">
+                                <h4 className="font-semibold">{step.name}</h4>
+                                <p className="text-xs text-muted-foreground mt-1">{step.description}</p>
+                            </div>
+                          </div>
+                          {index < course.thematicTree.length - 1 && (
+                            <ChevronsRight className="h-8 w-8 text-muted-foreground hidden md:block" />
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {course.classSchedule && course.classSchedule.length > 0 && (
+                    <div>
+                        <h3 className="font-semibold text-lg mb-2">Cronograma de Aulas</h3>
+                        <div className="border rounded-lg overflow-hidden">
+                           <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Data</TableHead>
+                                        <TableHead>Conteúdo</TableHead>
+                                        <TableHead>Atividade</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {course.classSchedule.map((item: any, index: number) => (
+                                        <TableRow key={index}>
+                                            <TableCell>{item.date}</TableCell>
+                                            <TableCell>{item.content}</TableCell>
+                                            <TableCell>{item.activity}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </div>
+                )}
+
                 <div>
-                    <h3 className="font-semibold">Árvore Temática</h3>
-                    <p className="text-muted-foreground">{course.thematicTree}</p>
-                </div>
-                <div>
-                    <h3 className="font-semibold">Bibliografia</h3>
+                    <h3 className="font-semibold text-lg mb-2">Bibliografia</h3>
                     <p className="text-muted-foreground">{course.bibliography}</p>
-                </div>
-                <div>
-                    <h3 className="font-semibold">Cronograma de Aulas</h3>
-                    <p className="text-muted-foreground">{course.classSchedule}</p>
                 </div>
             </CardContent>
         </Card>

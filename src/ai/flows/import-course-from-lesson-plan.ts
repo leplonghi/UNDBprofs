@@ -29,9 +29,26 @@ const ImportCourseFromLessonPlanOutputSchema = z.object({
   workload: z.string().describe('The workload of the course'),
   semester: z.string().describe('The semester of the course'),
   competencies: z.string().describe('The competencies of the course.'),
-  thematicTree: z.string().describe('The thematic tree of the course.'),
+  thematicTree: z
+    .array(
+      z.object({
+        name: z.string().describe('The name of the process stage.'),
+        description: z
+          .string()
+          .describe('A brief description of the stage.'),
+      })
+    )
+    .describe('The thematic tree or project process steps of the course.'),
   bibliography: z.string().describe('The bibliography of the course.'),
-  classSchedule: z.string().describe('The class schedule of the course.'),
+  classSchedule: z
+    .array(
+      z.object({
+        date: z.string().describe('The date of the class (format: YYYY-MM-DD).'),
+        content: z.string().describe('The content or topic of the class.'),
+        activity: z.string().describe('The activity planned for the class.'),
+      })
+    )
+    .describe('A structured list of class schedule events.'),
 });
 export type ImportCourseFromLessonPlanOutput = z.infer<
   typeof ImportCourseFromLessonPlanOutputSchema
