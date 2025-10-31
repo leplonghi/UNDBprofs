@@ -9,8 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { CourseClassSchedule } from '@/components/courses/course-class-schedule';
 
-export default function CourseDetailPage({ params }: { params: { id: string } }) {
-  const { id: courseId } = params;
+export default function CourseDetailPage({ params: { id: courseId } }: { params: { id: string } }) {
   const { user } = useUser();
   const firestore = useFirestore();
 

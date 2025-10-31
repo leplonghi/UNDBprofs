@@ -15,6 +15,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Nome da turma é obrigatório.'),
@@ -24,13 +26,12 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-export default function NewClassroomPage({ params }: { params: { id: string } }) {
+export default function NewClassroomPage({ params: { id: courseId } }: { params: { id: string } }) {
   const router = useRouter();
   const { toast } = useToast();
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
   const [isClient, setIsClient] = useState(false);
-  const { id: courseId } = params;
 
   useEffect(() => {
     setIsClient(true);
@@ -84,15 +85,22 @@ export default function NewClassroomPage({ params }: { params: { id: string } })
     const classroomCollection = collection(firestore, `professors/${user.uid}/courses/${courseId}/classrooms`);
     const classroomDocRef = doc(classroomCollection, classroomId);
     
-    // We don't await this to make the UI faster
     setDoc(classroomDocRef, classroomData)
-
-    toast({
-      title: 'Turma Criada com Sucesso!',
-      description: `A turma "${values.name}" foi adicionada.`,
-    });
-    
-    router.push(`/disciplinas`);
+      .then(() => {
+        toast({
+          title: 'Turma Criada com Sucesso!',
+          description: `A turma "${values.name}" foi adicionada.`,
+        });
+        router.push(`/disciplinas`);
+      })
+      .catch((error) => {
+        const contextualError = new FirestorePermissionError({
+          path: classroomDocRef.path,
+          operation: 'create',
+          requestResourceData: classroomData,
+        });
+        errorEmitter.emit('permission-error', contextualError);
+      });
   }
 
   if (isUserLoading || !user) {
