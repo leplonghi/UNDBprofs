@@ -23,6 +23,9 @@ interface ClassroomsListProps {
 }
 
 function getSemesterValue(semesterString: string): number {
+  if (!semesterString || !/^\d{4}\.[12]$/.test(semesterString)) {
+    return 0; // Trata como muito antigo se o formato for inválido
+  }
   const [year, semester] = semesterString.split('.').map(Number);
   return year * 10 + semester;
 }
@@ -31,7 +34,7 @@ function getCurrentSemesterValue(): number {
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth(); // 0-11
-    const semester = month < 6 ? 1 : 2;
+    const semester = month < 6 ? 1 : 2; // Jan-Jun é .1, Jul-Dec é .2
     return year * 10 + semester;
 }
 
@@ -75,9 +78,11 @@ export function ClassroomsList({ filter }: ClassroomsListProps) {
         const currentSemesterValue = getCurrentSemesterValue();
         const filteredClassrooms = allClassrooms.filter(c => {
           const classroomSemesterValue = getSemesterValue(c.semester);
-          if (filter === 'active') {
-            return classroomSemesterValue >= currentSemesterValue;
+           if (filter === 'active') {
+            // "Ativas" são apenas as do semestre atual
+            return classroomSemesterValue === currentSemesterValue;
           } else { // filter === 'past'
+            // "Anteriores" são todas as turmas de semestres passados
             return classroomSemesterValue < currentSemesterValue;
           }
         });
