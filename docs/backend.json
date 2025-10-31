@@ -65,6 +65,10 @@
         "objectives": {
           "type": "string",
           "description": "The objectives of the course."
+        },
+        "workload": {
+          "type": "string",
+          "description": "The workload of the course."
         }
       },
       "required": [
@@ -74,7 +78,8 @@
         "code",
         "semester",
         "syllabus",
-        "objectives"
+        "objectives",
+        "workload"
       ]
     },
     "Classroom": {

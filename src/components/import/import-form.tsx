@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -16,6 +17,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Upload } from 'lucide-react';
+import { useFirestore, useUser, addDocumentNonBlocking } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
 const formSchema = z.object({
   courseName: z.string().min(1, 'Nome do curso é obrigatório.'),
@@ -26,13 +29,18 @@ const formSchema = z.object({
   semester: z.string().min(1, 'Semestre é obrigatório.'),
 });
 
+type FormData = z.infer<typeof formSchema>;
+
 export function ImportForm() {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const [extractedData, setExtractedData] = useState<ImportCourseFromLessonPlanOutput | null>(null);
   const [fileName, setFileName] = useState('');
+  const router = useRouter();
+  const firestore = useFirestore();
+  const { user } = useUser();
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       courseName: '',
@@ -61,7 +69,14 @@ export function ImportForm() {
           const lessonPlanDataUri = reader.result as string;
           const result = await importCourseFromLessonPlan({ lessonPlanDataUri });
           setExtractedData(result);
-          form.reset(result);
+          form.reset({
+            courseName: result.courseName,
+            courseCode: result.courseCode,
+            syllabus: result.syllabus,
+            objectives: result.objectives,
+            workload: result.workload,
+            semester: result.semester,
+          });
           toast({
             title: 'Extração Concluída!',
             description: 'Revise os dados extraídos do plano de ensino.',
@@ -78,15 +93,45 @@ export function ImportForm() {
     });
   };
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    toast({
-      title: 'Disciplina Criada com Sucesso!',
-      description: `A disciplina "${values.courseName}" foi adicionada.`,
-    });
-    form.reset();
-    setExtractedData(null);
-    setFileName('');
+  async function onSubmit(values: FormData) {
+    if (!user || !firestore) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro de Autenticação',
+        description: 'Você precisa estar logado para criar uma disciplina.',
+      });
+      return;
+    }
+
+    const courseData = {
+      professorId: user.uid,
+      name: values.courseName,
+      code: values.courseCode,
+      syllabus: values.syllabus,
+      objectives: values.objectives,
+      workload: values.workload,
+      semester: values.semester,
+    };
+    
+    try {
+      const coursesCollection = collection(firestore, `professors/${user.uid}/courses`);
+      await addDocumentNonBlocking(coursesCollection, courseData);
+
+      toast({
+        title: 'Disciplina Criada com Sucesso!',
+        description: `A disciplina "${values.courseName}" foi adicionada.`,
+      });
+      
+      router.push('/disciplinas');
+
+    } catch (error) {
+      console.error('Error creating course: ', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao Salvar',
+        description: 'Não foi possível criar a disciplina. Tente novamente.',
+      });
+    }
   }
 
   return (
@@ -216,7 +261,10 @@ export function ImportForm() {
           </CardContent>
           <CardFooter>
             {extractedData && (
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
                 Confirmar e Criar Disciplina
               </Button>
             )}
