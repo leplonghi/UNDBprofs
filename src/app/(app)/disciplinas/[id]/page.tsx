@@ -10,7 +10,7 @@ import Link from 'next/link';
 export default function CourseDetailPage({ params }: { params: { id: string } }) {
   const { user } = useUser();
   const firestore = useFirestore();
-  const courseId = params.id;
+  const { id: courseId } = params;
 
   const courseRef = useMemoFirebase(() => {
     if (!user || !firestore || !courseId) return null;

@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useFirestore, useUser } from '@/firebase';
 import { collection, doc, setDoc } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
@@ -24,19 +24,17 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-export default function NewClassroomPage() {
+export default function NewClassroomPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const params = useParams();
   const { toast } = useToast();
   const firestore = useFirestore();
   const { user } = useUser();
   const [isClient, setIsClient] = useState(false);
+  const { id: courseId } = params;
 
   useEffect(() => {
     setIsClient(true);
   }, []);
-  
-  const courseId = params.id as string;
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
