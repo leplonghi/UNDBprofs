@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import {
   Table,
   TableBody,
@@ -10,7 +11,7 @@ import {
 import { placeholderCourses } from '@/lib/placeholder-data';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Users, GraduationCap } from 'lucide-react';
+import { MoreHorizontal, Users, GraduationCap, Eye } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,14 +53,23 @@ export function CoursesTable() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                  <DropdownMenuItem>Ver Detalhes</DropdownMenuItem>
-                   <DropdownMenuItem>
-                    <Users className="mr-2 h-4 w-4" />
-                    <span>Gerenciar Turmas</span>
+                  <DropdownMenuItem asChild>
+                    <Link href={`/disciplinas/${course.id}`}>
+                      <Eye className="mr-2 h-4 w-4" />
+                      <span>Ver Detalhes</span>
+                    </Link>
                   </DropdownMenuItem>
-                   <DropdownMenuItem>
-                    <GraduationCap className="mr-2 h-4 w-4" />
-                    <span>Gerenciar Alunos</span>
+                   <DropdownMenuItem asChild>
+                    <Link href={`/disciplinas/${course.id}/turmas`}>
+                      <Users className="mr-2 h-4 w-4" />
+                      <span>Gerenciar Turmas</span>
+                    </Link>
+                  </DropdownMenuItem>
+                   <DropdownMenuItem asChild>
+                    <Link href={`/disciplinas/${course.id}/alunos`}>
+                      <GraduationCap className="mr-2 h-4 w-4" />
+                      <span>Gerenciar Alunos</span>
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem>Editar</DropdownMenuItem>
                   <DropdownMenuItem>Arquivar</DropdownMenuItem>
