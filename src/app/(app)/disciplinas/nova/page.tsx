@@ -6,6 +6,8 @@ import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { useFirestore, useUser, addDocumentNonBlocking } from '@/firebase';
 import { collection } from 'firebase/firestore';
+import { v4 as uuidv4 } from 'uuid';
+
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,8 +20,6 @@ import { Loader2 } from 'lucide-react';
 const formSchema = z.object({
   name: z.string().min(1, 'Nome da disciplina é obrigatório.'),
   code: z.string().min(1, 'Código é obrigatório.'),
-  semester: z.string().min(1, 'Semestre é obrigatório.'),
-  workload: z.string().min(1, 'Carga horária é obrigatória.'),
   syllabus: z.string().min(1, 'Ementa é obrigatória.'),
   objectives: z.string().min(1, 'Objetivos são obrigatórios.'),
 });
@@ -37,8 +37,6 @@ export default function NewCoursePage() {
     defaultValues: {
       name: '',
       code: '',
-      semester: '',
-      workload: '',
       syllabus: '',
       objectives: '',
     },
@@ -54,19 +52,20 @@ export default function NewCoursePage() {
       return;
     }
 
+    const courseId = uuidv4();
     const courseData = {
+      id: courseId,
       professorId: user.uid,
       name: values.name,
       code: values.code,
-      semester: values.semester,
-      workload: values.workload,
       syllabus: values.syllabus,
       objectives: values.objectives,
     };
     
     try {
       const coursesCollection = collection(firestore, `professors/${user.uid}/courses`);
-      await addDocumentNonBlocking(coursesCollection, courseData);
+      // Note: We are not awaiting this on purpose to make UI faster
+      addDocumentNonBlocking(coursesCollection, courseData);
 
       toast({
         title: 'Disciplina Criada com Sucesso!',
@@ -90,7 +89,7 @@ export default function NewCoursePage() {
       <CardHeader>
         <CardTitle>Nova Disciplina</CardTitle>
         <CardDescription>
-          Preencha as informações abaixo para criar uma nova disciplina.
+          Preencha as informações abaixo para criar uma nova disciplina. As turmas serão criadas no próximo passo.
         </CardDescription>
       </CardHeader>
       <Form {...form}>
@@ -118,32 +117,6 @@ export default function NewCoursePage() {
                         <FormLabel>Código</FormLabel>
                         <FormControl>
                         <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="semester"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Semestre</FormLabel>
-                        <FormControl>
-                        <Input {...field} placeholder="Ex: 2024.2" />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="workload"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Carga Horária</FormLabel>
-                        <FormControl>
-                        <Input {...field} placeholder="Ex: 72h" />
                         </FormControl>
                         <FormMessage />
                     </FormItem>

@@ -8,10 +8,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { placeholderCourses } from '@/lib/placeholder-data';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Users, GraduationCap, Eye, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Eye, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,38 +18,53 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function CoursesTable() {
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const coursesRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return collection(firestore, `professors/${user.uid}/courses`);
+  }, [user, firestore]);
+
+  const { data: courses, isLoading } = useCollection(coursesRef);
+
   return (
     <Table>
       <TableHeader>
         <TableRow>
           <TableHead>Disciplina</TableHead>
           <TableHead>Código</TableHead>
-          <TableHead className="text-right">Turmas</TableHead>
-          <TableHead className="text-right">Alunos</TableHead>
           <TableHead>
             <span className="sr-only">Ações</span>
           </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {placeholderCourses.length === 0 ? (
+        {isLoading ? (
           <TableRow>
-            <TableCell colSpan={5} className="h-24 text-center">
+            <TableCell colSpan={3}>
+              <Skeleton className="h-10 w-full" />
+            </TableCell>
+          </TableRow>
+        ) : !courses || courses.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={3} className="h-24 text-center">
               Nenhuma disciplina encontrada.
             </TableCell>
           </TableRow>
         ) : (
-          placeholderCourses.map((course) => (
+          courses.map((course) => (
             <TableRow key={course.id}>
               <TableCell className="font-medium">{course.name}</TableCell>
               <TableCell>
                 <Badge variant="outline">{course.code}</Badge>
               </TableCell>
-              <TableCell className="text-right">3</TableCell>
-              <TableCell className="text-right">{course.students}</TableCell>
-              <TableCell>
+              <TableCell className="text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button aria-haspopup="true" size="icon" variant="ghost">
@@ -66,19 +80,6 @@ export function CoursesTable() {
                         <span>Ver Detalhes</span>
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href={`/disciplinas/${course.id}/turmas`}>
-                        <Users className="mr-2 h-4 w-4" />
-                        <span>Gerenciar Turmas</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href={`/disciplinas/${course.id}/alunos`}>
-                        <GraduationCap className="mr-2 h-4 w-4" />
-                        <span>Gerenciar Alunos</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>Editar</DropdownMenuItem>
                     <DropdownMenuItem className="text-red-600">
                       <Trash2 className="mr-2 h-4 w-4" />
                       Excluir

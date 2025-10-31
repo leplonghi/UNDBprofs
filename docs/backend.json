@@ -54,10 +54,6 @@
           "type": "string",
           "description": "The course code (e.g., MAT101)."
         },
-        "semester": {
-          "type": "string",
-          "description": "The semester the course is offered in (e.g., Fall 2024)."
-        },
         "syllabus": {
           "type": "string",
           "description": "The course syllabus content."
@@ -65,10 +61,6 @@
         "objectives": {
           "type": "string",
           "description": "The objectives of the course."
-        },
-        "workload": {
-          "type": "string",
-          "description": "The workload of the course."
         }
       },
       "required": [
@@ -76,10 +68,8 @@
         "professorId",
         "name",
         "code",
-        "semester",
         "syllabus",
-        "objectives",
-        "workload"
+        "objectives"
       ]
     },
     "Classroom": {
@@ -104,6 +94,10 @@
           "type": "string",
           "description": "The semester the classroom is active in."
         },
+        "workload": {
+          "type": "string",
+          "description": "The workload of the course for this specific classroom."
+        },
         "classType": {
           "type": "string",
           "description": "The type of class (e.g., Regular, Intensive)."
@@ -117,9 +111,7 @@
         "id",
         "courseId",
         "name",
-        "semester",
-        "classType",
-        "gradingRule"
+        "semester"
       ]
     },
     "Student": {

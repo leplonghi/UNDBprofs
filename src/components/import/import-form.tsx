@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useTransition, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -13,12 +13,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Upload } from 'lucide-react';
-import { useFirestore, useUser, addDocumentNonBlocking } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { useFirestore, useUser, useDoc, updateDocumentNonBlocking } from '@/firebase';
+import { collection, doc, setDoc } from 'firebase/firestore';
 
 const formSchema = z.object({
   courseName: z.string().min(1, 'Nome do curso é obrigatório.'),
@@ -31,15 +30,18 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-// TODO: Passar o courseId/classId como prop
 export function ImportForm() {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const [extractedData, setExtractedData] = useState<ImportCourseFromLessonPlanOutput | null>(null);
   const [fileName, setFileName] = useState('');
   const router = useRouter();
+  const params = useParams();
   const firestore = useFirestore();
   const { user } = useUser();
+
+  const courseId = params.id as string;
+  const classroomId = params.turmaId as string;
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -99,36 +101,45 @@ export function ImportForm() {
       toast({
         variant: 'destructive',
         title: 'Erro de Autenticação',
-        description: 'Você precisa estar logado para criar uma disciplina.',
+        description: 'Você precisa estar logado para salvar as informações.',
+      });
+      return;
+    }
+     if (!courseId || !classroomId) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro: Contexto Inválido',
+        description: 'Não foi possível identificar a disciplina ou a turma.',
       });
       return;
     }
 
-    // TODO: Update existing course/class instead of creating a new one
-    const courseData = {
-      professorId: user.uid,
-      name: values.courseName,
-      code: values.courseCode,
-      syllabus: values.syllabus,
-      objectives: values.objectives,
-      workload: values.workload,
-      semester: values.semester,
-    };
-    
     try {
-      const coursesCollection = collection(firestore, `professors/${user.uid}/courses`);
-      const docRef = await addDocumentNonBlocking(coursesCollection, courseData);
+      // Update the Course document with syllabus and objectives
+      const courseRef = doc(firestore, `professors/${user.uid}/courses/${courseId}`);
+      updateDocumentNonBlocking(courseRef, {
+        name: values.courseName,
+        code: values.courseCode,
+        syllabus: values.syllabus,
+        objectives: values.objectives,
+      });
+
+      // Update the Classroom document with semester and workload
+      const classroomRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}`);
+      updateDocumentNonBlocking(classroomRef, {
+        semester: values.semester,
+        workload: values.workload,
+      });
 
       toast({
         title: 'Informações Salvas com Sucesso!',
-        description: `Os dados da disciplina "${values.courseName}" foram atualizados.`,
+        description: `Os dados da disciplina "${values.courseName}" e da turma foram atualizados.`,
       });
       
-      // TODO: Navigate to the class page
-      router.push('/disciplinas');
+      router.push(`/disciplinas/${courseId}`);
 
     } catch (error) {
-      console.error('Error creating course: ', error);
+      console.error('Error updating documents: ', error);
       toast({
         variant: 'destructive',
         title: 'Erro ao Salvar',
@@ -146,7 +157,7 @@ export function ImportForm() {
                 htmlFor="file-upload"
                 className="cursor-pointer text-primary underline-offset-4 hover:underline"
               >
-                Escolha um arquivo PDF
+                Escolha um arquivo PDF do Plano de Ensino
               </Label>
               <Input
                 id="file-upload"
@@ -164,7 +175,7 @@ export function ImportForm() {
             {isPending && (
               <div className="flex items-center justify-center space-x-2 text-muted-foreground">
                 <Loader2 className="h-5 w-5 animate-spin" />
-                <span>Analisando documento...</span>
+                <span>Analisando documento... Isso pode levar alguns instantes.</span>
               </div>
             )}
 
