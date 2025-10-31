@@ -119,7 +119,7 @@ export function ImportForm() {
         id: classroomId,
         courseId: courseId,
         professorId: user.uid,
-        name: `Turma de ${values.semester}`, // Or some default naming
+        name: `Turma 1`, // Generic name
         semester: values.semester,
         workload: values.workload,
         classType: 'Regular', // Default value
@@ -127,13 +127,12 @@ export function ImportForm() {
     };
     
     try {
-      // Save the Course document
+      // We don't await these to make the UI faster. The optimistic UI will handle it.
       const courseRef = doc(firestore, `professors/${user.uid}/courses/${courseId}`);
-      await setDoc(courseRef, courseData);
+      setDoc(courseRef, courseData);
       
-      // Save the Classroom document
       const classroomRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}`);
-      await setDoc(classroomRef, classroomData);
+      setDoc(classroomRef, classroomData);
 
 
       toast({
