@@ -31,9 +31,9 @@ function getSemesterValue(semesterString: string): number {
 }
 
 function getCurrentSemesterValue(): number {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth(); // 0-11
+    // Simulating the date to be October 2025 as per user request
+    const year = 2025;
+    const month = 9; // October (0-indexed)
     const semester = month < 6 ? 1 : 2; // Jan-Jun é .1, Jul-Dec é .2
     return year * 10 + semester;
 }
