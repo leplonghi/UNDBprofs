@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -10,7 +11,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Eye, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Eye, Trash2, Loader2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,13 +19,27 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { useUser, useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 export function CoursesTable() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const { toast } = useToast();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [courseToDelete, setCourseToDelete] = useState<any | null>(null);
 
   const coursesRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -33,64 +48,115 @@ export function CoursesTable() {
 
   const { data: courses, isLoading } = useCollection(coursesRef);
 
+  const handleDeleteCourse = async () => {
+    if (!courseToDelete || !user || !firestore) return;
+    
+    setIsDeleting(true);
+    const courseDocRef = doc(firestore, `professors/${user.uid}/courses/${courseToDelete.id}`);
+
+    try {
+      // Not awaiting this to make UI faster
+      deleteDocumentNonBlocking(courseDocRef);
+      
+      toast({
+        title: "Disciplina Excluída!",
+        description: `A disciplina "${courseToDelete.name}" foi removida.`,
+      });
+    } catch (error) {
+      console.error("Error deleting course: ", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao Excluir",
+        description: "Não foi possível remover a disciplina. Tente novamente.",
+      });
+    } finally {
+      setIsDeleting(false);
+      setCourseToDelete(null);
+    }
+  };
+
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Disciplina</TableHead>
-          <TableHead>Código</TableHead>
-          <TableHead>
-            <span className="sr-only">Ações</span>
-          </TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {isLoading ? (
+    <>
+      <Table>
+        <TableHeader>
           <TableRow>
-            <TableCell colSpan={3}>
-              <Skeleton className="h-10 w-full" />
-            </TableCell>
+            <TableHead>Disciplina</TableHead>
+            <TableHead>Código</TableHead>
+            <TableHead>
+              <span className="sr-only">Ações</span>
+            </TableHead>
           </TableRow>
-        ) : !courses || courses.length === 0 ? (
-          <TableRow>
-            <TableCell colSpan={3} className="h-24 text-center">
-              Nenhuma disciplina encontrada.
-            </TableCell>
-          </TableRow>
-        ) : (
-          courses.map((course) => (
-            <TableRow key={course.id}>
-              <TableCell className="font-medium">{course.name}</TableCell>
-              <TableCell>
-                <Badge variant="outline">{course.code}</Badge>
-              </TableCell>
-              <TableCell className="text-right">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button aria-haspopup="true" size="icon" variant="ghost">
-                      <MoreHorizontal className="h-4 w-4" />
-                      <span className="sr-only">Toggle menu</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                    <DropdownMenuItem asChild>
-                      <Link href={`/disciplinas/${course.id}`}>
-                        <Eye className="mr-2 h-4 w-4" />
-                        <span>Ver Detalhes</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="text-red-600">
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Excluir
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+        </TableHeader>
+        <TableBody>
+          {isLoading ? (
+            <TableRow>
+              <TableCell colSpan={3}>
+                <Skeleton className="h-10 w-full" />
               </TableCell>
             </TableRow>
-          ))
-        )}
-      </TableBody>
-    </Table>
+          ) : !courses || courses.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={3} className="h-24 text-center">
+                Nenhuma disciplina encontrada.
+              </TableCell>
+            </TableRow>
+          ) : (
+            courses.map((course) => (
+              <TableRow key={course.id}>
+                <TableCell className="font-medium">{course.name}</TableCell>
+                <TableCell>
+                  <Badge variant="outline">{course.code}</Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button aria-haspopup="true" size="icon" variant="ghost">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Toggle menu</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                      <DropdownMenuItem asChild>
+                        <Link href={`/disciplinas/${course.id}`}>
+                          <Eye className="mr-2 h-4 w-4" />
+                          <span>Ver Detalhes</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        className="text-red-600"
+                        onSelect={() => setCourseToDelete(course)}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        <span>Excluir</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+      <AlertDialog open={!!courseToDelete} onOpenChange={(open) => !open && setCourseToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. Isso excluirá permanentemente a disciplina
+              <span className="font-bold"> "{courseToDelete?.name}" </span>
+              e todos os dados associados a ela, como turmas e eventos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteCourse} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+              {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
