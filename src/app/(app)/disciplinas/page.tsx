@@ -1,6 +1,8 @@
+'use client';
+
 import { Card, CardContent } from '@/components/ui/card';
 import { CoursesTable } from '@/components/courses/courses-table';
-import { NewCourseDialog } from '@/components/courses/new-course-dialog';
+import { NewClassroomDialog } from '@/components/courses/new-classroom-dialog';
 
 
 export default function CoursesPage() {
@@ -8,7 +10,7 @@ export default function CoursesPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-primary">Minhas Disciplinas</h1>
-        <NewCourseDialog />
+        <NewClassroomDialog />
       </div>
       <Card>
         <CardContent className="p-0">

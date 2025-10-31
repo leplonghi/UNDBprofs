@@ -12,26 +12,26 @@ import {
 import { FilePlus, PlusCircle } from 'lucide-react';
 import Link from 'next/link';
 
-export function NewCourseDialog() {
+export function NewClassroomDialog() {
   return (
     <Dialog>
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Nova Disciplina
+          Nova Turma
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Criar Nova Disciplina</DialogTitle>
+          <DialogTitle>Criar Nova Turma</DialogTitle>
           <DialogDescription>
-            Escolha como você quer criar a nova disciplina. Você pode preencher as informações
+            Escolha como você quer criar a nova turma. Você pode preencher as informações
             manualmente ou importar de um arquivo PDF.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <Button variant="outline" asChild>
-            <Link href="/disciplinas/nova">
+            <Link href="/disciplinas/turmas/nova">
               <PlusCircle className="mr-2" />
               Criar Manualmente
             </Link>
@@ -45,7 +45,7 @@ export function NewCourseDialog() {
         </div>
         <DialogFooter>
           <p className="text-sm text-muted-foreground">
-            Ao importar de um PDF, a IA irá extrair o nome, código, ementa, objetivos, semestre e carga horária.
+            Ao importar de um PDF, a disciplina e a turma serão criadas automaticamente.
           </p>
         </DialogFooter>
       </DialogContent>
