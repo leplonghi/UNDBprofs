@@ -10,7 +10,7 @@ import {
 import { placeholderCourses } from '@/lib/placeholder-data';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, Users, GraduationCap } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,7 +26,7 @@ export function CoursesTable() {
         <TableRow>
           <TableHead>Disciplina</TableHead>
           <TableHead>Código</TableHead>
-          <TableHead>Turma</TableHead>
+          <TableHead className="text-right">Turmas</TableHead>
           <TableHead className="text-right">Alunos</TableHead>
           <TableHead>
             <span className="sr-only">Ações</span>
@@ -40,7 +40,7 @@ export function CoursesTable() {
             <TableCell>
               <Badge variant="outline">{course.code}</Badge>
             </TableCell>
-            <TableCell>{course.classroom}</TableCell>
+            <TableCell className="text-right">3</TableCell>
             <TableCell className="text-right">{course.students}</TableCell>
             <TableCell>
               <DropdownMenu>
@@ -52,6 +52,15 @@ export function CoursesTable() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                  <DropdownMenuItem>Ver Detalhes</DropdownMenuItem>
+                   <DropdownMenuItem>
+                    <Users className="mr-2 h-4 w-4" />
+                    <span>Gerenciar Turmas</span>
+                  </DropdownMenuItem>
+                   <DropdownMenuItem>
+                    <GraduationCap className="mr-2 h-4 w-4" />
+                    <span>Gerenciar Alunos</span>
+                  </DropdownMenuItem>
                   <DropdownMenuItem>Editar</DropdownMenuItem>
                   <DropdownMenuItem>Arquivar</DropdownMenuItem>
                   <DropdownMenuItem className="text-red-600">Excluir</DropdownMenuItem>
