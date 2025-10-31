@@ -1,40 +1,15 @@
 'use client';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { FileUp, PlusCircle } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
 import Link from 'next/link';
 
 export function NewCourseDialog() {
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Nova Disciplina
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Criar nova disciplina</DialogTitle>
-          <DialogDescription>
-            Escolha como você quer adicionar uma nova disciplina ao sistema.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-           <Button asChild variant="outline" size="lg">
-            <Link href="/disciplinas/nova">
-              Criação Manual
-            </Link>
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <Button asChild>
+      <Link href="/disciplinas/nova">
+        <PlusCircle className="mr-2 h-4 w-4" />
+        Nova Disciplina
+      </Link>
+    </Button>
   );
 }
