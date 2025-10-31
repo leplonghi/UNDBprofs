@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -16,8 +16,9 @@ import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Upload } from 'lucide-react';
-import { useFirestore, useUser, useDoc, updateDocumentNonBlocking } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
 import { collection, doc, setDoc } from 'firebase/firestore';
+import { v4 as uuidv4 } from 'uuid';
 
 const formSchema = z.object({
   courseName: z.string().min(1, 'Nome do curso é obrigatório.'),
@@ -36,12 +37,8 @@ export function ImportForm() {
   const [extractedData, setExtractedData] = useState<ImportCourseFromLessonPlanOutput | null>(null);
   const [fileName, setFileName] = useState('');
   const router = useRouter();
-  const params = useParams();
   const firestore = useFirestore();
   const { user } = useUser();
-
-  const courseId = params.id as string;
-  const classroomId = params.turmaId as string;
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -105,41 +102,49 @@ export function ImportForm() {
       });
       return;
     }
-     if (!courseId || !classroomId) {
-      toast({
-        variant: 'destructive',
-        title: 'Erro: Contexto Inválido',
-        description: 'Não foi possível identificar a disciplina ou a turma.',
-      });
-      return;
-    }
 
-    try {
-      // Update the Course document with syllabus and objectives
-      const courseRef = doc(firestore, `professors/${user.uid}/courses/${courseId}`);
-      updateDocumentNonBlocking(courseRef, {
-        name: values.courseName,
-        code: values.courseCode,
-        syllabus: values.syllabus,
-        objectives: values.objectives,
-      });
+    const courseId = uuidv4();
+    const classroomId = uuidv4();
 
-      // Update the Classroom document with semester and workload
-      const classroomRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}`);
-      updateDocumentNonBlocking(classroomRef, {
+    const courseData = {
+      id: courseId,
+      professorId: user.uid,
+      name: values.courseName,
+      code: values.courseCode,
+      syllabus: values.syllabus,
+      objectives: values.objectives,
+    };
+
+    const classroomData = {
+        id: classroomId,
+        courseId: courseId,
+        professorId: user.uid,
+        name: `Turma de ${values.semester}`, // Or some default naming
         semester: values.semester,
         workload: values.workload,
-      });
+        classType: 'Regular', // Default value
+        gradingRule: '', // Default value
+    };
+    
+    try {
+      // Save the Course document
+      const courseRef = doc(firestore, `professors/${user.uid}/courses/${courseId}`);
+      await setDoc(courseRef, courseData);
+      
+      // Save the Classroom document
+      const classroomRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}`);
+      await setDoc(classroomRef, classroomData);
+
 
       toast({
-        title: 'Informações Salvas com Sucesso!',
-        description: `Os dados da disciplina "${values.courseName}" e da turma foram atualizados.`,
+        title: 'Disciplina e Turma Criadas!',
+        description: `A disciplina "${values.courseName}" e sua primeira turma foram salvas.`,
       });
       
       router.push(`/disciplinas/${courseId}`);
 
     } catch (error) {
-      console.error('Error updating documents: ', error);
+      console.error('Error creating documents: ', error);
       toast({
         variant: 'destructive',
         title: 'Erro ao Salvar',
@@ -179,7 +184,7 @@ export function ImportForm() {
               </div>
             )}
 
-            {extractedData && (
+            {(extractedData || form.formState.isDirty) && (
               <div className="space-y-4 rounded-lg border p-4">
                 <h3 className="font-semibold">Revise os Dados Extraídos</h3>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

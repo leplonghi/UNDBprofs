@@ -1,23 +1,57 @@
 'use client';
-import { ImportForm } from '@/components/import/import-form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ClassDetailPage({ params }: { params: { id: string, turmaId: string } }) {
-    // TODO: fetch class details from backend
-    const className = "Turma A";
+    const { user } = useUser();
+    const firestore = useFirestore();
+
+    const classroomRef = useMemoFirebase(() => {
+        if (!user || !firestore) return null;
+        return doc(firestore, `professors/${user.uid}/courses/${params.id}/classrooms/${params.turmaId}`);
+    }, [user, firestore, params.id, params.turmaId]);
+
+    const { data: classroom, isLoading } = useDoc(classroomRef);
+    
+    if(isLoading) {
+        return (
+            <div className="flex flex-col gap-6">
+                <Skeleton className="h-8 w-1/2" />
+                <Card>
+                    <CardHeader>
+                        <Skeleton className="h-8 w-1/3" />
+                        <Skeleton className="h-4 w-full" />
+                    </CardHeader>
+                    <CardContent>
+                        <Skeleton className="h-10 w-1/4" />
+                    </CardContent>
+                </Card>
+            </div>
+        )
+    }
 
     return (
         <div className="flex flex-col gap-6">
-            <h1 className="text-2xl font-bold text-primary">Gerenciar Turma: {className}</h1>
+            <h1 className="text-2xl font-bold text-primary">Gerenciar Turma: {classroom?.name}</h1>
             <Card>
                 <CardHeader>
-                    <CardTitle>Plano de Ensino</CardTitle>
+                    <CardTitle>Detalhes da Turma</CardTitle>
                     <CardDescription>
-                        Importe o plano de ensino em PDF para que a IA extraia as informações da disciplina, ou preencha manualmente.
+                        Informações sobre a turma específica.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <ImportForm />
+                    {classroom ? (
+                        <div className="space-y-2">
+                           <p><strong>Semestre:</strong> {classroom.semester}</p>
+                           <p><strong>Carga Horária:</strong> {classroom.workload}</p>
+                           <p><strong>Tipo:</strong> {classroom.classType}</p>
+                        </div>
+                    ): (
+                        <p>Turma não encontrada.</p>
+                    )}
                 </CardContent>
             </Card>
         </div>
