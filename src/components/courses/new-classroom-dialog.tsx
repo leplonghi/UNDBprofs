@@ -15,19 +15,30 @@ import { FilePlus, PlusCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { importCourseFromLessonPlan } from '@/ai/flows/import-course-from-lesson-plan';
 import { Input } from '../ui/input';
+import { useUser } from '@/firebase';
 
 export function NewClassroomDialog() {
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useUser();
 
   const handleNavigate = (path: string) => {
+    if (!user) {
+        toast({ variant: 'destructive', title: 'Acesso Negado', description: 'Você precisa estar logado.'});
+        return;
+    }
     router.push(path);
     setIsOpen(false);
   };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!user) {
+        toast({ variant: 'destructive', title: 'Acesso Negado', description: 'Você precisa estar logado para importar um arquivo.'});
+        return;
+    }
+
     const file = event.target.files?.[0];
     if (!file) return;
 

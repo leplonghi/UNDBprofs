@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
-import { useFirestore, useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
 import { collection, doc, setDoc } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import { useEffect, useState } from 'react';
@@ -28,13 +28,19 @@ export default function NewClassroomPage({ params }: { params: { id: string } })
   const router = useRouter();
   const { toast } = useToast();
   const firestore = useFirestore();
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const [isClient, setIsClient] = useState(false);
   const { id: courseId } = params;
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push('/');
+    }
+  }, [user, isUserLoading, router]);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -63,8 +69,6 @@ export default function NewClassroomPage({ params }: { params: { id: string } })
       return;
     }
 
-    form.control.disabled = true;
-
     const classroomId = uuidv4();
     const classroomData = {
         id: classroomId,
@@ -81,14 +85,7 @@ export default function NewClassroomPage({ params }: { params: { id: string } })
     const classroomDocRef = doc(classroomCollection, classroomId);
     
     // We don't await this to make the UI faster
-    setDoc(classroomDocRef, classroomData).catch(error => {
-      const contextualError = new FirestorePermissionError({
-          operation: 'create',
-          path: classroomDocRef.path,
-          requestResourceData: classroomData,
-      });
-      errorEmitter.emit('permission-error', contextualError);
-    });
+    setDoc(classroomDocRef, classroomData)
 
     toast({
       title: 'Turma Criada com Sucesso!',
@@ -96,6 +93,14 @@ export default function NewClassroomPage({ params }: { params: { id: string } })
     });
     
     router.push(`/disciplinas`);
+  }
+
+  if (isUserLoading || !user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p>Carregando...</p>
+      </div>
+    );
   }
 
   if (!isClient) {
