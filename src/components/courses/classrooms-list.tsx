@@ -31,10 +31,11 @@ function getSemesterValue(semesterString: string): number {
 }
 
 function getCurrentSemesterValue(): number {
-    // Simulating the date to be October 2025 as per user request
-    const year = 2025;
-    const month = 9; // October (0-indexed)
-    const semester = month < 6 ? 1 : 2; // Jan-Jun é .1, Jul-Dec é .2
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth(); // 0-indexed (0 for January, 11 for December)
+    // Semestre 1: Jan-Jul (meses 0-6). Semestre 2: Ago-Dez (meses 7-11)
+    const semester = month <= 6 ? 1 : 2; 
     return year * 10 + semester;
 }
 
@@ -79,8 +80,8 @@ export function ClassroomsList({ filter }: ClassroomsListProps) {
         const filteredClassrooms = allClassrooms.filter(c => {
           const classroomSemesterValue = getSemesterValue(c.semester);
            if (filter === 'active') {
-            // "Ativas" são as do semestre atual ou futuras.
-            return classroomSemesterValue >= currentSemesterValue;
+            // "Ativas" são as do semestre atual.
+            return classroomSemesterValue === currentSemesterValue;
           } else { // filter === 'past'
             // "Anteriores" são todas as turmas de semestres passados.
             return classroomSemesterValue > 0 && classroomSemesterValue < currentSemesterValue;
