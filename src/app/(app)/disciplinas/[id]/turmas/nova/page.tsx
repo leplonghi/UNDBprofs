@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useFirestore, useUser } from '@/firebase';
 import { collection, doc, setDoc } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
@@ -26,8 +26,9 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-export default function NewClassroomPage({ params }: { params: { id: string } }) {
-  const courseId = params.id;
+export default function NewClassroomPage() {
+  const params = useParams();
+  const courseId = params.id as string;
   const router = useRouter();
   const { toast } = useToast();
   const firestore = useFirestore();

@@ -3,9 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useParams } from 'next/navigation';
 
-export default function ClassDetailPage({ params }: { params: { id: string, turmaId: string } }) {
-    const { id: courseId, turmaId: classroomId } = params;
+export default function ClassDetailPage() {
+    const params = useParams();
+    const courseId = params.id as string;
+    const classroomId = params.turmaId as string;
     const { user } = useUser();
     const firestore = useFirestore();
 

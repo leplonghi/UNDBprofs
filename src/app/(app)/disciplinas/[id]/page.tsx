@@ -8,9 +8,11 @@ import { doc, collection } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { CourseClassSchedule } from '@/components/courses/course-class-schedule';
+import { useParams } from 'next/navigation';
 
-export default function CourseDetailPage({ params }: { params: { id: string } }) {
-  const courseId = params.id;
+export default function CourseDetailPage() {
+  const params = useParams();
+  const courseId = params.id as string;
   const { user } = useUser();
   const firestore = useFirestore();
 
