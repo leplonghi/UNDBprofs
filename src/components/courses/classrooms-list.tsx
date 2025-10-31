@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { collection, getDocs, query, collectionGroup, where } from 'firebase/firestore';
+import { collection, getDocs, query } from 'firebase/firestore';
 import { useUser, useFirestore } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -46,34 +46,30 @@ export function ClassroomsList({ filter }: ClassroomsListProps) {
       setIsLoading(true);
       
       try {
-        // 1. Fetch all courses for the professor to create a map of courseId -> courseInfo
+        // 1. Fetch all courses for the professor
         const coursesRef = collection(firestore, `professors/${user.uid}/courses`);
         const coursesSnapshot = await getDocs(coursesRef);
-        const coursesMap = new Map<string, { name: string; code: string }>();
-        coursesSnapshot.forEach(doc => {
-            coursesMap.set(doc.id, { name: doc.data().name, code: doc.data().code });
-        });
-
-        // 2. Query the classrooms collection group for the specific professor
-        const classroomsQuery = query(
-            collectionGroup(firestore, 'classrooms'),
-            where('professorId', '==', user.uid)
-        );
-        const classroomsSnapshot = await getDocs(classroomsQuery);
         
         const allClassrooms: Classroom[] = [];
-        classroomsSnapshot.forEach(doc => {
-            const data = doc.data();
-            const courseInfo = coursesMap.get(data.courseId);
+        
+        // 2. For each course, fetch its classrooms
+        for (const courseDoc of coursesSnapshot.docs) {
+          const courseData = courseDoc.data();
+          const classroomsRef = collection(firestore, `professors/${user.uid}/courses/${courseDoc.id}/classrooms`);
+          const classroomsSnapshot = await getDocs(classroomsRef);
+
+          classroomsSnapshot.forEach(classroomDoc => {
+            const classroomData = classroomDoc.data();
             allClassrooms.push({
-                id: doc.id,
-                name: data.name,
-                semester: data.semester,
-                courseId: data.courseId,
-                courseName: courseInfo?.name || 'Disciplina Desconhecida',
-                courseCode: courseInfo?.code || 'N/A'
+              id: classroomDoc.id,
+              name: classroomData.name,
+              semester: classroomData.semester,
+              courseId: courseDoc.id,
+              courseName: courseData.name || 'Disciplina Desconhecida',
+              courseCode: courseData.code || 'N/A'
             });
-        });
+          });
+        }
 
         // 3. Filter classrooms based on the current semester
         const currentSemester = getCurrentSemester();
