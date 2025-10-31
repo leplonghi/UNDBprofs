@@ -8,12 +8,15 @@ export default function ImportCoursePage() {
         <div className="flex flex-col gap-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>Importar Disciplina e Turma</CardTitle>
+                    <CardTitle>Importar Disciplina e Turma via PDF</CardTitle>
                     <CardDescription>
-                        Importe o plano de ensino em PDF para que a IA extraia as informações da disciplina e da primeira turma.
+                        Faça o upload do plano de ensino em formato PDF. Nossa inteligência artificial irá ler o documento e preencher automaticamente os campos abaixo com as informações da disciplina e da primeira turma.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4">
+                        Após a extração, você poderá revisar e editar os dados antes de salvar. Isso criará tanto a disciplina quanto a primeira turma associada a ela no sistema.
+                    </p>
                     <ImportForm />
                 </CardContent>
             </Card>
