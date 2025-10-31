@@ -87,7 +87,7 @@ export default function NewClassroomPage({ params }: { params: { id: string } })
         description: `A turma "${values.name}" foi adicionada.`,
       });
       
-      router.push(`/disciplinas/${courseId}`);
+      router.push(`/disciplinas`);
 
     } catch (error) {
       console.error('Error creating classroom: ', error);
