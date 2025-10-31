@@ -8,9 +8,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 
 export default function CourseDetailPage({ params }: { params: { id: string } }) {
+  const { id: courseId } = params;
   const { user } = useUser();
   const firestore = useFirestore();
-  const { id: courseId } = params;
 
   const courseRef = useMemoFirebase(() => {
     if (!user || !firestore || !courseId) return null;
@@ -73,7 +73,7 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
             <CardHeader>
                 <CardTitle>{course.name} ({course.code})</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 whitespace-pre-wrap">
                 <div>
                     <h3 className="font-semibold">Ementa</h3>
                     <p className="text-muted-foreground">{course.syllabus}</p>
@@ -85,6 +85,18 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
                 <div>
                     <h3 className="font-semibold">Competências</h3>
                     <p className="text-muted-foreground">{course.competencies}</p>
+                </div>
+                <div>
+                    <h3 className="font-semibold">Árvore Temática</h3>
+                    <p className="text-muted-foreground">{course.thematicTree}</p>
+                </div>
+                <div>
+                    <h3 className="font-semibold">Bibliografia</h3>
+                    <p className="text-muted-foreground">{course.bibliography}</p>
+                </div>
+                <div>
+                    <h3 className="font-semibold">Cronograma de Aulas</h3>
+                    <p className="text-muted-foreground">{course.classSchedule}</p>
                 </div>
             </CardContent>
         </Card>

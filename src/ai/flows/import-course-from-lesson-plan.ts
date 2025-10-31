@@ -29,6 +29,9 @@ const ImportCourseFromLessonPlanOutputSchema = z.object({
   workload: z.string().describe('The workload of the course'),
   semester: z.string().describe('The semester of the course'),
   competencies: z.string().describe('The competencies of the course.'),
+  thematicTree: z.string().describe('The thematic tree of the course.'),
+  bibliography: z.string().describe('The bibliography of the course.'),
+  classSchedule: z.string().describe('The class schedule of the course.'),
 });
 export type ImportCourseFromLessonPlanOutput = z.infer<
   typeof ImportCourseFromLessonPlanOutputSchema
@@ -51,10 +54,14 @@ const prompt = ai.definePrompt({
   - Course Name (extract from 'UNIDADE CURRICULAR')
   - Course Code (if not available, generate a plausible one based on the course name)
   - Syllabus (extract from 'EMENTA')
-  - Objectives (extract from 'COMPETÊNCIAS' if 'OBJETIVOS' is not present)
+  - Objectives (extract from 'OBJETIVOS')
   - Workload (extract from 'CARGA HORÁRIA')
   - Semester (extract from 'SEMESTRE')
   - Competencies (extract from 'COMPETÊNCIAS')
+  - Thematic Tree (extract from 'ÁRVORE TEMÁTICA')
+  - Bibliography (extract from 'BIBLIOGRAFIA BÁSICA E COMPLEMENTAR')
+  - Class Schedule (extract from 'CRONOGRAMA DAS AULAS')
+
 
   Return the information in a structured JSON format.
 

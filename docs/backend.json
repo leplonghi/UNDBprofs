@@ -65,6 +65,18 @@
         "competencies": {
           "type": "string",
           "description": "The competencies of the course."
+        },
+        "thematicTree": {
+          "type": "string",
+          "description": "The thematic tree of the course."
+        },
+        "bibliography": {
+          "type": "string",
+          "description": "The bibliography of the course."
+        },
+        "classSchedule": {
+          "type": "string",
+          "description": "The class schedule of the course."
         }
       },
       "required": [

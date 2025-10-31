@@ -26,6 +26,9 @@ const formSchema = z.object({
   workload: z.string().min(1, 'Carga horária é obrigatória.'),
   semester: z.string().min(1, 'Semestre é obrigatório.'),
   competencies: z.string().min(1, 'Competências são obrigatórias.'),
+  thematicTree: z.string().min(1, 'Árvore temática é obrigatória.'),
+  bibliography: z.string().min(1, 'Bibliografia é obrigatória.'),
+  classSchedule: z.string().min(1, 'Cronograma é obrigatório.'),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -48,6 +51,9 @@ export function ImportForm() {
       workload: '',
       semester: '',
       competencies: '',
+      thematicTree: '',
+      bibliography: '',
+      classSchedule: '',
     },
   });
 
@@ -65,6 +71,9 @@ export function ImportForm() {
             workload: data.workload,
             semester: data.semester,
             competencies: data.competencies,
+            thematicTree: data.thematicTree,
+            bibliography: data.bibliography,
+            classSchedule: data.classSchedule,
         });
         // Clean up session storage after use
         sessionStorage.removeItem('importedData');
@@ -102,6 +111,9 @@ export function ImportForm() {
           syllabus: values.syllabus,
           objectives: values.objectives,
           competencies: values.competencies,
+          thematicTree: values.thematicTree,
+          bibliography: values.bibliography,
+          classSchedule: values.classSchedule,
         };
     
         const classroomData = {
@@ -244,6 +256,45 @@ export function ImportForm() {
                       <FormLabel>Competências</FormLabel>
                       <FormControl>
                         <Textarea rows={5} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="thematicTree"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Árvore Temática</FormLabel>
+                      <FormControl>
+                        <Textarea rows={5} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="bibliography"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bibliografia</FormLabel>
+                      <FormControl>
+                        <Textarea rows={8} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="classSchedule"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Cronograma de Aulas</FormLabel>
+                      <FormControl>
+                        <Textarea rows={8} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
