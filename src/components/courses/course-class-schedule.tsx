@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { updateDocumentNonBlocking } from '@/firebase';
 import { Loader2, Pencil, Trash2 } from 'lucide-react';
+import { ScrollArea } from '../ui/scroll-area';
 
 const classScheduleItemSchema = z.object({
   date: z.string().min(1, 'Data é obrigatória'),
@@ -48,7 +49,6 @@ export function CourseClassSchedule({ course, courseRef }: CourseClassSchedulePr
   });
 
   useEffect(() => {
-    // Reset form when the course data changes (e.g., on initial load)
     form.reset({
       classSchedule: course.classSchedule || [],
     });
@@ -105,85 +105,92 @@ export function CourseClassSchedule({ course, courseRef }: CourseClassSchedulePr
       )}
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+        <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Editar Cronograma de Aulas</DialogTitle>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 overflow-y-auto space-y-6 p-1">
-              <div className="space-y-4">
-                {fields.map((field, index) => (
-                  <div key={field.id} className="grid grid-cols-1 md:grid-cols-7 gap-2 items-start border p-3 rounded-lg relative">
-                    <FormField
-                      control={form.control}
-                      name={`classSchedule.${index}.date`}
-                      render={({ field }) => (
-                        <FormItem className="md:col-span-2">
-                          <FormLabel>Data</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`classSchedule.${index}.content`}
-                      render={({ field }) => (
-                        <FormItem className="md:col-span-2">
-                          <FormLabel>Conteúdo</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`classSchedule.${index}.activity`}
-                      render={({ field }) => (
-                        <FormItem className="md:col-span-2">
-                          <FormLabel>Atividade</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                     <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        onClick={() => remove(index)}
-                        className="md:mt-8"
-                    >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Remover aula</span>
-                    </Button>
-                  </div>
-                ))}
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col overflow-hidden">
+              <ScrollArea className="flex-1 pr-6 -mr-6">
+                <div className="space-y-4 py-4">
+                  {fields.map((field, index) => (
+                    <div key={field.id} className="flex flex-col md:flex-row gap-4 items-start border p-4 rounded-lg">
+                      <FormField
+                        control={form.control}
+                        name={`classSchedule.${index}.date`}
+                        render={({ field }) => (
+                          <FormItem className="flex-1 w-full">
+                            <FormLabel>Data</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="AAAA-MM-DD" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name={`classSchedule.${index}.content`}
+                        render={({ field }) => (
+                          <FormItem className="flex-1 w-full">
+                            <FormLabel>Conteúdo</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="Tema da aula" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name={`classSchedule.${index}.activity`}
+                        render={({ field }) => (
+                          <FormItem className="flex-1 w-full">
+                            <FormLabel>Atividade</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="Atividade planejada"/>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                       <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          onClick={() => remove(index)}
+                          className="mt-0 md:mt-8 flex-shrink-0"
+                      >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Remover aula</span>
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+              
+              <div className="flex-shrink-0 pt-4">
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => append({ date: '', content: '', activity: '' })}
+                    className="w-full"
+                >
+                    Adicionar Aula
+                </Button>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => append({ date: '', content: '', activity: '' })}
-              >
-                Adicionar Aula
-              </Button>
+
+              <DialogFooter className="mt-4 pt-4 border-t flex-shrink-0">
+                 <DialogClose asChild>
+                    <Button type="button" variant="ghost">Cancelar</Button>
+                 </DialogClose>
+                <Button type="submit" onClick={form.handleSubmit(onSubmit)} disabled={form.formState.isSubmitting}>
+                   {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Salvar Alterações
+                </Button>
+              </DialogFooter>
             </form>
           </Form>
-          <DialogFooter className="mt-4 pt-4 border-t">
-             <DialogClose asChild>
-                <Button type="button" variant="ghost">Cancelar</Button>
-             </DialogClose>
-            <Button type="submit" onClick={form.handleSubmit(onSubmit)} disabled={form.formState.isSubmitting}>
-               {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Salvar Alterações
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
