@@ -79,11 +79,11 @@ export function ClassroomsList({ filter }: ClassroomsListProps) {
         const filteredClassrooms = allClassrooms.filter(c => {
           const classroomSemesterValue = getSemesterValue(c.semester);
            if (filter === 'active') {
-            // "Ativas" são apenas as do semestre atual
-            return classroomSemesterValue === currentSemesterValue;
+            // "Ativas" são as do semestre atual ou futuras.
+            return classroomSemesterValue >= currentSemesterValue;
           } else { // filter === 'past'
-            // "Anteriores" são todas as turmas de semestres passados
-            return classroomSemesterValue < currentSemesterValue;
+            // "Anteriores" são todas as turmas de semestres passados.
+            return classroomSemesterValue > 0 && classroomSemesterValue < currentSemesterValue;
           }
         });
 
