@@ -23,11 +23,8 @@ interface ClassroomsListProps {
 }
 
 function getCurrentSemester() {
-  const date = new Date();
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1;
-  const semester = month <= 6 ? 1 : 2;
-  return `${year}.${semester}`;
+  // As per user request, hardcode the active semester to "2025.2"
+  return "2025.2";
 }
 
 export function ClassroomsList({ filter }: ClassroomsListProps) {
