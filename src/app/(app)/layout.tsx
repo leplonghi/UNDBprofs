@@ -12,7 +12,7 @@ export default function AppLayout({
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <div className="flex min-h-screen w-full flex-col">
         <Header />
-        <main className="flex-1 p-4 sm:p-6">{children}</main>
+        <main className="flex-1 p-4 pb-20 sm:p-6">{children}</main>
         <BottomNav />
       </div>
     </ThemeProvider>
