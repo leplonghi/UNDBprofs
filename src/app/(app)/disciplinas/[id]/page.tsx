@@ -2,12 +2,12 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PlusCircle, ChevronsRight } from 'lucide-react';
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
+import { CourseClassSchedule } from '@/components/courses/course-class-schedule';
 
 export default function CourseDetailPage({ params }: { params: { id: string } }) {
   const { id: courseId } = params;
@@ -110,36 +110,18 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
                   </div>
                 )}
                 
-                {course.classSchedule && course.classSchedule.length > 0 && (
+                <CourseClassSchedule course={course} courseRef={courseRef} />
+
+                {course.bibliography && (
                     <div>
-                        <h3 className="font-semibold text-lg mb-2">Cronograma de Aulas</h3>
-                        <div className="border rounded-lg overflow-hidden">
-                           <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Data</TableHead>
-                                        <TableHead>Conteúdo</TableHead>
-                                        <TableHead>Atividade</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {course.classSchedule.map((item: any, index: number) => (
-                                        <TableRow key={index}>
-                                            <TableCell>{item.date}</TableCell>
-                                            <TableCell>{item.content}</TableCell>
-                                            <TableCell>{item.activity}</TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
+                        <h3 className="font-semibold text-lg mb-2">Bibliografia</h3>
+                        <div className="text-muted-foreground space-y-2">
+                           {course.bibliography.split('\n').filter((item: string) => item.trim() !== '').map((item: string, index: number) => (
+                                <p key={index}>{item}</p>
+                            ))}
                         </div>
                     </div>
                 )}
-
-                <div>
-                    <h3 className="font-semibold text-lg mb-2">Bibliografia</h3>
-                    <p className="text-muted-foreground whitespace-pre-wrap">{course.bibliography}</p>
-                </div>
             </CardContent>
         </Card>
       ) : (
