@@ -16,7 +16,7 @@ import {
   useCollection,
 } from '@/firebase';
 import type { Course, Classroom } from '@/types';
-import { doc, collection } from 'firebase/firestore';
+import { doc, collection, query, limit } from 'firebase/firestore';
 import {
   Table,
   TableBody,
@@ -26,8 +26,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import Link from 'next/link';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 function CourseDetailsSkeleton() {
   return (
@@ -49,93 +48,70 @@ function CourseDetailsSkeleton() {
   );
 }
 
-function ClassroomsList({ courseId }: { courseId: string }) {
+function CourseScheduleTab({ courseId }: { courseId: string }) {
   const { user } = useUser();
   const firestore = useFirestore();
 
-  const classroomsQuery = useMemoFirebase(() => {
+  // Query to get the first classroom for the course
+  const classroomQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
-    return collection(
-      firestore,
-      `professors/${user.uid}/courses/${courseId}/classrooms`
+    return query(
+      collection(
+        firestore,
+        `professors/${user.uid}/courses/${courseId}/classrooms`
+      ),
+      limit(1)
     );
   }, [user, firestore, courseId]);
 
-  const { data: classrooms, isLoading } =
-    useCollection<Classroom>(classroomsQuery);
-
+  const { data: classrooms, isLoading } = useCollection<Classroom>(classroomQuery);
+  const classroom = classrooms?.[0];
+  
   if (isLoading) {
-    return <Skeleton className="h-40 w-full" />;
+    return <Skeleton className="h-60 w-full" />;
   }
-
-  if (!classrooms || classrooms.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Turmas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-center text-muted-foreground">
-            Nenhuma turma encontrada para esta disciplina.
-          </p>
-        </CardContent>
-      </Card>
-    );
+  
+  if (!classroom || !classroom.classSchedule || classroom.classSchedule.length === 0) {
+      return (
+          <div className="py-10 text-center text-muted-foreground">
+              Nenhum cronograma de aulas encontrado para a primeira turma desta disciplina.
+          </div>
+      );
   }
 
   return (
-    <div className="space-y-4">
-       <h2 className="text-xl font-bold text-primary">Turmas</h2>
-      {classrooms.map((classroom) => (
-        <Card key={classroom.id}>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>{classroom.name}</CardTitle>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">{classroom.semester}</Badge>
-                <Badge variant="outline">{classroom.workload}</Badge>
-              </div>
+    <Card>
+        <CardHeader>
+            <div className='flex items-center justify-between'>
+                <div>
+                    <CardTitle>Cronograma da Turma: {classroom.name}</CardTitle>
+                    <CardDescription>Semestre: {classroom.semester} | Carga Horária: {classroom.workload}</CardDescription>
+                </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="schedule">
-                <AccordionTrigger>Ver Cronograma de Aulas</AccordionTrigger>
-                <AccordionContent>
-                  {classroom.classSchedule && classroom.classSchedule.length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Data</TableHead>
-                          <TableHead>Conteúdo</TableHead>
-                          <TableHead>Atividade</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {classroom.classSchedule.map((scheduleItem, index) => (
-                          <TableRow key={index}>
-                            <TableCell>{scheduleItem.date}</TableCell>
-                            <TableCell>{scheduleItem.content}</TableCell>
-                            <TableCell>{scheduleItem.activity}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <p className="py-4 text-center text-muted-foreground">
-                      Nenhum cronograma de aulas para esta turma.
-                    </p>
-                  )}
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+        </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Data</TableHead>
+              <TableHead>Conteúdo</TableHead>
+              <TableHead>Atividade</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {classroom.classSchedule.map((scheduleItem, index) => (
+              <TableRow key={index}>
+                <TableCell className="font-medium">{scheduleItem.date}</TableCell>
+                <TableCell>{scheduleItem.content}</TableCell>
+                <TableCell>{scheduleItem.activity}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 }
-
 
 export default function CourseDetailPage({
   params,
@@ -178,53 +154,63 @@ export default function CourseDetailPage({
         <Badge variant="outline">{course.code}</Badge>
       </div>
 
-      <div className="grid gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Informações Gerais</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <h3 className="font-semibold">Ementa</h3>
-              <p className="text-muted-foreground">{course.syllabus}</p>
-            </div>
-            <div>
-              <h3 className="font-semibold">Objetivos</h3>
-              <p className="text-muted-foreground">{course.objectives}</p>
-            </div>
-            {course.competencies && (
-              <div>
-                <h3 className="font-semibold">Competências</h3>
-                <p className="text-muted-foreground">{course.competencies}</p>
-              </div>
-            )}
-             {course.thematicTree && course.thematicTree.length > 0 && (
+      <Tabs defaultValue="info" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="info">Informações Gerais</TabsTrigger>
+          <TabsTrigger value="schedule">Cronograma de Aulas</TabsTrigger>
+        </TabsList>
+        <TabsContent value="info" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Detalhes da Disciplina</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div>
+                  <h3 className="font-semibold">Ementa</h3>
+                  <p className="text-muted-foreground">{course.syllabus}</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold">Objetivos</h3>
+                  <p className="text-muted-foreground">{course.objectives}</p>
+                </div>
+                {course.competencies && (
+                  <div>
+                    <h3 className="font-semibold">Competências</h3>
+                    <p className="text-muted-foreground">
+                      {course.competencies}
+                    </p>
+                  </div>
+                )}
+                {course.thematicTree && course.thematicTree.length > 0 && (
+                  <div>
                     <h3 className="font-semibold">Árvore Temática</h3>
                     <div className="mt-2 space-y-2">
-                    {course.thematicTree.map((item, index) => (
+                      {course.thematicTree.map((item, index) => (
                         <div key={index} className="p-3 border rounded-md">
-                        <p className="font-medium">{item.name}</p>
-                        <p className="text-sm text-muted-foreground">{item.description}</p>
+                          <p className="font-medium">{item.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {item.description}
+                          </p>
                         </div>
-                    ))}
+                      ))}
                     </div>
-                </div>
-            )}
-            {course.bibliography && (
-              <div>
-                <h3 className="font-semibold">Bibliografia</h3>
-                <p className="whitespace-pre-wrap text-muted-foreground">
-                  {course.bibliography}
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        
-        <ClassroomsList courseId={course.id} />
-        
-      </div>
+                  </div>
+                )}
+                {course.bibliography && (
+                  <div>
+                    <h3 className="font-semibold">Bibliografia</h3>
+                    <p className="whitespace-pre-wrap text-muted-foreground">
+                      {course.bibliography}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+        </TabsContent>
+        <TabsContent value="schedule" className="mt-6">
+            <CourseScheduleTab courseId={course.id} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
