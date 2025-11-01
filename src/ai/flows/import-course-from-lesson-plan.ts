@@ -14,7 +14,7 @@ const ImportCourseFromLessonPlanInputSchema = z.object({
   lessonPlanDataUri: z
     .string()
     .describe(
-      'The lesson plan PDF as a data URI that must include a MIME type and use Base64 encoding. Expected format: \'data:<mimetype>;base64,<encoded_data>\'.'
+      "The lesson plan PDF as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
 });
 export type ImportCourseFromLessonPlanInput = z.infer<
@@ -76,12 +76,12 @@ const prompt = ai.definePrompt({
   - workload
   - semester
   - competencies
-  - thematicTree
+  - thematicTree: This is a list of project stages or thematic units. Each item should have a 'name' (the title of the stage) and a 'description'.
   - bibliography
-  - classSchedule
+  - classSchedule: This is a list of all classes. Each class should have a 'date', the 'content' or topic to be covered, and the planned 'activity'.
 
   Please be as faithful as possible to the original text. Do not summarize or alter technical content.
-  If a field is not present in the document, leave the corresponding JSON field empty.
+  If a field is not present in the document, leave the corresponding JSON field empty or as an empty array for lists.
   The final output must be a clean and complete JSON, ready for automatic integration into an academic system.
 
   Lesson Plan: {{media url=lessonPlanDataUri}}`,
