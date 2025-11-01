@@ -90,52 +90,66 @@ export function StudentUploadDialog({
     }
   };
 
-  const parseCSV = (file: File): Promise<ParsedStudent[]> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            try {
-                const text = event.target?.result as string;
-                const rows = text.split(/\r?\n/).filter(row => row.trim() !== '');
+const parseCSV = (file: File): Promise<ParsedStudent[]> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        const rows = text.split(/\r?\n/).filter(row => row.trim() !== '');
 
-                if (rows.length < 2) {
-                    return reject(new Error('O arquivo CSV está vazio ou contém apenas o cabeçalho.'));
-                }
+        if (rows.length < 2) {
+          return reject(new Error('O arquivo CSV está vazio ou contém apenas o cabeçalho.'));
+        }
 
-                const header = rows.shift()!;
-                const delimiter = header.includes(';') ? ';' : ',';
+        const headerRow = rows.shift()!;
+        const delimiter = headerRow.includes(';') ? ';' : ',';
+        const headers = headerRow.split(delimiter).map(h => h.trim().toLowerCase().replace(/["']/g, ''));
 
-                const students = rows.map((row, index) => {
-                    const columns = row.split(delimiter).slice(0, 2);
-                    
-                    const name = (columns[0] || '').trim().replace(/["']/g, '');
-                    const email = (columns[1] || '').trim().replace(/["']/g, '');
-                    
-                    // Validate that name and email are present and email looks like an email
-                    if (name && email && emailRegex.test(email)) {
-                        return { name, email };
-                    }
-                    
-                    if (name && email && !emailRegex.test(email)) {
-                         console.warn(`Linha ${index + 2} ignorada: e-mail inválido.`, {name, email});
-                    } else if (!name || !email) {
-                        console.warn(`Linha ${index + 2} ignorada por dados ausentes.`, {name, email});
-                    }
-                    return null;
-                }).filter((s): s is ParsedStudent => s !== null);
+        const nameIndex = headers.findIndex(h => h === 'nome' || h === 'name');
+        const lastNameIndex = headers.findIndex(h => h === 'sobrenome' || h === 'last name');
+        const emailIndex = headers.findIndex(h => h.includes('email') || h.includes('e-mail'));
 
-                if (students.length === 0) {
-                    return reject(new Error('Nenhum aluno válido encontrado. Verifique se as duas primeiras colunas contêm nome e um e-mail válido.'));
-                }
+        if (nameIndex === -1) {
+            return reject(new Error("A coluna 'Nome' não foi encontrada no arquivo CSV."));
+        }
+        if (emailIndex === -1) {
+            return reject(new Error("A coluna 'E-mail' não foi encontrada no arquivo CSV."));
+        }
 
-                resolve(students);
-            } catch (error: any) {
-                reject(new Error(`Falha ao processar o CSV: ${error.message}`));
-            }
-        };
-        reader.onerror = () => reject(new Error('Falha ao ler o arquivo.'));
-        reader.readAsText(file, 'UTF-8');
-    });
+        const students = rows.map((row, index) => {
+          const columns = row.split(delimiter);
+          
+          const firstName = (columns[nameIndex] || '').trim().replace(/["']/g, '');
+          const lastName = lastNameIndex > -1 ? (columns[lastNameIndex] || '').trim().replace(/["']/g, '') : '';
+          const name = `${firstName} ${lastName}`.trim();
+          const email = (columns[emailIndex] || '').trim().replace(/["']/g, '');
+          
+          if (name && email && emailRegex.test(email)) {
+            return { name, email };
+          }
+          
+          if (name && email && !emailRegex.test(email)) {
+            console.warn(`Linha ${index + 2} ignorada: e-mail inválido.`, {name, email});
+          } else if (!name || !email) {
+            console.warn(`Linha ${index + 2} ignorada por dados ausentes.`, {name, email});
+          }
+
+          return null;
+        }).filter((s): s is ParsedStudent => s !== null);
+
+        if (students.length === 0) {
+          return reject(new Error('Nenhum aluno válido encontrado no arquivo. Verifique o conteúdo e o formato.'));
+        }
+
+        resolve(students);
+      } catch (error: any) {
+        reject(new Error(`Falha ao processar o CSV: ${error.message}`));
+      }
+    };
+    reader.onerror = () => reject(new Error('Falha ao ler o arquivo.'));
+    reader.readAsText(file, 'UTF-8');
+  });
 };
 
 const handleAIExtraction = () => {
@@ -266,7 +280,7 @@ const handleAIExtraction = () => {
             <TabsContent value="csv">
                 <div className="space-y-4 py-4">
                      <p className="text-sm text-muted-foreground">
-                        Envie um arquivo CSV. A primeira coluna deve ser o nome e a segunda o e-mail.
+                        Envie um arquivo CSV com as colunas "Nome", "Sobrenome" (opcional) e "E-mail".
                     </p>
                     <div 
                         className="flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary"
@@ -347,5 +361,3 @@ const handleAIExtraction = () => {
     </Dialog>
   );
 }
-
-    
