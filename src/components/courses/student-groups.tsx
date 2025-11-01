@@ -78,44 +78,105 @@ export function StudentGroups({
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [ungroupedStudents, setUngroupedStudents] = useState<string[]>([]);
 
+  const applyStudioTemplate = useCallback(async () => {
+    if (!user || !firestore) {
+      toast({ variant: 'destructive', title: 'Erro de autenticação' });
+      return;
+    }
+    if (classroomStudents.length === 0) {
+      // Don't apply if there are no students
+      return;
+    }
+
+    setIsSaving(true);
+
+    const newStructure = studioTemplate.map((item) => ({ ...item, id: uuidv4() }));
+    const batch = writeBatch(firestore);
+    const newLocalGrades: Record<string, Grade[]> = {};
+
+    for (const cs of classroomStudents) {
+      const newGrades = newStructure.map((item) => ({ ...item, score: 0 }));
+      newLocalGrades[cs.id] = newGrades;
+      const studentRef = doc(
+        firestore,
+        `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/classroomStudents/${cs.id}`
+      );
+      batch.update(studentRef, { grades: newGrades });
+    }
+
+    try {
+      await batch.commit();
+      setGradeStructure(newStructure.map(({ score, ...rest }) => rest));
+      setLocalGrades(newLocalGrades);
+      toast({
+        title: 'Template Aplicado!',
+        description: 'A estrutura de notas de estúdio foi aplicada a todos os alunos.',
+      });
+    } catch (error) {
+      console.error('Error applying template:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao Aplicar Template',
+        description: 'Não foi possível aplicar o template.',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [user, firestore, classroomId, courseId, classroomStudents, toast]);
+
   useEffect(() => {
-      const initialGrades: Record<string, Grade[]> = {};
-      let structure: Omit<Grade, 'score'>[] | null = null;
-      const allStudentIds = new Set<string>();
-      const groupedStudentIds = new Set<string>();
+    if (isLoading || classroomStudents.length === 0) return;
 
-      // Initialize grade structure and local grades
-      for (const cs of classroomStudents) {
-          allStudentIds.add(cs.id);
-          initialGrades[cs.id] = cs.grades || [];
-          if (!structure && cs.grades && cs.grades.length > 0) {
-              structure = cs.grades.map(({ score, ...rest }) => rest);
-          }
+    const initialGrades: Record<string, Grade[]> = {};
+    let structure: Omit<Grade, 'score'>[] | null = null;
+    const allStudentIds = new Set<string>();
+    const groupedStudentIds = new Set<string>();
+
+    let hasGrades = false;
+    for (const cs of classroomStudents) {
+      if (cs.grades && cs.grades.length > 0) {
+        hasGrades = true;
+        break;
       }
+    }
 
-      setLocalGrades(initialGrades);
-      if(structure) {
-          setGradeStructure(structure);
-      }
+    if (!hasGrades) {
+      applyStudioTemplate();
+      return;
+    }
+    
+    // Initialize grade structure and local grades
+    for (const cs of classroomStudents) {
+        allStudentIds.add(cs.id);
+        initialGrades[cs.id] = cs.grades || [];
+        if (!structure && cs.grades && cs.grades.length > 0) {
+            structure = cs.grades.map(({ score, ...rest }) => rest);
+        }
+    }
 
-      // Initialize groups
-      const groups = classroomStudents.reduce((acc, cs) => {
-          if (cs.groupId) {
-              if (!acc[cs.groupId]) {
-                  acc[cs.groupId] = [];
-              }
-              acc[cs.groupId].push(cs.id);
-              groupedStudentIds.add(cs.id);
-          }
-          return acc;
-      }, {} as Record<string, string[]>);
-      setStudentGroups(Object.values(groups));
+    setLocalGrades(initialGrades);
+    if(structure) {
+        setGradeStructure(structure);
+    }
 
-      // Initialize ungrouped students
-      const ungrouped = Array.from(allStudentIds).filter(id => !groupedStudentIds.has(id));
-      setUngroupedStudents(ungrouped);
+    // Initialize groups
+    const groups = classroomStudents.reduce((acc, cs) => {
+        if (cs.groupId) {
+            if (!acc[cs.groupId]) {
+                acc[cs.groupId] = [];
+            }
+            acc[cs.groupId].push(cs.id);
+            groupedStudentIds.add(cs.id);
+        }
+        return acc;
+    }, {} as Record<string, string[]>);
+    setStudentGroups(Object.values(groups));
 
-  }, [classroomStudents]);
+    // Initialize ungrouped students
+    const ungrouped = Array.from(allStudentIds).filter(id => !groupedStudentIds.has(id));
+    setUngroupedStudents(ungrouped);
+
+  }, [classroomStudents, isLoading, applyStudioTemplate]);
 
 
   const debouncedSaveChanges = useCallback(
@@ -145,10 +206,13 @@ export function StudentGroups({
   
   useEffect(() => {
     if (Object.keys(localGrades).length > 0) {
-        debouncedSaveChanges(localGrades);
+        const hasGrades = classroomStudents.some(cs => cs.grades && cs.grades.length > 0);
+        if (hasGrades) { // Only save if grades existed before
+             debouncedSaveChanges(localGrades);
+        }
     }
     return () => debouncedSaveChanges.cancel();
-  }, [localGrades, debouncedSaveChanges]);
+  }, [localGrades, classroomStudents, debouncedSaveChanges]);
 
   const handleGradeChange = (studentOrGroupId: string, gradeId: string, newScore: number, isGroup: boolean) => {
       setLocalGrades(prev => {
@@ -166,38 +230,6 @@ export function StudentGroups({
 
           return newGrades;
       });
-  };
-
-  const applyStudioTemplate = async () => {
-     if (!user || !firestore) {
-        toast({ variant: "destructive", title: "Erro de autenticação" });
-        return;
-    }
-    
-    setIsSaving(true);
-
-    const newStructure = studioTemplate.map(item => ({ ...item, id: uuidv4() }));
-    const batch = writeBatch(firestore);
-    const newLocalGrades: Record<string, Grade[]> = {};
-
-    for (const cs of classroomStudents) {
-        const newGrades = newStructure.map(item => ({...item, score: 0}));
-        newLocalGrades[cs.id] = newGrades;
-        const studentRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/classroomStudents/${cs.id}`);
-        batch.update(studentRef, { grades: newGrades });
-    }
-    
-    try {
-        await batch.commit();
-        setGradeStructure(newStructure.map(({ score, ...rest }) => rest));
-        setLocalGrades(newLocalGrades);
-        toast({ title: "Template Aplicado!", description: "A estrutura de notas de estúdio foi aplicada a todos os alunos." });
-    } catch(error) {
-        console.error("Error applying template:", error);
-        toast({ variant: "destructive", title: "Erro ao Aplicar Template", description: "Não foi possível aplicar o template." });
-    } finally {
-        setIsSaving(false);
-    }
   };
 
     const handleCreateGroup = () => {
