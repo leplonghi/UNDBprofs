@@ -9,7 +9,7 @@ export default function AppLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
       <div className="flex min-h-screen w-full flex-col">
         <Header />
         <main className="flex-1 p-4 pb-20 sm:p-6">{children}</main>
