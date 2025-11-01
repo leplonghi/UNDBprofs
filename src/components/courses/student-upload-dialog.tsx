@@ -72,7 +72,7 @@ export function StudentUploadDialog({
     if (!file) return;
 
     if (currentTab === 'csv') {
-        if (file.type === 'text/csv') {
+        if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
             setSelectedFile(file);
         } else {
             toast({
@@ -94,7 +94,10 @@ export function StudentUploadDialog({
         try {
             const text = event.target?.result as string;
             const rows = text.split(/\r?\n/).filter(row => row.trim() !== '');
-            const header = rows.shift()?.split(',').map(h => h.trim().toLowerCase());
+            if (rows.length === 0) {
+                return reject(new Error('O arquivo CSV está vazio.'));
+            }
+            const header = rows.shift()?.split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
 
             if (!header) {
                 return reject(new Error('O arquivo CSV está vazio ou o cabeçalho não foi encontrado.'));
@@ -110,8 +113,8 @@ export function StudentUploadDialog({
             const students = rows.map(row => {
                 const columns = row.split(',');
                 return {
-                    name: columns[nameIndex]?.trim(),
-                    email: columns[emailIndex]?.trim(),
+                    name: columns[nameIndex]?.trim().replace(/"/g, ''),
+                    email: columns[emailIndex]?.trim().replace(/"/g, ''),
                 };
             }).filter(s => s.name && s.email);
 
