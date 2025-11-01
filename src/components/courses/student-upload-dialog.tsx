@@ -91,7 +91,7 @@ export function StudentUploadDialog({
     }
   };
 
-  const parseCSV = (file: File): Promise<ParsedStudent[]> => {
+const parseCSV = (file: File): Promise<ParsedStudent[]> => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (event) => {
@@ -116,7 +116,7 @@ export function StudentUploadDialog({
                     return reject(new Error("A coluna 'E-mail' é obrigatória no arquivo CSV."));
                 }
                  if (nameIndex === -1 && lastNameIndex === -1) {
-                    return reject(new Error("Pelo menos uma coluna ('Nome' ou 'Sobrenome') é obrigatória."));
+                    return reject(new Error("Pelo menos uma coluna de nome ('Nome', 'Sobrenome') é obrigatória."));
                 }
                 
                 const students = rows.map((row, index) => {
@@ -222,6 +222,7 @@ const handleAIExtraction = () => {
               id: classroomStudentId,
               classroomId: classroomId,
               studentId: studentId,
+              grades: [],
             };
             setDocumentNonBlocking(classroomStudentRef, classroomStudentPayload, { merge: false });
       }

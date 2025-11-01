@@ -190,6 +190,19 @@
         "studentId": {
           "type": "string",
           "description": "Reference to Student. (Relationship: Student 1:N ClassroomStudent)"
+        },
+        "grades": {
+          "type": "array",
+          "description": "An array of grades for the student in this classroom.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "description": { "type": "string" },
+              "score": { "type": "number" }
+            },
+            "required": ["id", "description", "score"]
+          }
         }
       },
       "required": [

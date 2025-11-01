@@ -33,15 +33,27 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { Button } from '../ui/button';
-import { Loader2, Trash2 } from 'lucide-react';
+import { Loader2, Trash2, Pencil } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { StudentGradesDialog } from './student-grades-dialog';
 
-function StudentRow({ studentId, classroomStudentId, courseId, classroomId }: { studentId: string; classroomStudentId: string; courseId: string; classroomId: string; }) {
+function StudentRow({ 
+    studentId, 
+    classroomStudent, 
+    courseId, 
+    classroomId 
+}: { 
+    studentId: string; 
+    classroomStudent: ClassroomStudent,
+    courseId: string; 
+    classroomId: string; 
+}) {
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [isGradesDialogOpen, setIsGradesDialogOpen] = useState(false);
   
   const studentDocRef = useMemoFirebase(() => {
     if (!firestore || !studentId) return null;
@@ -54,7 +66,7 @@ function StudentRow({ studentId, classroomStudentId, courseId, classroomId }: { 
     if (!user || !firestore || !student) return;
 
     setIsDeleting(true);
-    const classroomStudentRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/classroomStudents/${classroomStudentId}`);
+    const classroomStudentRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/classroomStudents/${classroomStudent.id}`);
     
     try {
         deleteDocumentNonBlocking(classroomStudentRef);
@@ -95,9 +107,21 @@ function StudentRow({ studentId, classroomStudentId, courseId, classroomId }: { 
       </TableRow>
     );
   }
+  
+  const average = classroomStudent.grades && classroomStudent.grades.length > 0 
+    ? (classroomStudent.grades.reduce((acc, grade) => acc + grade.score, 0) / classroomStudent.grades.length).toFixed(1)
+    : 'N/A';
 
   return (
     <>
+    <StudentGradesDialog
+        isOpen={isGradesDialogOpen}
+        onOpenChange={setIsGradesDialogOpen}
+        student={student}
+        classroomStudent={classroomStudent}
+        courseId={courseId}
+        classroomId={classroomId}
+    />
     <TableRow>
       <TableCell>
         <div className="flex items-center gap-3">
@@ -109,7 +133,11 @@ function StudentRow({ studentId, classroomStudentId, courseId, classroomId }: { 
       </TableCell>
       <TableCell className="text-muted-foreground">{student.email}</TableCell>
       <TableCell className="text-muted-foreground">{student.registrationId || 'N/A'}</TableCell>
+       <TableCell className="font-medium">{average}</TableCell>
       <TableCell className="text-right">
+        <Button variant="ghost" size="icon" onClick={() => setIsGradesDialogOpen(true)}>
+            <Pencil className="h-4 w-4" />
+        </Button>
         <Button variant="ghost" size="icon" onClick={() => setIsAlertOpen(true)} disabled={isDeleting}>
             <Trash2 className="h-4 w-4 text-destructive" />
         </Button>
@@ -171,21 +199,22 @@ export function ClassroomStudentsTable({
                 <TableHead>Nome</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Matrícula</TableHead>
-                <TableHead><span className='sr-only'>Ações</span></TableHead>
+                <TableHead>Média</TableHead>
+                <TableHead className='w-[100px] text-right'>Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell colSpan={4}>
+                    <TableCell colSpan={5}>
                       <Skeleton className="h-8 w-full" />
                     </TableCell>
                   </TableRow>
                 ))
               ) : !classroomStudents || classroomStudents.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center">
+                  <TableCell colSpan={5} className="h-24 text-center">
                     Nenhum aluno encontrado nesta turma.
                   </TableCell>
                 </TableRow>
@@ -194,7 +223,7 @@ export function ClassroomStudentsTable({
                   <StudentRow 
                     key={cs.id} 
                     studentId={cs.studentId} 
-                    classroomStudentId={cs.id}
+                    classroomStudent={cs}
                     courseId={courseId}
                     classroomId={classroomId}
                   />

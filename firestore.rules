@@ -60,6 +60,17 @@ service cloud.firestore {
     function isExistingOwner(userId) {
       return isOwner(userId) && resource != null;
     }
+    
+    /**
+     * @description Validates the structure and types of a 'grade' object.
+     * @param {map} grade The grade object to validate.
+     * @return {boolean} True if the grade is valid, false otherwise.
+     */
+    function isValidGrade(grade) {
+      return grade.id is string &&
+             grade.description is string &&
+             grade.score is number;
+    }
 
     /**
      * @description
@@ -161,7 +172,13 @@ service cloud.firestore {
         allow get: if isOwner(professorId);
         allow list: if isOwner(professorId);
         allow create: if isOwner(professorId);
-        allow update: if isExistingOwner(professorId);
+        allow update: if isExistingOwner(professorId) && 
+                        (request.resource.data.keys().hasAll(['id', 'classroomId', 'studentId', 'grades'])) &&
+                        request.resource.data.id == resource.data.id &&
+                        request.resource.data.classroomId == resource.data.classroomId &&
+                        request.resource.data.studentId == resource.data.studentId &&
+                        (request.resource.data.grades is list && request.resource.data.grades.size() == 0 ||
+                        request.resource.data.grades.forall(grade -> isValidGrade(grade)));
         allow delete: if isExistingOwner(professorId);
     }
 
@@ -211,5 +228,3 @@ service cloud.firestore {
     }
   }
 }
-
-    

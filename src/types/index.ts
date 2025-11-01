@@ -1,3 +1,9 @@
+export interface Grade {
+    id: string;
+    description: string;
+    score: number;
+}
+
 export interface Course {
   id: string;
   professorId: string;
@@ -30,6 +36,7 @@ export interface ClassroomStudent {
     id: string;
     classroomId: string;
     studentId: string;
+    grades?: Grade[];
 }
 
 export interface ExtractedStudent {
