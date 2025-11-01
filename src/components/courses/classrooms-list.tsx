@@ -22,19 +22,28 @@ interface ClassroomsListProps {
   filter: 'active' | 'past';
 }
 
+/**
+ * Converte uma string de semestre (ex: "2025.2") em um valor numérico para comparação.
+ * Ano tem peso maior que o semestre. Ex: 2025.2 (20252) > 2025.1 (20251) > 2024.2 (20242).
+ * Retorna 0 se o formato for inválido.
+ */
 function getSemesterValue(semesterString: string): number {
   if (!semesterString || !/^\d{4}\.[12]$/.test(semesterString)) {
-    return 0; // Trata como muito antigo se o formato for inválido
+    return 0; // Formato inválido é tratado como muito antigo.
   }
   const [year, semester] = semesterString.split('.').map(Number);
   return year * 10 + semester;
 }
 
+/**
+ * Calcula o valor numérico do semestre atual com base na data do sistema.
+ * Semestre 1: Janeiro a Julho (meses 0-6).
+ * Semestre 2: Agosto a Dezembro (meses 7-11).
+ */
 function getCurrentSemesterValue(): number {
     const today = new Date();
     const year = today.getFullYear();
     const month = today.getMonth(); // 0-indexed (0 for January, 11 for December)
-    // Semestre 1: Jan-Jul (meses 0-6). Semestre 2: Ago-Dez (meses 7-11)
     const semester = month <= 6 ? 1 : 2; 
     return year * 10 + semester;
 }
@@ -79,12 +88,14 @@ export function ClassroomsList({ filter }: ClassroomsListProps) {
         const currentSemesterValue = getCurrentSemesterValue();
         const filteredClassrooms = allClassrooms.filter(c => {
           const classroomSemesterValue = getSemesterValue(c.semester);
+          if (classroomSemesterValue === 0) return false; // Ignora turmas com semestre inválido
+
            if (filter === 'active') {
-            // "Ativas" são as do semestre atual.
-            return classroomSemesterValue === currentSemesterValue;
+            // "Ativas" são as turmas do semestre atual ou de semestres futuros.
+            return classroomSemesterValue >= currentSemesterValue;
           } else { // filter === 'past'
-            // "Anteriores" são todas as turmas de semestres passados.
-            return classroomSemesterValue > 0 && classroomSemesterValue < currentSemesterValue;
+            // "Anteriores" são apenas as turmas de semestres que já passaram.
+            return classroomSemesterValue < currentSemesterValue;
           }
         });
 
