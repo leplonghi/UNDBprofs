@@ -2,14 +2,13 @@
 
 import React, { useState } from 'react';
 import {
-  useCollection,
   useDoc,
   useFirestore,
   useUser,
   useMemoFirebase,
   deleteDocumentNonBlocking,
 } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import type { ClassroomStudent, Student } from '@/types';
 import {
   Table,
@@ -33,28 +32,26 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { Button } from '../ui/button';
-import { Loader2, Trash2, Pencil } from 'lucide-react';
+import { Loader2, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { StudentGradesDialog } from './student-grades-dialog';
 
-function StudentRow({ 
-    studentId, 
-    classroomStudent, 
-    courseId, 
-    classroomId 
-}: { 
-    studentId: string; 
-    classroomStudent: ClassroomStudent,
-    courseId: string; 
-    classroomId: string; 
+function StudentRow({
+  studentId,
+  classroomStudent,
+  courseId,
+  classroomId,
+}: {
+  studentId: string;
+  classroomStudent: ClassroomStudent;
+  courseId: string;
+  classroomId: string;
 }) {
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
-  const [isGradesDialogOpen, setIsGradesDialogOpen] = useState(false);
-  
+
   const studentDocRef = useMemoFirebase(() => {
     if (!firestore || !studentId) return null;
     return doc(firestore, `students/${studentId}`);
@@ -66,27 +63,29 @@ function StudentRow({
     if (!user || !firestore || !student) return;
 
     setIsDeleting(true);
-    const classroomStudentRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/classroomStudents/${classroomStudent.id}`);
-    
+    const classroomStudentRef = doc(
+      firestore,
+      `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/classroomStudents/${classroomStudent.id}`
+    );
+
     try {
-        deleteDocumentNonBlocking(classroomStudentRef);
-        toast({
-            title: "Aluno Removido",
-            description: `${student.name} foi removido da turma.`
-        });
+      deleteDocumentNonBlocking(classroomStudentRef);
+      toast({
+        title: "Aluno Removido",
+        description: `${student.name} foi removido da turma.`,
+      });
     } catch (error) {
-        console.error("Error deleting student from classroom: ", error);
-        toast({
-            variant: "destructive",
-            title: "Erro ao Remover",
-            description: "Não foi possível remover o aluno. Tente novamente.",
-        });
+      console.error("Error deleting student from classroom: ", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao Remover",
+        description: "Não foi possível remover o aluno. Tente novamente.",
+      });
     } finally {
-        setIsDeleting(false);
-        setIsAlertOpen(false);
+      setIsDeleting(false);
+      setIsAlertOpen(false);
     }
   };
-
 
   if (isLoading) {
     return (
@@ -107,53 +106,61 @@ function StudentRow({
       </TableRow>
     );
   }
-  
-  const average = classroomStudent.grades && classroomStudent.grades.length > 0 
-    ? (classroomStudent.grades.reduce((acc, grade) => acc + grade.score, 0) / classroomStudent.grades.length).toFixed(1)
-    : 'N/A';
+
+  const average =
+    classroomStudent.grades && classroomStudent.grades.length > 0
+      ? (
+          classroomStudent.grades.reduce((acc, grade) => acc + grade.score, 0) /
+          classroomStudent.grades.length
+        ).toFixed(1)
+      : 'N/A';
 
   return (
     <>
-    <StudentGradesDialog
-        isOpen={isGradesDialogOpen}
-        onOpenChange={setIsGradesDialogOpen}
-        student={student}
-        classroomStudent={classroomStudent}
-        courseId={courseId}
-        classroomId={classroomId}
-    />
-    <TableRow>
-      <TableCell>
-        <div className="flex items-center gap-3">
-          <Avatar className="h-8 w-8">
-             <AvatarFallback>{student.name ? student.name.charAt(0) : '?'}</AvatarFallback>
-          </Avatar>
-          <span className="font-medium">{student.name}</span>
-        </div>
-      </TableCell>
-      <TableCell className="text-muted-foreground">{student.email}</TableCell>
-      <TableCell className="text-muted-foreground">{student.registrationId || 'N/A'}</TableCell>
-       <TableCell className="font-medium">{average}</TableCell>
-      <TableCell className="text-right">
-        <Button variant="ghost" size="icon" onClick={() => setIsGradesDialogOpen(true)}>
-            <Pencil className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon" onClick={() => setIsAlertOpen(true)} disabled={isDeleting}>
+      <TableRow>
+        <TableCell>
+          <div className="flex items-center gap-3">
+            <Avatar className="h-8 w-8">
+              <AvatarFallback>
+                {student.name ? student.name.charAt(0) : '?'}
+              </AvatarFallback>
+            </Avatar>
+            <span className="font-medium">{student.name}</span>
+          </div>
+        </TableCell>
+        <TableCell className="text-muted-foreground">{student.email}</TableCell>
+        <TableCell className="text-muted-foreground">
+          {student.registrationId || 'N/A'}
+        </TableCell>
+        <TableCell className="font-medium">{average}</TableCell>
+        <TableCell className="text-right">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsAlertOpen(true)}
+            disabled={isDeleting}
+          >
             <Trash2 className="h-4 w-4 text-destructive" />
-        </Button>
-      </TableCell>
-    </TableRow>
-    <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+          </Button>
+        </TableCell>
+      </TableRow>
+      <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta ação removerá permanentemente o aluno <span className='font-bold'>"{student.name}"</span> desta turma. Os dados do aluno não serão excluídos do sistema.
+              Esta ação removerá permanentemente o aluno{' '}
+              <span className="font-bold">"{student.name}"</span> desta turma. Os
+              dados do aluno não serão excluídos do sistema.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-destructive hover:bg-destructive/90"
+            >
               {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Excluir
             </AlertDialogAction>
@@ -167,25 +174,14 @@ function StudentRow({
 export function ClassroomStudentsTable({
   courseId,
   classroomId,
+  classroomStudents,
+  isLoading,
 }: {
   courseId: string;
   classroomId: string;
+  classroomStudents: ClassroomStudent[];
+  isLoading: boolean;
 }) {
-  const { user } = useUser();
-  const firestore = useFirestore();
-
-  const classroomStudentsQuery = useMemoFirebase(() => {
-    if (!user || !firestore) return null;
-    return collection(
-      firestore,
-      `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/classroomStudents`
-    );
-  }, [user, firestore, courseId, classroomId]);
-
-  const { data: classroomStudents, isLoading } = useCollection<ClassroomStudent>(
-    classroomStudentsQuery
-  );
-
   return (
     <Card>
       <CardHeader>
@@ -200,7 +196,7 @@ export function ClassroomStudentsTable({
                 <TableHead>Email</TableHead>
                 <TableHead>Matrícula</TableHead>
                 <TableHead>Média</TableHead>
-                <TableHead className='w-[100px] text-right'>Ações</TableHead>
+                <TableHead className="w-[100px] text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -220,9 +216,9 @@ export function ClassroomStudentsTable({
                 </TableRow>
               ) : (
                 classroomStudents.map((cs) => (
-                  <StudentRow 
-                    key={cs.id} 
-                    studentId={cs.studentId} 
+                  <StudentRow
+                    key={cs.id}
+                    studentId={cs.studentId}
                     classroomStudent={cs}
                     courseId={courseId}
                     classroomId={classroomId}
