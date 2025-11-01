@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useTransition, useEffect } from 'react';
+import React, { useState, useTransition } from 'react';
 import {
   Card,
   CardContent,
@@ -23,7 +23,6 @@ import type { Activity, ClassType } from '@/types';
 import { Loader2 } from 'lucide-react';
 import { useFirestore, useUser, updateDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { v4 as uuidv4 } from 'uuid';
 import {
   Table,
   TableBody,
@@ -34,6 +33,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '../ui/badge';
 import { Switch } from '../ui/switch';
+import { createActivitiesFromPreset, integraPreset, modularPreset } from '@/lib/presets';
 
 interface ActivitySettingsProps {
   courseId: string;
@@ -41,21 +41,6 @@ interface ActivitySettingsProps {
   activities: Activity[];
   classType: ClassType;
 }
-
-const integraPreset: Omit<Activity, 'id' | 'order' | 'active'>[] = [
-  { name: 'Análise+Benchmark', maxScore: 2, group: 'N1' },
-  { name: 'Solução Preliminar', maxScore: 2, group: 'N1' },
-  { name: 'Entrega N1', maxScore: 6, group: 'N1' },
-  { name: 'Checks', maxScore: 1, group: 'N2' },
-  { name: 'Caderno Técnico', maxScore: 3, group: 'N2' },
-  { name: 'Entrega N2', maxScore: 6, group: 'N2' },
-];
-
-const modularPreset: Omit<Activity, 'id' | 'order' | 'active'>[] = [
-  { name: 'ST1', maxScore: 10, group: 'ST1' },
-  { name: 'Desafio 4.0 ou Case', maxScore: 10, group: 'Desafio' },
-  { name: 'ST2', maxScore: 10, group: 'ST2' },
-];
 
 export function ActivitySettings({
   courseId,
@@ -73,14 +58,7 @@ export function ActivitySettings({
     if (!user || !firestore) return;
 
     startTransition(() => {
-      const preset =
-        presetType === 'Integradora' ? integraPreset : modularPreset;
-      const newActivities: Activity[] = preset.map((item, index) => ({
-        ...item,
-        id: uuidv4(),
-        order: index,
-        active: true,
-      }));
+      const newActivities = createActivitiesFromPreset(presetType);
 
       const classroomRef = doc(
         firestore,
@@ -96,25 +74,13 @@ export function ActivitySettings({
       setShowConfirm(null);
     });
   };
-  
-  useEffect(() => {
-    if (activities.length === 0 && classType) {
-        applyPreset(classType);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activities, classType]);
-
 
   const handleApplyPresetClick = (presetType: ClassType) => {
     if (activities && activities.length > 0) {
-      toast({
-        variant: 'destructive',
-        title: 'Preset já aplicado',
-        description: 'Um preset de atividades já existe para esta turma. Para reaplicar, limpe as atividades atuais.',
-      });
-      return;
+        setShowConfirm(presetType);
+    } else {
+        applyPreset(presetType);
     }
-    setShowConfirm(presetType);
   };
 
 
@@ -152,10 +118,21 @@ export function ActivitySettings({
       <CardHeader>
         <CardTitle>Configuração das Atividades Avaliativas</CardTitle>
         <CardDescription>
-          A estrutura de avaliação da sua turma. O preset é aplicado automaticamente com base no tipo da turma.
+          Gerencie a estrutura de avaliação da sua turma. Use os presets para começar rapidamente.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className='space-y-4'>
+        <div className='flex items-center gap-2'>
+            <Button onClick={() => handleApplyPresetClick('Integradora')} disabled={isPending}>
+                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Aplicar Preset Integradora
+            </Button>
+            <Button onClick={() => handleApplyPresetClick('Modular')} disabled={isPending} variant="secondary">
+                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Aplicar Preset Modular
+            </Button>
+        </div>
+
         {activities && activities.length > 0 ? (
           <div className="rounded-md border">
             <Table>
@@ -187,11 +164,10 @@ export function ActivitySettings({
         ) : (
           <div className="flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed p-8 text-center">
             <h3 className="font-semibold">
-              Aplicando preset de atividades...
+              Nenhuma atividade avaliativa definida.
             </h3>
-            <Loader2 className="h-6 w-6 animate-spin" />
             <p className="text-sm text-muted-foreground">
-              Aguarde enquanto a estrutura de avaliação para a turma do tipo "{classType}" é criada.
+              Aplique um dos presets acima para gerar a estrutura de avaliação para esta turma.
             </p>
           </div>
         )}
@@ -203,10 +179,9 @@ export function ActivitySettings({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar aplicação do preset?</AlertDialogTitle>
+            <AlertDialogTitle>Reaplicar o preset?</AlertDialogTitle>
             <AlertDialogDescription>
-              A ação a seguir criará o seguinte conjunto de atividades para
-              esta turma. Esta ação não pode ser desfeita facilmente.
+              Esta ação irá sobrescrever a estrutura de atividades atual. As notas já lançadas podem ser perdidas. Deseja continuar?
             </AlertDialogDescription>
           </AlertDialogHeader>
           {showConfirm && renderPresetSummary(showConfirm)}
@@ -217,7 +192,7 @@ export function ActivitySettings({
               disabled={isPending}
             >
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Confirmar e Aplicar
+              Confirmar e Reaplicar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

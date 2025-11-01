@@ -21,6 +21,7 @@ import { v4 as uuidv4 } from 'uuid';
 import type { Course, Classroom, ClassType } from '@/types';
 import { ThematicTreeEditor } from './ThematicTreeEditor';
 import { ClassScheduleEditor } from './ClassScheduleEditor';
+import { createActivitiesFromPreset } from '@/lib/presets';
 
 const formSchema = z.object({
   courseName: z.string().min(1, 'Nome do curso é obrigatório.'),
@@ -132,6 +133,8 @@ export function ImportForm() {
         thematicTree: values.thematicTree || [],
         bibliography: values.bibliography || '',
     };
+    
+    const newActivities = createActivitiesFromPreset(values.classType);
 
     const classroomData: Classroom = {
         id: classroomId,
@@ -141,6 +144,7 @@ export function ImportForm() {
         workload: values.workload,
         classType: values.classType,
         classSchedule: values.classSchedule ?? [],
+        activities: newActivities,
     };
     
     try {
