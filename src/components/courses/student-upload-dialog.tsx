@@ -72,7 +72,7 @@ export function StudentUploadDialog({
     if (!file) return;
 
     if (currentTab === 'csv') {
-        if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
+        if (file.type === 'text/csv' || file.name.endsWith('.csv') || file.type === 'application/vnd.ms-excel') {
             setSelectedFile(file);
         } else {
             toast({
@@ -89,44 +89,56 @@ export function StudentUploadDialog({
 
   const parseCSV = (file: File): Promise<ParsedStudent[]> => {
     return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = event => {
-            try {
-                const text = event.target?.result as string;
-                const rows = text.split(/\r?\n/).filter(row => row.trim() !== '');
-                if (rows.length === 0) {
-                    return reject(new Error('O arquivo CSV está vazio.'));
-                }
-                const header = rows.shift()?.split(',').map(h => h.trim().toLowerCase().replace(/["']/g, ''));
-
-                if (!header || header.length === 0) {
-                    return reject(new Error('O arquivo CSV está vazio ou não contém um cabeçalho válido.'));
-                }
-
-                const nameIndex = header.findIndex(h => h === 'name' || h === 'nome');
-                const emailIndex = header.findIndex(h => h === 'email' || h === 'e-mail');
-
-                if (nameIndex === -1 || emailIndex === -1) {
-                    return reject(new Error("O CSV deve conter colunas para nome ('name' ou 'nome') e email ('email' ou 'e-mail')."));
-                }
-
-                const students = rows.map(row => {
-                    const columns = row.split(',');
-                    return {
-                        name: columns[nameIndex]?.trim().replace(/["']/g, '') || '',
-                        email: columns[emailIndex]?.trim().replace(/["']/g, '') || '',
-                    };
-                }).filter(s => s.name && s.email);
-
-                resolve(students);
-            } catch (error: any) {
-                reject(new Error(`Falha ao processar o CSV: ${error.message}`));
-            }
-        };
-        reader.onerror = () => reject(new Error('Falha ao ler o arquivo.'));
-        reader.readAsText(file, 'UTF-8');
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const text = event.target?.result as string;
+          const rows = text.split(/\r?\n/).filter((row) => row.trim() !== '');
+  
+          if (rows.length < 2) {
+            return reject(new Error('O arquivo CSV está vazio ou contém apenas o cabeçalho.'));
+          }
+  
+          const headerRow = rows.shift()!;
+          
+          // Auto-detect delimiter
+          const delimiter = headerRow.includes(';') ? ';' : ',';
+  
+          const cleanHeader = (h: string) => h.trim().toLowerCase().replace(/["']/g, '');
+          const header = headerRow.split(delimiter).map(cleanHeader);
+  
+          if (!header || header.length === 0) {
+            return reject(new Error('O cabeçalho do CSV é inválido.'));
+          }
+  
+          const nameIndex = header.findIndex((h) => h === 'name' || h === 'nome');
+          const emailIndex = header.findIndex((h) => h === 'email' || h === 'e-mail');
+  
+          if (nameIndex === -1 || emailIndex === -1) {
+            return reject(new Error("O CSV deve conter colunas para nome ('name' ou 'nome') e email ('email' ou 'e-mail')."));
+          }
+  
+          const students = rows
+            .map((row) => {
+              const columns = row.split(delimiter);
+              const name = (columns[nameIndex] || '').trim().replace(/["']/g, '');
+              const email = (columns[emailIndex] || '').trim().replace(/["']/g, '');
+              if (name && email) {
+                return { name, email };
+              }
+              return null;
+            })
+            .filter((s): s is ParsedStudent => s !== null);
+  
+          resolve(students);
+        } catch (error: any) {
+          reject(new Error(`Falha ao processar o CSV: ${error.message}`));
+        }
+      };
+      reader.onerror = () => reject(new Error('Falha ao ler o arquivo.'));
+      reader.readAsText(file, 'UTF-8');
     });
-};
+  };
 
 const handleAIExtraction = () => {
     if (!selectedFile) {
@@ -180,9 +192,9 @@ const handleAIExtraction = () => {
             };
             
             // Create the student document first.
-            await setDocumentNonBlocking(studentRef, studentPayload, { merge: false });
+            setDocumentNonBlocking(studentRef, studentPayload, { merge: false });
 
-            // Then create the association in a batch (or individually if preferred)
+            // Then create the association 
             const classroomStudentId = uuidv4();
             const classroomStudentRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/classroomStudents/${classroomStudentId}`);
             const classroomStudentPayload: ClassroomStudent = {
@@ -270,7 +282,7 @@ const handleAIExtraction = () => {
                     <Input
                         ref={fileInputRef}
                         type="file"
-                        accept=".csv"
+                        accept=".csv,application/vnd.ms-excel"
                         className="hidden"
                         onChange={handleFileChange}
                         disabled={isProcessing}
