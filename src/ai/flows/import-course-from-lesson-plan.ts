@@ -65,62 +65,23 @@ const prompt = ai.definePrompt({
   input: {schema: ImportCourseFromLessonPlanInputSchema},
   output: {schema: ImportCourseFromLessonPlanOutputSchema},
   prompt: `
-  OBJETIVO
+  You are an expert in academic document analysis.
+  Your task is to extract key information from the provided lesson plan PDF and structure it into a JSON format.
 
-A leitura deve identificar automaticamente:
+  Identify and extract the following fields:
+  - General course and professor information.
+  - The structure of Learning Units (Unidades de Aprendizagem - UAs).
+  - The class schedule with dates and topics.
+  - Evaluation activities and their scores.
+  - Basic and complementary bibliography.
+  - Administrative data (total hours, course, semester, etc.).
 
-Dados gerais da disciplina e do professor.
+  Please be as faithful as possible to the original text. Do not summarize or alter technical content.
+  Format dates as YYYY-MM-DD.
+  If a field is not present in the document, leave the corresponding JSON field empty.
+  The final output must be a clean and complete JSON, ready for automatic integration into an academic system.
 
-Estrutura das Unidades de Aprendizagem (UAs).
-
-Cronograma de aulas com datas e contextos.
-
-Atividades avaliativas e respectivas pontuações.
-
-Bibliografia básica e complementar.
-
-Dados administrativos (CH, curso, semestre, coordenação, aprovação, etc.).
-
-2. ESTRUTURA DE SAÍDA ESPERADA
-
-Organize os dados encontrados em uma estrutura JSON.
-
-3. REGRAS DE INTERPRETAÇÃO
-
-Datas abreviadas (ex: 04/08/25) -> converter para formato completo: 2025-08-04.
-
-Siglas de avaliação:
-
-ST = Somativa Teórica (Apresentação ou Entrega Final)
-
-FT = Formativa Técnica (Relatórios, pranchas, processos)
-
-AV QUALIS = Avaliação Parcial Intermediária
-
-N1 e N2:
-
-N1 corresponde à primeira metade do semestre.
-
-N2 à segunda metade, geralmente culminando na entrega final.
-
-Feriados: manter a data e descrição exatamente como no documento.
-
-Códigos: se não constarem, deixar o campo vazio.
-
-CH Total: deve ser o somatório das cargas horárias das UAs.
-
-Manter acentuação e formatação original.
-
-Excluir legendas repetidas, mas manter subtítulos que indiquem mudança de seção.
-
-Não resumir nem alterar textos técnicos.
-
-✅ Instrução final:
-
-Extraia tudo o que for relevante do plano de ensino mantendo fidelidade total aos textos originais, e organize conforme a estrutura.
-Cada campo deve estar completo, inteligível e coerente, pronto para integração automática no sistema acadêmico.
-
-Lesson Plan: {{media url=lessonPlanDataUri}}`,
+  Lesson Plan: {{media url=lessonPlanDataUri}}`,
 });
 
 const importCourseFromLessonPlanFlow = ai.defineFlow(
