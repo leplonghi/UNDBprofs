@@ -1,4 +1,5 @@
 'use client';
+import React from 'react';
 import {
   Card,
   CardContent,
@@ -121,7 +122,7 @@ export default function CourseDetailPage({
 }) {
   const { user } = useUser();
   const firestore = useFirestore();
-  const { id } = params;
+  const { id } = React.use(params);
 
   const courseDocRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
