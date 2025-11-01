@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { collection, getDocs, query } from 'firebase/firestore';
+import { collection, getDocs, query, collectionGroup, where } from 'firebase/firestore';
 import { useUser, useFirestore } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -31,11 +31,12 @@ function getSemesterValue(semesterString: string): number {
 }
 
 function getCurrentSemesterValue(): number {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth();
-    const semester = month <= 6 ? 1 : 2; 
-    return year * 10 + semester;
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth(); // 0-11
+  // Semestre 1: Jan-Jul (0-6), Semestre 2: Ago-Dez (7-11)
+  const semester = month <= 6 ? 1 : 2;
+  return year * 10 + semester;
 }
 
 
@@ -46,35 +47,43 @@ export function ClassroomsList({ filter }: ClassroomsListProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchClassrooms() {
+    async function fetchClassroomsAndCourses() {
       if (!user || !firestore) return;
 
       setIsLoading(true);
       
       try {
+        // 1. Fetch all courses for the professor to create a map
         const coursesRef = collection(firestore, `professors/${user.uid}/courses`);
         const coursesSnapshot = await getDocs(coursesRef);
+        const coursesMap = new Map<string, { name: string; code: string }>();
+        coursesSnapshot.forEach(doc => {
+            const data = doc.data();
+            coursesMap.set(doc.id, { name: data.name || 'Disciplina Desconhecida', code: data.code || 'N/A' });
+        });
+
+        // 2. Fetch all classrooms belonging to the user using a collectionGroup query
+        const classroomsQuery = query(collectionGroup(firestore, 'classrooms'), where('professorId', '==', user.uid));
+        const classroomsSnapshot = await getDocs(classroomsQuery);
         
         const allClassrooms: Classroom[] = [];
-        
-        for (const courseDoc of coursesSnapshot.docs) {
-          const courseData = courseDoc.data();
-          const classroomsRef = collection(firestore, `professors/${user.uid}/courses/${courseDoc.id}/classrooms`);
-          const classroomsSnapshot = await getDocs(classroomsRef);
+        classroomsSnapshot.forEach(doc => {
+            const classroomData = doc.data();
+            const courseInfo = coursesMap.get(classroomData.courseId);
 
-          classroomsSnapshot.forEach(classroomDoc => {
-            const classroomData = classroomDoc.data();
-            allClassrooms.push({
-              id: classroomDoc.id,
-              name: classroomData.name,
-              semester: classroomData.semester,
-              courseId: courseDoc.id,
-              courseName: courseData.name || 'Disciplina Desconhecida',
-              courseCode: courseData.code || 'N/A'
-            });
-          });
-        }
+            if (courseInfo) {
+                 allClassrooms.push({
+                    id: doc.id,
+                    name: classroomData.name,
+                    semester: classroomData.semester,
+                    courseId: classroomData.courseId,
+                    courseName: courseInfo.name,
+                    courseCode: courseInfo.code,
+                });
+            }
+        });
         
+        // 3. Filter based on the 'active' or 'past' criteria
         const currentSemesterValue = getCurrentSemesterValue();
         const filteredClassrooms = allClassrooms.filter(c => {
           const classroomSemesterValue = getSemesterValue(c.semester);
@@ -87,17 +96,17 @@ export function ClassroomsList({ filter }: ClassroomsListProps) {
           }
         });
 
-
         setClassrooms(filteredClassrooms);
 
       } catch (error) {
         console.error("Error fetching classrooms:", error);
+        // Optionally, set an error state to show in the UI
       } finally {
         setIsLoading(false);
       }
     }
 
-    fetchClassrooms();
+    fetchClassroomsAndCourses();
   }, [user, firestore, filter]);
 
   if (isLoading) {
