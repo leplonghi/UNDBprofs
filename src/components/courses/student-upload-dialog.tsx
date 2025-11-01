@@ -107,19 +107,22 @@ const parseCSV = (file: File): Promise<ParsedStudent[]> => {
                 const delimiter = headerRow.includes(';') ? ';' : ',';
                 const headers = headerRow.split(delimiter).map(h => h.trim().toLowerCase().replace(/["']/g, ''));
 
-                const nameIndex = headers.findIndex(h => h === 'nome' || h === 'name');
+                const nameIndex = headers.findIndex(h => h === 'nome' || h === 'name' || h === 'first name');
                 const lastNameIndex = headers.findIndex(h => h === 'sobrenome' || h === 'last name');
                 const emailIndex = headers.findIndex(h => h.includes('email') || h.includes('e-mail'));
                 const registrationIdIndex = headers.findIndex(h => h.includes('matrícula') || h.includes('matricula') || h.includes('id'));
-
-                if (nameIndex === -1 || emailIndex === -1) {
-                    return reject(new Error("As colunas 'Nome' e 'E-mail' são obrigatórias no arquivo CSV."));
+                
+                if (emailIndex === -1) {
+                    return reject(new Error("A coluna 'E-mail' é obrigatória no arquivo CSV."));
+                }
+                 if (nameIndex === -1 && lastNameIndex === -1) {
+                    return reject(new Error("Pelo menos uma coluna ('Nome' ou 'Sobrenome') é obrigatória."));
                 }
                 
                 const students = rows.map((row, index) => {
                     const columns = row.split(delimiter).map(c => c.trim().replace(/["']/g, ''));
 
-                    const firstName = columns[nameIndex] || '';
+                    const firstName = nameIndex > -1 ? (columns[nameIndex] || '') : '';
                     const lastName = lastNameIndex > -1 ? (columns[lastNameIndex] || '') : '';
                     const name = `${firstName} ${lastName}`.trim();
                     const email = columns[emailIndex] || '';
@@ -206,7 +209,7 @@ const handleAIExtraction = () => {
               id: studentId,
               name: studentData.name,
               email: studentData.email,
-              registrationId: studentData.registrationId,
+              registrationId: studentData.registrationId || null,
             };
             
             // Create the student document first.

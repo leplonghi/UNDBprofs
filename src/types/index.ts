@@ -23,7 +23,7 @@ export interface Student {
     id: string;
     name: string;
     email: string;
-    registrationId?: string;
+    registrationId?: string | null;
 }
 
 export interface ClassroomStudent {
