@@ -6,12 +6,11 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { FilePlus, PlusCircle, Loader2 } from 'lucide-react';
+import { FilePlus, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { importCourseFromLessonPlan } from '@/ai/flows/import-course-from-lesson-plan';
 import { Input } from '../ui/input';
@@ -25,15 +24,6 @@ export function NewClassroomDialog() {
   const { user } = useUser();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleNavigate = (path: string) => {
-    if (!user) {
-        toast({ variant: 'destructive', title: 'Acesso Negado', description: 'Você precisa estar logado.'});
-        return;
-    }
-    router.push(path);
-    setIsOpen(false);
-  };
-
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!user) {
         toast({ variant: 'destructive', title: 'Acesso Negado', description: 'Você precisa estar logado para importar um arquivo.'});
@@ -43,7 +33,6 @@ export function NewClassroomDialog() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Reset the file input value to allow re-uploading the same file
     if(fileInputRef.current) {
         fileInputRef.current.value = '';
     }
@@ -51,10 +40,17 @@ export function NewClassroomDialog() {
     const reader = new FileReader();
     reader.readAsDataURL(file);
 
+    setIsOpen(false);
     startTransition(() => {
         reader.onload = async () => {
             try {
                 const lessonPlanDataUri = reader.result as string;
+                
+                toast({
+                    title: 'Processando Arquivo...',
+                    description: 'Aguarde enquanto a IA extrai as informações do plano de ensino.',
+                });
+
                 const result = await importCourseFromLessonPlan({ lessonPlanDataUri });
                 
                 sessionStorage.setItem('importedData', JSON.stringify(result));
@@ -65,7 +61,6 @@ export function NewClassroomDialog() {
                 });
 
                 router.push('/disciplinas/importar');
-                setIsOpen(false);
 
             } catch (error) {
                 console.error(error);
@@ -90,32 +85,26 @@ export function NewClassroomDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Nova Turma
+        <Button variant="outline">
+          <FilePlus className="mr-2 h-4 w-4" />
+          Importar de PDF
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Criar Nova Turma</DialogTitle>
+          <DialogTitle>Importar de PDF</DialogTitle>
           <DialogDescription>
-            Escolha como você quer criar a nova turma. Você pode preencher as informações
-            manualmente ou importar de um arquivo PDF.
+            Selecione o arquivo do plano de ensino para importar a disciplina e a primeira turma automaticamente.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <Button variant="outline" onClick={() => handleNavigate('/disciplinas/turmas/nova')} disabled={isPending}>
-            <PlusCircle className="mr-2" />
-            Criar Manualmente
-          </Button>
-
           <Button onClick={handleImportClick} disabled={isPending}>
               {isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <FilePlus className="mr-2" />
               )}
-              {isPending ? 'Processando...' : 'Importar de PDF'}
+              {isPending ? 'Processando...' : 'Selecionar Arquivo PDF'}
           </Button>
           <Input 
             id="file-upload" 
@@ -126,13 +115,7 @@ export function NewClassroomDialog() {
             accept=".pdf" 
             disabled={isPending}
           />
-
         </div>
-        <DialogFooter>
-          <p className="text-sm text-muted-foreground">
-            Ao importar de um PDF, a disciplina e a turma serão criadas automaticamente.
-          </p>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
