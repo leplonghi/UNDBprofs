@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { collection, getDocs, query, DocumentData } from 'firebase/firestore';
+import { collection, getDocs, DocumentData } from 'firebase/firestore';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -26,7 +26,7 @@ interface ClassroomsListProps {
 
 function getSemesterValue(semesterString: string): number {
   if (!semesterString || !/^\d{4}\.[12]$/.test(semesterString)) {
-    return 0;
+    return 0; // Return a value that indicates an invalid format
   }
   const [year, semester] = semesterString.split('.').map(Number);
   return year * 10 + semester;
@@ -35,7 +35,8 @@ function getSemesterValue(semesterString: string): number {
 function getCurrentSemesterValue(): number {
   // Simulating being in October 2025 as requested
   const year = 2025;
-  const semester = 2; // .2 for second semester
+  const month = 9; // October (0-indexed)
+  const semester = month >= 0 && month <= 6 ? 1 : 2; // Jan-Jul is sem 1, Aug-Dec is sem 2
   return year * 10 + semester;
 }
 
@@ -62,31 +63,32 @@ export function ClassroomsList({ filter }: ClassroomsListProps) {
       };
 
       setIsLoading(true);
-      const allClassrooms: Classroom[] = [];
-
+      
       try {
-        // Fetch all classrooms for all courses
-        for (const course of courses) {
+        const classroomPromises = courses.map(async (course) => {
             const classroomsRef = collection(firestore, `professors/${user.uid}/courses/${course.id}/classrooms`);
             const classroomsSnapshot = await getDocs(classroomsRef);
             
-            classroomsSnapshot.forEach(classroomDoc => {
+            return classroomsSnapshot.docs.map(classroomDoc => {
                 const classroomData = classroomDoc.data();
-                allClassrooms.push({
+                return {
                     id: classroomDoc.id,
                     name: classroomData.name,
                     semester: classroomData.semester,
                     courseId: course.id,
                     courseName: course.name,
                     courseCode: course.code,
-                });
+                };
             });
-        }
+        });
+
+        const allClassroomsArrays = await Promise.all(classroomPromises);
+        const allClassrooms = allClassroomsArrays.flat();
         
         const currentSemesterValue = getCurrentSemesterValue();
         const filtered = allClassrooms.filter(c => {
             const classroomSemesterValue = getSemesterValue(c.semester);
-            if (classroomSemesterValue === 0) return false; // Ignore improperly formatted semesters
+            if (classroomSemesterValue === 0) return false;
             
             if (filter === 'active') {
                 return classroomSemesterValue >= currentSemesterValue;
@@ -122,7 +124,7 @@ export function ClassroomsList({ filter }: ClassroomsListProps) {
   if (coursesError) {
     return (
          <p className="p-4 text-center text-destructive">
-            Ocorreu um erro de permissão ao buscar as turmas.
+            Ocorreu um erro de permissão ao buscar as turmas. Verifique as regras de segurança do Firestore.
         </p>
     )
   }
