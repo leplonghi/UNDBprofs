@@ -69,15 +69,18 @@ const prompt = ai.definePrompt({
   Your task is to extract key information from the provided lesson plan PDF and structure it into a JSON format.
 
   Identify and extract the following fields:
-  - General course and professor information.
-  - The structure of Learning Units (Unidades de Aprendizagem - UAs).
-  - The class schedule with dates and topics.
-  - Evaluation activities and their scores.
-  - Basic and complementary bibliography.
-  - Administrative data (total hours, course, semester, etc.).
+  - courseName
+  - courseCode
+  - syllabus
+  - objectives
+  - workload
+  - semester
+  - competencies
+  - thematicTree
+  - bibliography
+  - classSchedule
 
   Please be as faithful as possible to the original text. Do not summarize or alter technical content.
-  Format dates as YYYY-MM-DD.
   If a field is not present in the document, leave the corresponding JSON field empty.
   The final output must be a clean and complete JSON, ready for automatic integration into an academic system.
 
