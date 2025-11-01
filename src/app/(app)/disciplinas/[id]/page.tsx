@@ -52,7 +52,60 @@ function CourseDetailsSkeleton() {
   );
 }
 
-function ClassroomDetails({ courseId }: { courseId: string }) {
+function CourseInformation({ course }: { course: Course }) {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Plano de Ensino</CardTitle>
+                <CardDescription>Detalhes e estrutura da disciplina.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <div>
+                <h3 className="font-semibold">Ementa</h3>
+                <p className="text-muted-foreground">{course.syllabus}</p>
+                </div>
+                <div>
+                <h3 className="font-semibold">Objetivos</h3>
+                <p className="text-muted-foreground">{course.objectives}</p>
+                </div>
+                {course.competencies && (
+                <div>
+                    <h3 className="font-semibold">Competências</h3>
+                    <p className="text-muted-foreground">
+                    {course.competencies}
+                    </p>
+                </div>
+                )}
+                {course.thematicTree && course.thematicTree.length > 0 && (
+                <div>
+                    <h3 className="font-semibold">Árvore Temática</h3>
+                    <div className="mt-2 space-y-2">
+                    {course.thematicTree.map((item, index) => (
+                        <div key={index} className="p-3 border rounded-md">
+                        <p className="font-medium">{item.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                            {item.description}
+                        </p>
+                        </div>
+                    ))}
+                    </div>
+                </div>
+                )}
+                {course.bibliography && (
+                <div>
+                    <h3 className="font-semibold">Bibliografia</h3>
+                    <p className="whitespace-pre-wrap text-muted-foreground">
+                    {course.bibliography}
+                    </p>
+                </div>
+                )}
+            </CardContent>
+        </Card>
+    )
+}
+
+
+function ClassroomManager({ courseId }: { courseId: string }) {
   const { user } = useUser();
   const firestore = useFirestore();
   const [isStudentUploadOpen, setIsStudentUploadOpen] = React.useState(false);
@@ -92,7 +145,7 @@ function ClassroomDetails({ courseId }: { courseId: string }) {
         classroomId={classroom.id}
         courseId={courseId}
       />
-       <Tabs defaultValue="students" className="w-full">
+       <div className="flex flex-col gap-6">
             <Card>
                 <CardHeader>
                     <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
@@ -100,59 +153,50 @@ function ClassroomDetails({ courseId }: { courseId: string }) {
                             <CardTitle>Turma: {classroom.name}</CardTitle>
                             <CardDescription>Semestre: {classroom.semester} | Carga Horária: {classroom.workload}</CardDescription>
                         </div>
-                        <div className="flex w-full sm:w-auto items-center gap-2">
-                             <Button onClick={() => setIsStudentUploadOpen(true)} className="w-full sm:w-auto">
-                                <Users className="mr-2 h-4 w-4" />
-                                Adicionar Alunos
-                            </Button>
-                             <TabsList className="grid grid-cols-2 w-full sm:w-auto">
-                                <TabsTrigger value="students">Alunos</TabsTrigger>
-                                <TabsTrigger value="schedule">Cronograma</TabsTrigger>
-                            </TabsList>
-                        </div>
+                        <Button onClick={() => setIsStudentUploadOpen(true)} className="w-full sm:w-auto">
+                            <Users className="mr-2 h-4 w-4" />
+                            Adicionar Alunos
+                        </Button>
                     </div>
                 </CardHeader>
             </Card>
 
-            <TabsContent value="students" className="mt-6">
-                <ClassroomStudentsTable courseId={courseId} classroomId={classroom.id} />
-            </TabsContent>
-            <TabsContent value="schedule" className="mt-6">
-                 <Card>
-                    <CardHeader>
-                        <CardTitle>Cronograma de Aulas</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                    {classroom.classSchedule && classroom.classSchedule.length > 0 ? (
-                        <div className="max-h-96 overflow-y-auto rounded-md border">
-                            <Table>
-                            <TableHeader>
-                                <TableRow>
-                                <TableHead>Data</TableHead>
-                                <TableHead>Conteúdo</TableHead>
-                                <TableHead>Atividade</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {classroom.classSchedule.map((scheduleItem, index) => (
-                                <TableRow key={index}>
-                                    <TableCell className="font-medium">{scheduleItem.date}</TableCell>
-                                    <TableCell>{scheduleItem.content}</TableCell>
-                                    <TableCell>{scheduleItem.activity}</TableCell>
-                                </TableRow>
-                                ))}
-                            </TableBody>
-                            </Table>
-                        </div>
-                    ) : (
-                        <div className="py-10 text-center text-muted-foreground">
-                            Nenhum cronograma de aulas encontrado para esta turma.
-                        </div>
-                    )}
-                    </CardContent>
-                </Card>
-            </TabsContent>
-       </Tabs>
+            <ClassroomStudentsTable courseId={courseId} classroomId={classroom.id} />
+            
+            <Card>
+                <CardHeader>
+                    <CardTitle>Cronograma de Aulas</CardTitle>
+                </CardHeader>
+                <CardContent>
+                {classroom.classSchedule && classroom.classSchedule.length > 0 ? (
+                    <div className="max-h-96 overflow-y-auto rounded-md border">
+                        <Table>
+                        <TableHeader>
+                            <TableRow>
+                            <TableHead>Data</TableHead>
+                            <TableHead>Conteúdo</TableHead>
+                            <TableHead>Atividade</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {classroom.classSchedule.map((scheduleItem, index) => (
+                            <TableRow key={index}>
+                                <TableCell className="font-medium">{scheduleItem.date}</TableCell>
+                                <TableCell>{scheduleItem.content}</TableCell>
+                                <TableCell>{scheduleItem.activity}</TableCell>
+                            </TableRow>
+                            ))}
+                        </TableBody>
+                        </Table>
+                    </div>
+                ) : (
+                    <div className="py-10 text-center text-muted-foreground">
+                        Nenhum cronograma de aulas encontrado para esta turma.
+                    </div>
+                )}
+                </CardContent>
+            </Card>
+       </div>
     </>
   );
 }
@@ -200,59 +244,14 @@ export default function CourseDetailPage({
 
       <Tabs defaultValue="classroom" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="info">Informações Gerais</TabsTrigger>
+          <TabsTrigger value="info">Plano de Ensino</TabsTrigger>
           <TabsTrigger value="classroom">Turma e Alunos</TabsTrigger>
         </TabsList>
         <TabsContent value="info" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Detalhes da Disciplina</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <h3 className="font-semibold">Ementa</h3>
-                  <p className="text-muted-foreground">{course.syllabus}</p>
-                </div>
-                <div>
-                  <h3 className="font-semibold">Objetivos</h3>
-                  <p className="text-muted-foreground">{course.objectives}</p>
-                </div>
-                {course.competencies && (
-                  <div>
-                    <h3 className="font-semibold">Competências</h3>
-                    <p className="text-muted-foreground">
-                      {course.competencies}
-                    </p>
-                  </div>
-                )}
-                {course.thematicTree && course.thematicTree.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold">Árvore Temática</h3>
-                    <div className="mt-2 space-y-2">
-                      {course.thematicTree.map((item, index) => (
-                        <div key={index} className="p-3 border rounded-md">
-                          <p className="font-medium">{item.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {item.description}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {course.bibliography && (
-                  <div>
-                    <h3 className="font-semibold">Bibliografia</h3>
-                    <p className="whitespace-pre-wrap text-muted-foreground">
-                      {course.bibliography}
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <CourseInformation course={course} />
         </TabsContent>
         <TabsContent value="classroom" className="mt-6">
-            <ClassroomDetails courseId={course.id} />
+            <ClassroomManager courseId={course.id} />
         </TabsContent>
       </Tabs>
     </div>
