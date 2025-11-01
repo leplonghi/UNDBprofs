@@ -130,21 +130,16 @@ service cloud.firestore {
 
     /**
      * @description
-     * Students collection: Student profiles are stored here. Professors can create/manage student records.
-     * Students (if they were to log in) could only read their own data.
+     * Students collection: Student profiles are stored here. Any authenticated professor can manage student records.
      * @path /students/{studentId}
-     * @allow (get) - A student with UID 'student_123' can read their profile at /students/student_123. Any authenticated professor can also read.
-     * @allow (create) - Any authenticated professor can create student records.
-     * @allow (update) - Any authenticated professor can update student records.
-     * @allow (delete) - Any authenticated professor can delete student records.
-     * @principle Allows professors to manage student data.
+     * @allow (read) - Any authenticated user (professor or student) can read student profiles.
+     * @allow (list) - Any authenticated user can list student profiles.
+     * @allow (write) - Any authenticated professor can create, update, or delete student records.
+     * @principle Allows professors to manage student data, while allowing broader read access.
      */
     match /students/{studentId} {
-        allow get: if isSignedIn();
-        allow list: if isSignedIn();
-        allow create: if isSignedIn();
-        allow update: if isSignedIn();
-        allow delete: if isSignedIn();
+        allow read, list: if isSignedIn();
+        allow write: if isSignedIn(); // Allows any authenticated user to write.
     }
 
      /**

@@ -34,6 +34,9 @@ interface ParsedStudent {
   email: string;
 }
 
+// Simple email validation regex
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export function StudentUploadDialog({
   isOpen,
   onOpenChange,
@@ -103,22 +106,26 @@ export function StudentUploadDialog({
                 const delimiter = header.includes(';') ? ';' : ',';
 
                 const students = rows.map((row, index) => {
-                    // Split the row and only take the first two columns
                     const columns = row.split(delimiter).slice(0, 2);
                     
                     const name = (columns[0] || '').trim().replace(/["']/g, '');
                     const email = (columns[1] || '').trim().replace(/["']/g, '');
-
-                    if (name && email) {
+                    
+                    // Validate that name and email are present and email looks like an email
+                    if (name && email && emailRegex.test(email)) {
                         return { name, email };
                     }
                     
-                    console.warn(`Linha ${index + 2} ignorada por dados ausentes ou incompletos: ${row}`);
+                    if (name && email && !emailRegex.test(email)) {
+                         console.warn(`Linha ${index + 2} ignorada: e-mail inválido.`, {name, email});
+                    } else if (!name || !email) {
+                        console.warn(`Linha ${index + 2} ignorada por dados ausentes.`, {name, email});
+                    }
                     return null;
                 }).filter((s): s is ParsedStudent => s !== null);
 
                 if (students.length === 0) {
-                    return reject(new Error('Nenhum aluno válido encontrado. Verifique se as duas primeiras colunas contêm nome e e-mail.'));
+                    return reject(new Error('Nenhum aluno válido encontrado. Verifique se as duas primeiras colunas contêm nome e um e-mail válido.'));
                 }
 
                 resolve(students);
