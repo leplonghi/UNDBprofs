@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 function CourseDetailsSkeleton() {
   return (
@@ -63,57 +64,78 @@ function ClassroomsList({ courseId }: { courseId: string }) {
   const { data: classrooms, isLoading } =
     useCollection<Classroom>(classroomsQuery);
 
+  if (isLoading) {
+    return <Skeleton className="h-40 w-full" />;
+  }
+
+  if (!classrooms || classrooms.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Turmas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-center text-muted-foreground">
+            Nenhuma turma encontrada para esta disciplina.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Turmas</CardTitle>
-        <CardDescription>
-          Todas as turmas associadas a esta disciplina.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome da Turma</TableHead>
-              <TableHead>Semestre</TableHead>
-              <TableHead>Carga Horária</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={3}>
-                  <Skeleton className="h-10 w-full" />
-                </TableCell>
-              </TableRow>
-            ) : !classrooms || classrooms.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={3} className="h-24 text-center">
-                  Nenhuma turma encontrada para esta disciplina.
-                </TableCell>
-              </TableRow>
-            ) : (
-              classrooms.map((classroom) => (
-                <TableRow key={classroom.id}>
-                  <TableCell className="font-medium">
-                    <Link href={`#`} className="hover:underline">
-                      {classroom.name}
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{classroom.semester}</Badge>
-                  </TableCell>
-                  <TableCell>{classroom.workload}</TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+       <h2 className="text-xl font-bold text-primary">Turmas</h2>
+      {classrooms.map((classroom) => (
+        <Card key={classroom.id}>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>{classroom.name}</CardTitle>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary">{classroom.semester}</Badge>
+                <Badge variant="outline">{classroom.workload}</Badge>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="schedule">
+                <AccordionTrigger>Ver Cronograma de Aulas</AccordionTrigger>
+                <AccordionContent>
+                  {classroom.classSchedule && classroom.classSchedule.length > 0 ? (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Data</TableHead>
+                          <TableHead>Conteúdo</TableHead>
+                          <TableHead>Atividade</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {classroom.classSchedule.map((scheduleItem, index) => (
+                          <TableRow key={index}>
+                            <TableCell>{scheduleItem.date}</TableCell>
+                            <TableCell>{scheduleItem.content}</TableCell>
+                            <TableCell>{scheduleItem.activity}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <p className="py-4 text-center text-muted-foreground">
+                      Nenhum cronograma de aulas para esta turma.
+                    </p>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
 }
+
 
 export default function CourseDetailPage({
   params,
@@ -156,8 +178,8 @@ export default function CourseDetailPage({
         <Badge variant="outline">{course.code}</Badge>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="lg:col-span-2">
+      <div className="grid gap-6">
+        <Card>
           <CardHeader>
             <CardTitle>Informações Gerais</CardTitle>
           </CardHeader>
@@ -176,6 +198,19 @@ export default function CourseDetailPage({
                 <p className="text-muted-foreground">{course.competencies}</p>
               </div>
             )}
+             {course.thematicTree && course.thematicTree.length > 0 && (
+                <div>
+                    <h3 className="font-semibold">Árvore Temática</h3>
+                    <div className="mt-2 space-y-2">
+                    {course.thematicTree.map((item, index) => (
+                        <div key={index} className="p-3 border rounded-md">
+                        <p className="font-medium">{item.name}</p>
+                        <p className="text-sm text-muted-foreground">{item.description}</p>
+                        </div>
+                    ))}
+                    </div>
+                </div>
+            )}
             {course.bibliography && (
               <div>
                 <h3 className="font-semibold">Bibliografia</h3>
@@ -186,9 +221,9 @@ export default function CourseDetailPage({
             )}
           </CardContent>
         </Card>
-        <div className="lg:col-span-2">
-          <ClassroomsList courseId={course.id} />
-        </div>
+        
+        <ClassroomsList courseId={course.id} />
+        
       </div>
     </div>
   );
