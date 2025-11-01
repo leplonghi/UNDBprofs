@@ -1,42 +1,47 @@
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
+import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore'
+import { getFirestore } from 'firebase/firestore';
 
-// IMPORTANT: DO NOT MODIFY THIS FUNCTION
+// This function is designed to work in both production (App Hosting) and local development.
 export function initializeFirebase() {
+  // If no Firebase app has been initialized yet...
   if (!getApps().length) {
-    // Important! initializeApp() is called without any arguments because Firebase App Hosting
-    // integrates with the initializeApp() function to provide the environment variables needed to
-    // populate the FirebaseOptions in production. It is critical that we attempt to call initializeApp()
-    // without arguments.
-    let firebaseApp;
+    // In a production App Hosting environment, the SDK is automatically configured.
+    // In this case, `initializeApp()` can be called without arguments.
     try {
-      // Attempt to initialize via Firebase App Hosting environment variables
-      firebaseApp = initializeApp();
+      const app = initializeApp();
+      // If successful, return the SDKs for the automatically configured app.
+      return getSdks(app);
     } catch (e) {
-      // Only warn in production because it's normal to use the firebaseConfig to initialize
-      // during development
-      if (process.env.NODE_ENV === "production") {
-        console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
+      // If automatic initialization fails (which is expected in local development),
+      // fall back to using the local firebaseConfig object.
+      // We only log a warning in production, as this fallback is the norm for local dev.
+      if (process.env.NODE_ENV === 'production') {
+        console.warn(
+          'Firebase automatic initialization failed. Falling back to local firebaseConfig.',
+          e
+        );
       }
-      firebaseApp = initializeApp(firebaseConfig);
+      const app = initializeApp(firebaseConfig);
+      return getSdks(app);
     }
-
-    return getSdks(firebaseApp);
   }
 
-  // If already initialized, return the SDKs with the already initialized App
-  return getSdks(getApp());
+  // If an app is already initialized, get it and return its SDKs.
+  // This prevents re-initialization on every hot-reload in development.
+  const app = getApp();
+  return getSdks(app);
 }
 
+// Helper function to get the SDKs from a FirebaseApp instance.
 export function getSdks(firebaseApp: FirebaseApp) {
   return {
     firebaseApp,
     auth: getAuth(firebaseApp),
-    firestore: getFirestore(firebaseApp)
+    firestore: getFirestore(firebaseApp),
   };
 }
 
