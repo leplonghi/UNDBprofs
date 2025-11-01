@@ -15,8 +15,8 @@ import {
   useMemoFirebase,
   useCollection,
 } from '@/firebase';
-import type { Course, Classroom, ClassroomStudent } from '@/types';
-import { doc, collection, query, limit } from 'firebase/firestore';
+import type { Course, Classroom, ClassroomStudent, Activity } from '@/types';
+import { doc, collection, query } from 'firebase/firestore';
 import {
   Table,
   TableBody,
@@ -32,6 +32,7 @@ import { Users } from 'lucide-react';
 import { StudentUploadDialog } from '@/components/courses/student-upload-dialog';
 import { ClassroomStudentsTable } from '@/components/courses/classroom-students-table';
 import { StudentGroups } from '@/components/courses/student-groups';
+import { ActivitySettings } from '@/components/courses/activity-settings';
 
 function CourseDetailsSkeleton() {
   return (
@@ -103,7 +104,7 @@ function CourseInformation({ course }: { course: Course }) {
   );
 }
 
-function ClassroomManager({ courseId }: { courseId: string }) {
+function ClassroomManager({ courseId, courseCode }: { courseId: string, courseCode: string }) {
   const { user } = useUser();
   const firestore = useFirestore();
   const [isStudentUploadOpen, setIsStudentUploadOpen] = React.useState(false);
@@ -114,14 +115,27 @@ function ClassroomManager({ courseId }: { courseId: string }) {
       collection(
         firestore,
         `professors/${user.uid}/courses/${courseId}/classrooms`
-      ),
-      limit(1)
+      )
     );
   }, [user, firestore, courseId]);
 
   const { data: classrooms, isLoading } =
     useCollection<Classroom>(classroomQuery);
-  const classroom = classrooms?.[0];
+
+  if (isLoading) {
+    return <Skeleton className="h-60 w-full" />;
+  }
+
+  if (!classrooms || classrooms.length === 0) {
+    return (
+      <div className="py-10 text-center text-muted-foreground">
+        Nenhuma turma encontrada para esta disciplina.
+      </div>
+    );
+  }
+
+  // Assuming one classroom per course for now
+  const classroom = classrooms[0];
 
   const studentsQuery = useMemoFirebase(() => {
     if (!user || !firestore || !classroom) return null;
@@ -133,18 +147,8 @@ function ClassroomManager({ courseId }: { courseId: string }) {
 
   const { data: classroomStudents, isLoading: isLoadingStudents } =
     useCollection<ClassroomStudent>(studentsQuery);
-
-  if (isLoading) {
-    return <Skeleton className="h-60 w-full" />;
-  }
-
-  if (!classroom) {
-    return (
-      <div className="py-10 text-center text-muted-foreground">
-        Nenhuma turma encontrada para esta disciplina.
-      </div>
-    );
-  }
+    
+  const activities = classroom.activities || [];
 
   return (
     <>
@@ -163,22 +167,23 @@ function ClassroomManager({ courseId }: { courseId: string }) {
               {classroom.workload}
             </p>
           </div>
-          <Button
-            onClick={() => setIsStudentUploadOpen(true)}
-            className="w-full sm:w-auto"
-          >
-            <Users className="mr-2 h-4 w-4" />
-            Adicionar Alunos
-          </Button>
         </div>
 
         <Tabs defaultValue="students" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="students">Alunos</TabsTrigger>
-            <TabsTrigger value="grades">Grupos e Notas</TabsTrigger>
+            <TabsTrigger value="activities">Atividades</TabsTrigger>
+            <TabsTrigger value="grades">Lançamento de Notas</TabsTrigger>
             <TabsTrigger value="schedule">Cronograma</TabsTrigger>
           </TabsList>
+          
           <TabsContent value="students" className="mt-6">
+             <div className="flex justify-end mb-4">
+                <Button onClick={() => setIsStudentUploadOpen(true)}>
+                    <Users className="mr-2 h-4 w-4" />
+                    Adicionar Alunos
+                </Button>
+            </div>
             <ClassroomStudentsTable
               courseId={courseId}
               classroomId={classroom.id}
@@ -186,14 +191,25 @@ function ClassroomManager({ courseId }: { courseId: string }) {
               isLoading={isLoadingStudents}
             />
           </TabsContent>
+          
+          <TabsContent value="activities" className="mt-6">
+            <ActivitySettings 
+              courseId={courseId}
+              classroomId={classroom.id}
+              activities={activities}
+            />
+          </TabsContent>
+
           <TabsContent value="grades" className="mt-6">
             <StudentGroups
                 courseId={courseId}
                 classroomId={classroom.id}
                 classroomStudents={classroomStudents ?? []}
                 isLoading={isLoadingStudents}
+                activities={activities}
             />
           </TabsContent>
+
           <TabsContent value="schedule" className="mt-6">
             <Card>
               <CardHeader>
@@ -202,7 +218,7 @@ function ClassroomManager({ courseId }: { courseId: string }) {
               <CardContent>
                 {classroom.classSchedule &&
                 classroom.classSchedule.length > 0 ? (
-                  <div className="max-h-96 overflow-y-auto rounded-md border">
+                  <div className="max-h-[600px] overflow-y-auto rounded-md border">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -288,7 +304,7 @@ export default function CourseDetailPage({
           <CourseInformation course={course} />
         </TabsContent>
         <TabsContent value="classroom" className="mt-6">
-          <ClassroomManager courseId={course.id} />
+          <ClassroomManager courseId={course.id} courseCode={course.code} />
         </TabsContent>
       </Tabs>
     </div>

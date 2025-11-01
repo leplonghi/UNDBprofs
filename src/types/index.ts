@@ -1,9 +1,16 @@
 export interface Grade {
     id: string;
-    description: string;
+    activityId: string;
     score: number;
-    maxScore?: number;
-    group?: 'N1' | 'N2';
+}
+
+export interface Activity {
+    id: string;
+    name: string;
+    maxScore: number;
+    group: 'N1' | 'N2' | 'ST1' | 'ST2' | 'Desafio' | 'Substitutiva' | 'Final';
+    order: number;
+    active: boolean;
 }
 
 export interface Course {
@@ -25,6 +32,7 @@ export interface Classroom {
   semester: string;
   workload: string;
   classSchedule: { date: string; content: string; activity: string }[];
+  activities?: Activity[];
 }
 
 export interface Student {
@@ -35,7 +43,7 @@ export interface Student {
 }
 
 export interface ClassroomStudent {
-    id: string;
+    id:string;
     classroomId: string;
     studentId: string;
     grades?: Grade[];

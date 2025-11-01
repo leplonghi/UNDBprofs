@@ -17,21 +17,15 @@ import {
   useUser,
   useDoc,
   useMemoFirebase,
+  updateDocumentNonBlocking,
 } from '@/firebase';
 import { doc, writeBatch } from 'firebase/firestore';
-import type { ClassroomStudent, Student, Grade } from '@/types';
+import type { ClassroomStudent, Student, Grade, Activity } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 import { Skeleton } from '../ui/skeleton';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { debounce } from 'lodash';
-import { Loader2, ClipboardPaste, Users, Trash2 } from 'lucide-react';
-
-const studioTemplate: Omit<Grade, 'id'>[] = [
-    { description: 'Relatório de Análise e Benchmarking', score: 0, maxScore: 2, group: 'N1' },
-    { description: 'Solução Preliminar', score: 0, maxScore: 2, group: 'N1' },
-    { description: 'Checks de Desenvolvimento', score: 0, maxScore: 1, group: 'N2' },
-    { description: 'Caderno Técnico', score: 0, maxScore: 3, group: 'N2' },
-];
+import { Loader2, Users, Trash2 } from 'lucide-react';
 
 function StudentRow({ studentId }: { studentId: string }) {
   const firestore = useFirestore();
@@ -62,123 +56,64 @@ export function StudentGroups({
   classroomId,
   classroomStudents,
   isLoading,
+  activities,
 }: {
   courseId: string;
   classroomId: string;
   classroomStudents: ClassroomStudent[];
   isLoading: boolean;
+  activities: Activity[];
 }) {
   const { toast } = useToast();
   const firestore = useFirestore();
   const { user } = useUser();
   const [isSaving, setIsSaving] = useState(false);
   const [localGrades, setLocalGrades] = useState<Record<string, Grade[]>>({});
-  const [gradeStructure, setGradeStructure] = useState<Omit<Grade, 'score'>[]>([]);
   const [studentGroups, setStudentGroups] = useState<string[][]>([]);
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [ungroupedStudents, setUngroupedStudents] = useState<string[]>([]);
 
-  const applyStudioTemplate = useCallback(async () => {
-    if (!user || !firestore) {
-      toast({ variant: 'destructive', title: 'Erro de autenticação' });
-      return;
-    }
-    if (classroomStudents.length === 0) {
-      // Don't apply if there are no students
-      return;
-    }
-
-    setIsSaving(true);
-
-    const newStructure = studioTemplate.map((item) => ({ ...item, id: uuidv4() }));
-    const batch = writeBatch(firestore);
-    const newLocalGrades: Record<string, Grade[]> = {};
-
-    for (const cs of classroomStudents) {
-      const newGrades = newStructure.map((item) => ({ ...item, score: 0 }));
-      newLocalGrades[cs.id] = newGrades;
-      const studentRef = doc(
-        firestore,
-        `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/classroomStudents/${cs.id}`
-      );
-      batch.update(studentRef, { grades: newGrades });
-    }
-
-    try {
-      await batch.commit();
-      setGradeStructure(newStructure.map(({ score, ...rest }) => rest));
-      setLocalGrades(newLocalGrades);
-      toast({
-        title: 'Template Aplicado!',
-        description: 'A estrutura de notas de estúdio foi aplicada a todos os alunos.',
-      });
-    } catch (error) {
-      console.error('Error applying template:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Erro ao Aplicar Template',
-        description: 'Não foi possível aplicar o template.',
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  }, [user, firestore, classroomId, courseId, classroomStudents, toast]);
+  const gradeStructure = useMemo(() => activities.filter(a => a.active), [activities]);
 
   useEffect(() => {
-    if (isLoading || classroomStudents.length === 0) return;
+    if (isLoading || !classroomStudents) return;
 
-    let hasGrades = false;
-    for (const cs of classroomStudents) {
-      if (cs.grades && cs.grades.length > 0) {
-        hasGrades = true;
-        break;
-      }
-    }
-
-    if (!hasGrades) {
-        (async () => {
-            await applyStudioTemplate();
-        })();
-        return;
-    }
-    
     const initialGrades: Record<string, Grade[]> = {};
-    let structure: Omit<Grade, 'score'>[] | null = null;
     const allStudentIds = new Set<string>();
     const groupedStudentIds = new Set<string>();
-    
-    // Initialize grade structure and local grades
+
     for (const cs of classroomStudents) {
         allStudentIds.add(cs.id);
-        initialGrades[cs.id] = cs.grades || [];
-        if (!structure && cs.grades && cs.grades.length > 0) {
-            structure = cs.grades.map(({ score, ...rest }) => rest);
+        
+        // Ensure student has a grade for each active activity
+        const studentGrades = gradeStructure.map(activity => {
+            const existingGrade = cs.grades?.find(g => g.activityId === activity.id);
+            return existingGrade || { id: uuidv4(), activityId: activity.id, score: 0 };
+        });
+        initialGrades[cs.id] = studentGrades;
+        
+        if (cs.groupId) {
+            groupedStudentIds.add(cs.id);
         }
     }
 
     setLocalGrades(initialGrades);
-    if(structure) {
-        setGradeStructure(structure);
-    }
-
-    // Initialize groups
+    
     const groups = classroomStudents.reduce((acc, cs) => {
         if (cs.groupId) {
             if (!acc[cs.groupId]) {
                 acc[cs.groupId] = [];
             }
             acc[cs.groupId].push(cs.id);
-            groupedStudentIds.add(cs.id);
         }
         return acc;
     }, {} as Record<string, string[]>);
-    setStudentGroups(Object.values(groups));
 
-    // Initialize ungrouped students
+    setStudentGroups(Object.values(groups));
     const ungrouped = Array.from(allStudentIds).filter(id => !groupedStudentIds.has(id));
     setUngroupedStudents(ungrouped);
 
-  }, [classroomStudents, isLoading, applyStudioTemplate]);
+  }, [classroomStudents, isLoading, gradeStructure]);
 
 
   const debouncedSaveChanges = useCallback(
@@ -186,15 +121,13 @@ export function StudentGroups({
       if (!user || !firestore || Object.keys(gradesToSave).length === 0) return;
 
       setIsSaving(true);
-      const batch = writeBatch(firestore);
-
-      Object.entries(gradesToSave).forEach(([csId, grades]) => {
-        const studentRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/classroomStudents/${csId}`);
-        batch.update(studentRef, { grades });
-      });
-
+      
       try {
-        await batch.commit();
+        // Use individual non-blocking updates
+        for (const [csId, grades] of Object.entries(gradesToSave)) {
+            const studentRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/classroomStudents/${csId}`);
+            updateDocumentNonBlocking(studentRef, { grades });
+        }
         toast({ title: 'Notas Salvas!', description: 'As alterações foram salvas com sucesso.' });
       } catch (error) {
         console.error("Error saving grades:", error);
@@ -207,25 +140,28 @@ export function StudentGroups({
   );
   
   useEffect(() => {
-    if (Object.keys(localGrades).length > 0) {
-        const hasGrades = classroomStudents.some(cs => cs.grades && cs.grades.length > 0);
-        if (hasGrades) { // Only save if grades existed before
-             debouncedSaveChanges(localGrades);
-        }
+    // Prevent saving on initial load
+    if (Object.keys(localGrades).length > 0 && classroomStudents.length > 0) {
+        debouncedSaveChanges(localGrades);
     }
     return () => debouncedSaveChanges.cancel();
   }, [localGrades, classroomStudents, debouncedSaveChanges]);
 
-  const handleGradeChange = (studentOrGroupId: string, gradeId: string, newScore: number, isGroup: boolean) => {
+  const handleGradeChange = (studentOrGroupId: string, activityId: string, newScore: number, isGroup: boolean) => {
       setLocalGrades(prev => {
           const newGrades = {...prev};
-          const studentIdsToUpdate = isGroup ? studentGroups.flat().find(id => id === studentOrGroupId) ? studentGroups.find(g => g.includes(studentOrGroupId)) : [studentOrGroupId] : [studentOrGroupId];
+          
+          const studentIdsToUpdate: string[] = isGroup 
+            ? studentGroups.find(g => g.includes(studentOrGroupId)) || []
+            : [studentOrGroupId];
           
           studentIdsToUpdate?.forEach(studentId => {
-                const studentGrades = [...(newGrades[studentId] || [])];
-                const gradeIndex = studentGrades.findIndex(g => g.id === gradeId);
+                const studentGrades = newGrades[studentId] ? [...newGrades[studentId]] : [];
+                const gradeIndex = studentGrades.findIndex(g => g.activityId === activityId);
                 if (gradeIndex > -1) {
                     studentGrades[gradeIndex] = { ...studentGrades[gradeIndex], score: newScore };
+                } else {
+                    studentGrades.push({ id: uuidv4(), activityId, score: newScore });
                 }
                 newGrades[studentId] = studentGrades;
           });
@@ -236,8 +172,8 @@ export function StudentGroups({
 
     const handleCreateGroup = () => {
         if (!user || !firestore) return;
-        if (selectedStudents.length < 2) {
-            toast({ variant: 'destructive', title: 'Seleção Inválida', description: 'Selecione pelo menos 2 alunos para criar um grupo.' });
+        if (selectedStudents.length < 1) { // Can group even 1 person
+            toast({ variant: 'destructive', title: 'Seleção Inválida', description: 'Selecione pelo menos 1 aluno para criar um grupo.' });
             return;
         }
 
@@ -276,23 +212,54 @@ export function StudentGroups({
             toast({ variant: 'destructive', title: 'Erro ao Desfazer Grupo' });
         })
     }
-  
-  const n1Structure = gradeStructure.filter(g => g.group === 'N1');
-  const n2Structure = gradeStructure.filter(g => g.group === 'N2');
 
-  const renderGradeRow = (studentId: string, isGroup: boolean) => {
+  const n1Activities = gradeStructure.filter(g => g.group === 'N1');
+  const n2Activities = gradeStructure.filter(g => g.group === 'N2');
+  const modularActivities = gradeStructure.filter(g => g.group?.startsWith('ST'));
+
+  const calculateTotals = (grades: Grade[]) => {
+    const n1Total = Math.min(10, n1Activities.reduce((acc, activity) => {
+        const grade = grades.find(g => g.activityId === activity.id);
+        return acc + (grade?.score || 0);
+    }, 0));
+
+    const n2Total = Math.min(10, n2Activities.reduce((acc, activity) => {
+        const grade = grades.find(g => g.activityId === activity.id);
+        return acc + (grade?.score || 0);
+    }, 0));
+
+    const finalGrade = (n1Total + n2Total) / 2;
+
+    const modularTotals = modularActivities.map(activity => {
+        const grade = grades.find(g => g.activityId === activity.id);
+        return { name: activity.name, score: grade?.score || 0 };
+    });
+
+
+    return { n1Total, n2Total, finalGrade, modularTotals };
+  };
+
+  const renderGradeRow = (studentId: string, isGroup: boolean, isGroupMember = false) => {
     const studentClassroom = classroomStudents.find(cs => cs.id === studentId);
     if (!studentClassroom) return null;
     const grades = localGrades[studentId] || [];
 
-    const getGrade = (gradeId: string) => grades.find(g => g.id === gradeId)?.score ?? 0;
+    const getGrade = (activityId: string) => grades.find(g => g.activityId === activityId)?.score ?? 0;
     
-    const n1Grades = grades.filter(g => g.group === 'N1') || [];
-    const n2Grades = grades.filter(g => g.group === 'N2') || [];
+    const { n1Total, n2Total, finalGrade, modularTotals } = calculateTotals(grades);
     
-    const n1Total = n1Grades.reduce((acc, g) => acc + (g.score || 0), 0);
-    const n2Total = n2Grades.reduce((acc, g) => acc + (g.score || 0), 0);
-    const finalGrade = n1Total + n2Total;
+    if (isGroupMember) {
+        return (
+             <TableRow key={studentId} className='border-l-2 border-primary'>
+                <TableCell className="sticky left-0 bg-background z-10 pl-8">
+                    <StudentRow studentId={studentClassroom.studentId} />
+                </TableCell>
+                <TableCell colSpan={gradeStructure.length + 3} className='text-center text-muted-foreground'>
+                    As notas deste aluno são sincronizadas com as do grupo.
+                </TableCell>
+            </TableRow>
+        );
+    }
 
     return (
         <TableRow key={studentId}>
@@ -307,21 +274,26 @@ export function StudentGroups({
                     <StudentRow studentId={studentClassroom.studentId} />
                 </div>
             </TableCell>
-             {gradeStructure.map(gradeItem => (
-                <TableCell key={gradeItem.id}>
+             {gradeStructure.map(activity => (
+                <TableCell key={activity.id}>
                 <Input
                     type="number"
                     step="0.5"
-                    defaultValue={getGrade(gradeItem.id)}
-                    onChange={(e) => handleGradeChange(studentId, gradeItem.id, parseFloat(e.target.value) || 0, isGroup)}
+                    min="0"
+                    max={activity.maxScore}
+                    defaultValue={getGrade(activity.id)}
+                    onChange={(e) => handleGradeChange(studentId, activity.id, parseFloat(e.target.value) || 0, isGroup)}
                     className="w-24"
                     disabled={isSaving}
                 />
                 </TableCell>
             ))}
-            <TableCell className="font-semibold text-center">{n1Total.toFixed(1)}</TableCell>
-            <TableCell className="font-semibold text-center">{n2Total.toFixed(1)}</TableCell>
-            <TableCell className="font-bold text-primary text-center">{finalGrade.toFixed(1)}</TableCell>
+            {n1Activities.length > 0 && <TableCell className="font-semibold text-center">{n1Total.toFixed(1)}</TableCell>}
+            {n2Activities.length > 0 && <TableCell className="font-semibold text-center">{n2Total.toFixed(1)}</TableCell>}
+            {(n1Activities.length > 0 || n2Activities.length > 0) && <TableCell className="font-bold text-primary text-center">{finalGrade.toFixed(1)}</TableCell>}
+            {modularTotals.map(mt => (
+                 <TableCell key={mt.name} className="font-semibold text-center">{mt.score.toFixed(1)}</TableCell>
+            ))}
         </TableRow>
     )
   }
@@ -344,35 +316,30 @@ export function StudentGroups({
                   <TableCell colSpan={gradeStructure.length + 3}></TableCell>
               </TableRow>
               {renderGradeRow(firstStudentId, true)}
-              {group.map(csId => (
-                  <TableRow key={csId} className='border-l-2 border-primary'>
-                       <TableCell className="sticky left-0 bg-background z-10 pl-8">
-                           <StudentRow studentId={classroomStudents.find(cs => cs.id === csId)!.studentId} />
-                       </TableCell>
-                       <TableCell colSpan={gradeStructure.length + 3} className='text-center text-muted-foreground'>
-                           As notas deste aluno são sincronizadas com as do grupo.
-                       </TableCell>
-                  </TableRow>
-              ))}
+              {group.slice(1).map(csId => renderGradeRow(csId, false, true))}
           </React.Fragment>
       )
+  }
+
+  if (gradeStructure.length === 0) {
+      return (
+        <div className="py-10 text-center text-muted-foreground">
+          Nenhuma atividade avaliativa foi definida para esta turma. Vá para a aba "Atividades" para configurar um preset.
+        </div>
+      );
   }
 
   return (
     <div className='space-y-4'>
         <div className='flex items-center justify-between'>
             <div className='space-y-1'>
-                 <h3 className="text-lg font-semibold">Grupos e Notas</h3>
+                 <h3 className="text-lg font-semibold">Lançamento de Notas</h3>
                  <p className='text-sm text-muted-foreground'>Crie grupos e edite as notas. As alterações são salvas automaticamente.</p>
             </div>
             <div className='flex items-center gap-2'>
-                <Button variant="outline" onClick={handleCreateGroup} disabled={isSaving || selectedStudents.length < 2}>
+                <Button variant="outline" onClick={handleCreateGroup} disabled={isSaving || selectedStudents.length === 0}>
                     <Users className="mr-2 h-4 w-4" />
                     Agrupar Selecionados
-                </Button>
-                 <Button variant="secondary" onClick={applyStudioTemplate} disabled={isSaving}>
-                    <ClipboardPaste className="mr-2 h-4 w-4" />
-                    Aplicar Template de Estúdio
                 </Button>
                 {isSaving && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
             </div>
@@ -381,19 +348,22 @@ export function StudentGroups({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="sticky left-0 bg-background z-10 w-[250px]">Aluno</TableHead>
-              {n1Structure.length > 0 && <TableHead colSpan={n1Structure.length} className="text-center bg-muted/30">N1</TableHead>}
-              {n2Structure.length > 0 && <TableHead colSpan={n2Structure.length} className="text-center bg-muted/30">N2</TableHead>}
-              <TableHead colSpan={3} className='text-center'>Totais</TableHead>
+              <TableHead className="sticky left-0 bg-background z-10 w-[250px] min-w-[250px]">Aluno</TableHead>
+              {n1Activities.length > 0 && <TableHead colSpan={n1Activities.length} className="text-center bg-muted/30">N1</TableHead>}
+              {n2Activities.length > 0 && <TableHead colSpan={n2Activities.length} className="text-center bg-muted/30">N2</TableHead>}
+              {modularActivities.length > 0 && <TableHead colSpan={modularActivities.length} className="text-center bg-muted/30">Avaliações Modulares</TableHead>}
+
+              {(n1Activities.length > 0 || n2Activities.length > 0) && <TableHead colSpan={3} className='text-center'>Totais</TableHead>}
             </TableRow>
             <TableRow>
                 <TableHead className="sticky left-0 bg-background z-10"></TableHead>
-                {gradeStructure.map(grade => (
-                    <TableHead key={grade.id} className="min-w-[150px]">{grade.description} ({grade.maxScore?.toFixed(1)})</TableHead>
+                {gradeStructure.map(activity => (
+                    <TableHead key={activity.id} className="min-w-[150px]">{activity.name} ({activity.maxScore?.toFixed(1)})</TableHead>
                 ))}
-                <TableHead className='text-center'>Total N1</TableHead>
-                <TableHead className='text-center'>Total N2</TableHead>
-                <TableHead className='text-center'>Nota Final</TableHead>
+                {n1Activities.length > 0 && <TableHead className='text-center'>Total N1</TableHead>}
+                {n2Activities.length > 0 && <TableHead className='text-center'>Total N2</TableHead>}
+                {(n1Activities.length > 0 || n2Activities.length > 0) && <TableHead className='text-center'>Nota Final</TableHead>}
+                 {modularActivities.length > 0 && modularActivities.map(act => <TableHead key={act.id} className="text-center min-w-[150px]">{act.name} Total</TableHead>)}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -406,7 +376,7 @@ export function StudentGroups({
             ) : classroomStudents.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={gradeStructure.length + 4} className="h-24 text-center">
-                  Nenhum aluno para exibir. Adicione alunos à turma primeiro.
+                  Nenhum aluno para exibir. Adicione alunos na aba "Alunos".
                 </TableCell>
               </TableRow>
             ) : (
@@ -421,5 +391,3 @@ export function StudentGroups({
     </div>
   );
 }
-
-    
