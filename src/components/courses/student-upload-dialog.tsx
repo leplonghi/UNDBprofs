@@ -89,42 +89,42 @@ export function StudentUploadDialog({
 
   const parseCSV = (file: File): Promise<ParsedStudent[]> => {
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = event => {
-        try {
-            const text = event.target?.result as string;
-            const rows = text.split(/\r?\n/).filter(row => row.trim() !== '');
-            if (rows.length === 0) {
-                return reject(new Error('O arquivo CSV está vazio.'));
+        const reader = new FileReader();
+        reader.onload = event => {
+            try {
+                const text = event.target?.result as string;
+                const rows = text.split(/\r?\n/).filter(row => row.trim() !== '');
+                if (rows.length === 0) {
+                    return reject(new Error('O arquivo CSV está vazio.'));
+                }
+                const header = rows.shift()?.split(',').map(h => h.trim().toLowerCase().replace(/["']/g, ''));
+
+                if (!header || header.length === 0) {
+                    return reject(new Error('O arquivo CSV está vazio ou não contém um cabeçalho válido.'));
+                }
+
+                const nameIndex = header.findIndex(h => h === 'name' || h === 'nome');
+                const emailIndex = header.findIndex(h => h === 'email' || h === 'e-mail');
+
+                if (nameIndex === -1 || emailIndex === -1) {
+                    return reject(new Error("O CSV deve conter colunas para nome ('name' ou 'nome') e email ('email' ou 'e-mail')."));
+                }
+
+                const students = rows.map(row => {
+                    const columns = row.split(',');
+                    return {
+                        name: columns[nameIndex]?.trim().replace(/["']/g, '') || '',
+                        email: columns[emailIndex]?.trim().replace(/["']/g, '') || '',
+                    };
+                }).filter(s => s.name && s.email);
+
+                resolve(students);
+            } catch (error: any) {
+                reject(new Error(`Falha ao processar o CSV: ${error.message}`));
             }
-            const header = rows.shift()?.split(',').map(h => h.trim().toLowerCase().replace(/["']/g, ''));
-
-            if (!header) {
-                return reject(new Error('O arquivo CSV está vazio ou o cabeçalho não foi encontrado.'));
-            }
-            
-            const nameIndex = header.findIndex(h => h === 'name' || h === 'nome');
-            const emailIndex = header.findIndex(h => h === 'email' || h === 'e-mail');
-
-            if (nameIndex === -1 || emailIndex === -1) {
-                return reject(new Error("O CSV deve conter colunas para nome ('name' ou 'nome') e email ('email' ou 'e-mail')."));
-            }
-
-            const students = rows.map(row => {
-                const columns = row.split(',');
-                return {
-                    name: columns[nameIndex]?.trim().replace(/["']/g, ''),
-                    email: columns[emailIndex]?.trim().replace(/["']/g, ''),
-                };
-            }).filter(s => s.name && s.email);
-
-            resolve(students);
-        } catch (error: any) {
-            reject(new Error(`Falha ao processar o CSV: ${error.message}`));
-        }
-      };
-      reader.onerror = () => reject(new Error('Falha ao ler o arquivo.'));
-      reader.readAsText(file, 'UTF-8');
+        };
+        reader.onerror = () => reject(new Error('Falha ao ler o arquivo.'));
+        reader.readAsText(file, 'UTF-8');
     });
 };
 
@@ -337,3 +337,5 @@ const handleAIExtraction = () => {
     </Dialog>
   );
 }
+
+    
