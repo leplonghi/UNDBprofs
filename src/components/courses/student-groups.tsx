@@ -19,6 +19,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,7 +46,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Skeleton } from '../ui/skeleton';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { debounce } from 'lodash';
-import { Loader2, Users, Trash2, Search, X, PlusCircle } from 'lucide-react';
+import { Loader2, Users, Trash2, Search, X, PlusCircle, Download } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
@@ -351,6 +360,87 @@ export function StudentGroups({
     });
 
     return { n1Total, n2Total, finalGrade, modularTotals };
+  };
+
+  const getExportData = () => {
+    const data = classroomStudents.map(cs => {
+        const studentInfo = allStudentsData[cs.id];
+        if (!studentInfo) return null;
+
+        const grades = localGrades[cs.id] || [];
+        const totals = calculateTotals(grades);
+
+        const row: Record<string, string | number> = {
+            'Nome': studentInfo.name,
+            'Email': studentInfo.email,
+            'Matrícula': studentInfo.registrationId || 'N/A'
+        };
+
+        gradeStructure.forEach(activity => {
+            const grade = grades.find(g => g.activityId === activity.id);
+            row[activity.name] = grade?.score.toFixed(1) ?? '0.0';
+        });
+
+        if (modularActivities.length > 0) {
+            totals.modularTotals.forEach(mt => {
+                row[`Total ${mt.name}`] = mt.score.toFixed(1);
+            });
+        } else {
+            row['Total N1'] = totals.n1Total.toFixed(1);
+            row['Total N2'] = totals.n2Total.toFixed(1);
+            row['Nota Final'] = totals.finalGrade.toFixed(1);
+        }
+        return row;
+    }).filter(Boolean);
+
+    // @ts-ignore
+    const headers = data.length > 0 ? Object.keys(data[0]) : [];
+    // @ts-ignore
+    const body = data.map(row => Object.values(row));
+    
+    return { headers, body };
+};
+
+  const exportToCSV = () => {
+      const { headers, body } = getExportData();
+      if (headers.length === 0) {
+          toast({ variant: 'destructive', title: 'Nenhum dado para exportar.' });
+          return;
+      }
+      
+      const csvContent = [
+          headers.join(','),
+          ...body.map(row => row.join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute('download', 'notas.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast({ title: 'Exportação CSV iniciada.' });
+  };
+
+  const exportToPDF = () => {
+      const { headers, body } = getExportData();
+       if (headers.length === 0) {
+          toast({ variant: 'destructive', title: 'Nenhum dado para exportar.' });
+          return;
+      }
+
+      const doc = new jsPDF({ orientation: 'landscape' });
+
+      autoTable(doc, {
+          head: [headers],
+          body: body,
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [79, 53, 150] } // Primary color
+      });
+
+      doc.save('notas.pdf');
+      toast({ title: 'Exportação PDF iniciada.' });
   };
 
   const filteredGroups = useMemo(() => {
@@ -779,6 +869,18 @@ export function StudentGroups({
                 <Users className="mr-2 h-4 w-4" />
                 Agrupar Selecionados
               </Button>
+               <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline">
+                      <Download className="mr-2 h-4 w-4" />
+                      Exportar
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onSelect={exportToCSV}>Exportar para CSV</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={exportToPDF}>Exportar para PDF</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               {isSaving && (
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               )}
