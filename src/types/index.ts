@@ -30,3 +30,8 @@ export interface ClassroomStudent {
     classroomId: string;
     studentId: string;
 }
+
+export interface ExtractedStudent {
+    name: string;
+    email: string;
+}
