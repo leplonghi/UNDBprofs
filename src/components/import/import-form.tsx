@@ -18,6 +18,8 @@ import { useFirestore, useUser } from '@/firebase';
 import { doc, writeBatch } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import type { Course, Classroom } from '@/types';
+import { ThematicTreeEditor } from './ThematicTreeEditor';
+import { ClassScheduleEditor } from './ClassScheduleEditor';
 
 const formSchema = z.object({
   courseName: z.string().min(1, 'Nome do curso é obrigatório.'),
@@ -27,9 +29,9 @@ const formSchema = z.object({
   workload: z.string().min(1, 'Carga horária é obrigatória.'),
   semester: z.string().min(1, 'Semestre é obrigatório.'),
   competencies: z.string().min(1, 'Competências são obrigatórias.'),
-  thematicTree: z.array(z.object({ name: z.string(), description: z.string() })).optional(),
+  thematicTree: z.array(z.object({ name: z.string().min(1, 'O nome é obrigatório.'), description: z.string().min(1, 'A descrição é obrigatória.') })).optional(),
   bibliography: z.string().min(1, 'Bibliografia é obrigatória.'),
-  classSchedule: z.array(z.object({ date: z.string(), content: z.string(), activity: z.string() })).optional(),
+  classSchedule: z.array(z.object({ date: z.string().min(1, 'A data é obrigatória.'), content: z.string().min(1, 'O conteúdo é obrigatório.'), activity: z.string().min(1, 'A atividade é obrigatória.') })).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -89,9 +91,9 @@ export function ImportForm() {
         workload: extractedData.workload,
         semester: extractedData.semester,
         competencies: extractedData.competencies,
-        thematicTree: extractedData.thematicTree,
+        thematicTree: extractedData.thematicTree || [],
         bibliography: extractedData.bibliography,
-        classSchedule: extractedData.classSchedule,
+        classSchedule: extractedData.classSchedule || [],
       });
     }
   }, [extractedData, form]);
@@ -167,7 +169,7 @@ export function ImportForm() {
     return (
         <div className="flex items-center justify-center space-x-2 text-muted-foreground p-8">
             <Loader2 className="h-5 w-5 animate-spin" />
-            <span>Redirecionando...</span>
+            <span>Carregando dados extraídos...</span>
         </div>
     );
   }
@@ -245,31 +247,7 @@ export function ImportForm() {
                     </FormItem>
                   )}
                 />
-                 <FormField
-                  control={form.control}
-                  name="thematicTree"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Árvore Temática</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          rows={8}
-                          value={field.value ? JSON.stringify(field.value, null, 2) : ''}
-                          onChange={(e) => {
-                            try {
-                              const parsed = JSON.parse(e.target.value);
-                              field.onChange(parsed);
-                            } catch (error) {
-                              // Handle invalid JSON input if necessary
-                              console.warn("Invalid JSON for thematicTree");
-                            }
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                 <ThematicTreeEditor control={form.control} />
                 <FormField
                   control={form.control}
                   name="bibliography"
@@ -315,30 +293,7 @@ export function ImportForm() {
                     )}
                   />
                 </div>
-                <FormField
-                  control={form.control}
-                  name="classSchedule"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Cronograma de Aulas</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          rows={8}
-                          value={field.value ? JSON.stringify(field.value, null, 2) : ''}
-                          onChange={(e) => {
-                             try {
-                              const parsed = JSON.parse(e.target.value);
-                              field.onChange(parsed);
-                            } catch (error) {
-                              console.warn("Invalid JSON for classSchedule");
-                            }
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <ClassScheduleEditor control={form.control} />
             </div>
             
             <Button type="submit" className="w-full" disabled={isSaving}>
