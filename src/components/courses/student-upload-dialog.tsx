@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
 import { doc, writeBatch } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import { Loader2, UploadCloud, FileScan, FileText } from 'lucide-react';
@@ -169,30 +169,29 @@ const handleAIExtraction = () => {
     toast({ title: 'Iniciando importação...', description: `Adicionando ${studentsToCreate.length} alunos à turma.` });
 
     try {
-      const batch = writeBatch(firestore);
+        for (const studentData of studentsToCreate) {
+            const studentId = uuidv4(); 
+            const studentRef = doc(firestore, `students/${studentId}`);
+            
+            const studentPayload: Student = {
+              id: studentId,
+              name: studentData.name,
+              email: studentData.email,
+            };
+            
+            // Create the student document first.
+            await setDoc(studentRef, studentPayload);
 
-      for (const studentData of studentsToCreate) {
-        const studentId = uuidv4(); 
-        const classroomStudentId = uuidv4();
-        
-        const studentRef = doc(firestore, `students/${studentId}`);
-        const studentPayload: Student = {
-          id: studentId,
-          name: studentData.name,
-          email: studentData.email,
-        };
-        batch.set(studentRef, studentPayload);
-
-        const classroomStudentRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/classroomStudents/${classroomStudentId}`);
-        const classroomStudentPayload: ClassroomStudent = {
-          id: classroomStudentId,
-          classroomId: classroomId,
-          studentId: studentId,
-        };
-        batch.set(classroomStudentRef, classroomStudentPayload);
+            // Then create the association in a batch (or individually if preferred)
+            const classroomStudentId = uuidv4();
+            const classroomStudentRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/classroomStudents/${classroomStudentId}`);
+            const classroomStudentPayload: ClassroomStudent = {
+              id: classroomStudentId,
+              classroomId: classroomId,
+              studentId: studentId,
+            };
+            setDocumentNonBlocking(classroomStudentRef, classroomStudentPayload, { merge: false });
       }
-      
-      await batch.commit();
 
       toast({
         title: 'Sucesso!',
@@ -338,3 +337,5 @@ const handleAIExtraction = () => {
     </Dialog>
   );
 }
+
+    
