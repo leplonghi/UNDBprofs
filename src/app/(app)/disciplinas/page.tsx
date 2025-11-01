@@ -1,7 +1,6 @@
 'use client';
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { ClassroomsList } from '@/components/courses/classrooms-list';
 import { NewClassroomDialog } from '@/components/courses/new-classroom-dialog';
 
@@ -14,20 +13,7 @@ export default function CoursesPage() {
       </div>
       <Card>
         <CardContent className="p-0">
-          <Tabs defaultValue="active">
-            <div className="p-4 border-b">
-              <TabsList>
-                <TabsTrigger value="active">Ativas</TabsTrigger>
-                <TabsTrigger value="past">Anteriores</TabsTrigger>
-              </TabsList>
-            </div>
-            <TabsContent value="active">
-                <ClassroomsList filter="active" />
-            </TabsContent>
-            <TabsContent value="past">
-                <ClassroomsList filter="past" />
-            </TabsContent>
-          </Tabs>
+          <ClassroomsList />
         </CardContent>
       </Card>
     </div>
