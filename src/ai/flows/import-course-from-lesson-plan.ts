@@ -82,10 +82,11 @@ const prompt = ai.definePrompt({
       - bibliography
       - classSchedule: A list of all classes. Each class should have a 'date', 'content' (topic), and planned 'activity'.
 
-  2.  **Determine classType**: This is a critical step. Analyze the document's content (course name, syllabus, objectives) to classify the discipline.
-      - If the discipline is project-based, a "Studio", or has a clear project development cycle (e.g., analysis, preliminary solution, final delivery), set classType to **"Integradora"**.
-      - Otherwise, for more traditional or theoretical disciplines, set classType to **"Modular"**.
-      - You MUST provide a value for classType. Default to "Modular" if uncertain.
+  2.  **Determine classType**: This is a critical step. Analyze the document's content to classify the discipline.
+      - **Rule 1 (Highest Priority):** If the course name contains the word "Estúdio", you MUST classify it as **"Integradora"**.
+      - **Rule 2:** If Rule 1 does not apply, analyze the content. If the discipline is project-based, a "Studio", or has a clear project development cycle (e.g., analysis, preliminary solution, final delivery), set classType to **"Integradora"**.
+      - **Rule 3:** Otherwise, for all other traditional or theoretical disciplines, set classType to **"Modular"**.
+      - You MUST provide a value for classType. Default to "Modular" if uncertain after applying the rules.
 
   **Output Instructions**:
   - Be as faithful as possible to the original text. Do not summarize or alter technical content.
