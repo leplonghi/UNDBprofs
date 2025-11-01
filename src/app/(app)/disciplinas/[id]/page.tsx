@@ -31,7 +31,7 @@ import { Button } from '@/components/ui/button';
 import { Users } from 'lucide-react';
 import { StudentUploadDialog } from '@/components/courses/student-upload-dialog';
 import { ClassroomStudentsTable } from '@/components/courses/classroom-students-table';
-import { GradesTable } from '@/components/courses/grades-table';
+import { StudentGroups } from '@/components/courses/student-groups';
 
 function CourseDetailsSkeleton() {
   return (
@@ -175,7 +175,7 @@ function ClassroomManager({ courseId }: { courseId: string }) {
         <Tabs defaultValue="students" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="students">Alunos</TabsTrigger>
-            <TabsTrigger value="grades">Lançamento de Notas</TabsTrigger>
+            <TabsTrigger value="grades">Grupos e Notas</TabsTrigger>
             <TabsTrigger value="schedule">Cronograma</TabsTrigger>
           </TabsList>
           <TabsContent value="students" className="mt-6">
@@ -187,7 +187,7 @@ function ClassroomManager({ courseId }: { courseId: string }) {
             />
           </TabsContent>
           <TabsContent value="grades" className="mt-6">
-            <GradesTable
+            <StudentGroups
                 courseId={courseId}
                 classroomId={classroom.id}
                 classroomStudents={classroomStudents ?? []}

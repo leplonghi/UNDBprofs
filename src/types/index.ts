@@ -39,6 +39,7 @@ export interface ClassroomStudent {
     classroomId: string;
     studentId: string;
     grades?: Grade[];
+    groupId?: string | null;
 }
 
 export interface ExtractedStudent {
