@@ -245,20 +245,26 @@ export function ImportForm() {
                     </FormItem>
                   )}
                 />
-                <FormField
+                 <FormField
                   control={form.control}
                   name="thematicTree"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Árvore Temática</FormLabel>
                       <FormControl>
-                        <Textarea rows={5} value={field.value?.map(v => `${v.name}: ${v.description}`).join('\\n')} onChange={(e) => {
-                          const value = e.target.value.split('\\n').map(line => {
-                            const [name, ...description] = line.split(':');
-                            return {name: name.trim(), description: description.join(':').trim()};
-                          });
-                          field.onChange(value);
-                        }} />
+                        <Textarea
+                          rows={8}
+                          value={field.value ? JSON.stringify(field.value, null, 2) : ''}
+                          onChange={(e) => {
+                            try {
+                              const parsed = JSON.parse(e.target.value);
+                              field.onChange(parsed);
+                            } catch (error) {
+                              // Handle invalid JSON input if necessary
+                              console.warn("Invalid JSON for thematicTree");
+                            }
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -309,21 +315,25 @@ export function ImportForm() {
                     )}
                   />
                 </div>
-                 <FormField
+                <FormField
                   control={form.control}
                   name="classSchedule"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Cronograma de Aulas</FormLabel>
                       <FormControl>
-                          <Textarea rows={8} value={field.value?.map(v => `${v.date} - ${v.content}: ${v.activity}`).join('\\n')} onChange={(e) => {
-                          const value = e.target.value.split('\\n').map(line => {
-                            const [date, rest] = line.split(' - ');
-                            const [content, ...activity] = rest ? rest.split(':') : ['', ''];
-                            return {date: date.trim(), content: content.trim(), activity: activity.join(':').trim()};
-                          });
-                          field.onChange(value);
-                        }} />
+                        <Textarea
+                          rows={8}
+                          value={field.value ? JSON.stringify(field.value, null, 2) : ''}
+                          onChange={(e) => {
+                             try {
+                              const parsed = JSON.parse(e.target.value);
+                              field.onChange(parsed);
+                            } catch (error) {
+                              console.warn("Invalid JSON for classSchedule");
+                            }
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
