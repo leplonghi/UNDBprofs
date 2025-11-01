@@ -107,8 +107,7 @@ export function CoursesTable() {
             courses.map((course) => (
               <TableRow key={course.id}>
                 <TableCell className="font-medium">
-                  {/* The link will eventually go to a new details page */}
-                  <Link href={`#`} className="hover:underline">
+                  <Link href={`/disciplinas/${course.id}`} className="hover:underline">
                     {course.name}
                   </Link>
                 </TableCell>
@@ -126,7 +125,7 @@ export function CoursesTable() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Ações</DropdownMenuLabel>
                       <DropdownMenuItem asChild>
-                        <Link href={`#`}>
+                        <Link href={`/disciplinas/${course.id}`}>
                           <Eye className="mr-2 h-4 w-4" />
                           <span>Ver Detalhes</span>
                         </Link>
