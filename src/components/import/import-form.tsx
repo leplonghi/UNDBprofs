@@ -266,7 +266,7 @@ export function ImportForm() {
                     <FormItem>
                       <FormLabel>Bibliografia</FormLabel>
                       <FormControl>
-                        <Textarea rows={8} {...field} />
+                        <Textarea rows={12} {...field} className="font-mono text-xs" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

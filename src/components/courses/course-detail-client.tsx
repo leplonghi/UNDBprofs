@@ -102,7 +102,7 @@ function CourseInformation({
         {course.bibliography && (
           <div>
             <h3 className="font-semibold">Bibliografia</h3>
-            <p className="whitespace-pre-wrap text-muted-foreground">
+            <p className="whitespace-pre-wrap text-muted-foreground font-mono text-sm">
               {course.bibliography}
             </p>
           </div>
