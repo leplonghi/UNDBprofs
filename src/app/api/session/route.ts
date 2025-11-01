@@ -48,3 +48,18 @@ export async function DELETE() {
     return NextResponse.json({ error: 'Failed to sign out.' }, { status: 500 });
   }
 }
+
+export async function GET(req: NextRequest) {
+    const session = cookies().get('session')?.value;
+    if (!session) {
+      return NextResponse.json({ isAuthenticated: false }, { status: 200 });
+    }
+
+    try {
+        const auth = getAuth();
+        const decodedClaims = await auth.verifySessionCookie(session, true);
+        return NextResponse.json({ isAuthenticated: true, user: decodedClaims }, { status: 200 });
+    } catch (error) {
+        return NextResponse.json({ isAuthenticated: false }, { status: 200 });
+    }
+}
