@@ -7,8 +7,8 @@ import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from '@
 import { doc, collection } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
-import { CourseClassSchedule } from '@/components/courses/course-class-schedule';
 import { useParams } from 'next/navigation';
+import type { Course } from '@/types';
 
 export default function CourseDetailPage() {
   const params = useParams();
@@ -21,7 +21,7 @@ export default function CourseDetailPage() {
     return doc(firestore, `professors/${user.uid}/courses/${courseId}`);
   }, [user, firestore, courseId]);
 
-  const { data: course, isLoading: isCourseLoading } = useDoc(courseRef);
+  const { data: course, isLoading: isCourseLoading } = useDoc<Course>(courseRef);
 
   const classesRef = useMemoFirebase(() => {
     if (!user || !firestore || !courseId) return null;
@@ -84,10 +84,9 @@ export default function CourseDetailPage() {
          <Card>
             <CardHeader>
                 <CardTitle>{course.name} ({course.code})</CardTitle>
-                 <div className="flex gap-4 text-sm text-muted-foreground pt-2">
-                    <span>Carga Horária: <strong>{course.workload}</strong></span>
-                    <span>Semestre: <strong>{course.semester}</strong></span>
-                </div>
+                 <CardDescription>
+                    Esta é a visualização geral da disciplina. As turmas, horários e cronogramas são gerenciados individualmente.
+                </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                 <div>
@@ -124,8 +123,6 @@ export default function CourseDetailPage() {
                   </div>
                 )}
                 
-                <CourseClassSchedule course={course} courseRef={courseRef} />
-
                 {course.bibliography && (
                     <div>
                         <h3 className="font-semibold text-lg mb-2">Bibliografia</h3>

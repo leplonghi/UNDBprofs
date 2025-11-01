@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { updateDocumentNonBlocking } from '@/firebase';
 import { Loader2, Pencil, Trash2 } from 'lucide-react';
 import { ScrollArea } from '../ui/scroll-area';
+import type { Classroom } from '@/types';
 
 const classScheduleItemSchema = z.object({
   date: z.string().min(1, 'Data é obrigatória'),
@@ -28,18 +29,18 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 interface CourseClassScheduleProps {
-  course: any;
-  courseRef: DocumentReference | null;
+  classroom: Classroom;
+  classroomRef: DocumentReference | null;
 }
 
-export function CourseClassSchedule({ course, courseRef }: CourseClassScheduleProps) {
+export function CourseClassSchedule({ classroom, classroomRef }: CourseClassScheduleProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      classSchedule: course.classSchedule || [],
+      classSchedule: classroom.classSchedule || [],
     },
   });
   
@@ -50,17 +51,17 @@ export function CourseClassSchedule({ course, courseRef }: CourseClassSchedulePr
 
   useEffect(() => {
     form.reset({
-      classSchedule: course.classSchedule || [],
+      classSchedule: classroom.classSchedule || [],
     });
-  }, [course.classSchedule, form]);
+  }, [classroom.classSchedule, form]);
 
   const onSubmit = (data: FormData) => {
-    if (!courseRef) {
-        toast({ variant: 'destructive', title: 'Erro', description: 'Referência do curso não encontrada.' });
+    if (!classroomRef) {
+        toast({ variant: 'destructive', title: 'Erro', description: 'Referência da turma não encontrada.' });
         return;
     }
 
-    updateDocumentNonBlocking(courseRef, { classSchedule: data.classSchedule });
+    updateDocumentNonBlocking(classroomRef, { classSchedule: data.classSchedule });
 
     toast({
       title: 'Cronograma Atualizado!',
@@ -79,7 +80,7 @@ export function CourseClassSchedule({ course, courseRef }: CourseClassSchedulePr
         </Button>
       </div>
 
-      {course.classSchedule && course.classSchedule.length > 0 ? (
+      {classroom.classSchedule && classroom.classSchedule.length > 0 ? (
         <div className="border rounded-lg overflow-hidden">
           <Table>
             <TableHeader>
@@ -90,7 +91,7 @@ export function CourseClassSchedule({ course, courseRef }: CourseClassSchedulePr
               </TableRow>
             </TableHeader>
             <TableBody>
-              {course.classSchedule.map((item: any, index: number) => (
+              {classroom.classSchedule.map((item: any, index: number) => (
                 <TableRow key={index}>
                   <TableCell>{item.date}</TableCell>
                   <TableCell>{item.content}</TableCell>
@@ -101,7 +102,7 @@ export function CourseClassSchedule({ course, courseRef }: CourseClassSchedulePr
           </Table>
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">Nenhum cronograma de aulas cadastrado.</p>
+        <p className="text-sm text-muted-foreground">Nenhum cronograma de aulas cadastrado para esta turma.</p>
       )}
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>

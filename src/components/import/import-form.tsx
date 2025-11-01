@@ -113,18 +113,17 @@ export function ImportForm() {
           competencies: values.competencies,
           thematicTree: values.thematicTree,
           bibliography: values.bibliography,
-          classSchedule: values.classSchedule,
-          workload: values.workload,
-          semester: values.semester,
+          // semester and workload are now part of classroom
         };
     
         const classroomData = {
             id: classroomId,
             courseId: courseId,
             professorId: user.uid,
-            name: values.semester, // Use semester as the name for the first class
+            name: values.semester,
             semester: values.semester,
             workload: values.workload,
+            classSchedule: values.classSchedule ?? [],
             classType: 'Regular', // Default value, can be extracted in future
             gradingRule: '', // Default value, can be extracted in future
         };
@@ -202,7 +201,7 @@ export function ImportForm() {
                     name="semester"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Semestre</FormLabel>
+                        <FormLabel>Semestre (da Turma)</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -215,7 +214,7 @@ export function ImportForm() {
                     name="workload"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Carga Horária</FormLabel>
+                        <FormLabel>Carga Horária (da Turma)</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -300,7 +299,7 @@ export function ImportForm() {
                   name="classSchedule"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Cronograma de Aulas</FormLabel>
+                      <FormLabel>Cronograma de Aulas (da Turma)</FormLabel>
                       <FormControl>
                           <Textarea rows={8} value={field.value?.map(v => `${v.date} - ${v.content}: ${v.activity}`).join('\n')} onChange={(e) => {
                           const value = e.target.value.split('\n').map(line => {

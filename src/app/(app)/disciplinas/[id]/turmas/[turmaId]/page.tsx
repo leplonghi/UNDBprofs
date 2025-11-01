@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useUser, useFirestore, useDoc, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useParams, useRouter } from 'next/navigation';
@@ -18,6 +18,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useToast } from '@/hooks/use-toast';
+import { CourseClassSchedule } from '@/components/courses/course-class-schedule';
+import type { Classroom } from '@/types';
+
 
 export default function ClassDetailPage() {
     const params = useParams();
@@ -36,7 +39,7 @@ export default function ClassDetailPage() {
         return doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}`);
     }, [user, firestore, courseId, classroomId]);
 
-    const { data: classroom, isLoading } = useDoc(classroomRef);
+    const { data: classroom, isLoading } = useDoc<Classroom>(classroomRef);
 
     const handleDelete = async () => {
         if (!classroomRef) return;
@@ -73,6 +76,14 @@ export default function ClassDetailPage() {
                         <Skeleton className="h-10 w-1/4" />
                     </CardContent>
                 </Card>
+                 <Card>
+                    <CardHeader>
+                        <Skeleton className="h-8 w-1/3" />
+                    </CardHeader>
+                    <CardContent>
+                        <Skeleton className="h-40 w-full" />
+                    </CardContent>
+                </Card>
             </div>
         )
     }
@@ -100,6 +111,15 @@ export default function ClassDetailPage() {
                         )}
                     </CardContent>
                 </Card>
+
+                {classroom && (
+                  <Card>
+                      <CardContent className="p-6">
+                          <CourseClassSchedule classroom={classroom} classroomRef={classroomRef} />
+                      </CardContent>
+                  </Card>
+                )}
+
                  <Card>
                     <CardHeader>
                         <CardTitle>Zona de Perigo</CardTitle>
