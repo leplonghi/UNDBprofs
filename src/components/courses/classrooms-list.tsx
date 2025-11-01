@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { collection, getDocs, query, DocumentData } from 'firebase/firestore';
-import { useUser, useFirestore } from '@/firebase';
+import { collection, getDocs, query, DocumentData, collectionGroup } from 'firebase/firestore';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '../ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
+import type { Course } from '@/types';
+
 
 interface Classroom {
   id: string;
@@ -46,63 +48,67 @@ export function ClassroomsList({ filter }: ClassroomsListProps) {
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const coursesRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return collection(firestore, `professors/${user.uid}/courses`);
+  }, [user, firestore]);
+
+  const { data: courses, isLoading: coursesLoading, error: coursesError } = useCollection<Course>(coursesRef);
+
+
   useEffect(() => {
-    async function fetchClassroomsAndCourses() {
-      if (!user || !firestore) return;
+    async function fetchAllClassrooms() {
+      if (!user || !firestore || !courses) {
+        if (!coursesLoading) setIsLoading(false);
+        return;
+      };
 
       setIsLoading(true);
-      
+      const allClassrooms: Classroom[] = [];
+
       try {
-        const allClassrooms: Classroom[] = [];
-
-        // 1. Fetch all courses for the professor
-        const coursesRef = collection(firestore, `professors/${user.uid}/courses`);
-        const coursesSnapshot = await getDocs(coursesRef);
-
-        // 2. For each course, fetch its classrooms
-        for (const courseDoc of coursesSnapshot.docs) {
-          const courseData = courseDoc.data();
-          const classroomsRef = collection(firestore, `professors/${user.uid}/courses/${courseDoc.id}/classrooms`);
-          const classroomsSnapshot = await getDocs(classroomsRef);
-          
-          classroomsSnapshot.forEach(classroomDoc => {
-            const classroomData = classroomDoc.data();
-            allClassrooms.push({
-              id: classroomDoc.id,
-              name: classroomData.name,
-              semester: classroomData.semester,
-              courseId: courseDoc.id,
-              courseName: courseData.name,
-              courseCode: courseData.code,
+        for (const course of courses) {
+            const classroomsRef = collection(firestore, `professors/${user.uid}/courses/${course.id}/classrooms`);
+            const classroomsSnapshot = await getDocs(classroomsRef);
+            
+            classroomsSnapshot.forEach(classroomDoc => {
+                const classroomData = classroomDoc.data();
+                allClassrooms.push({
+                    id: classroomDoc.id,
+                    name: classroomData.name,
+                    semester: classroomData.semester,
+                    courseId: course.id,
+                    courseName: course.name,
+                    courseCode: course.code,
+                });
             });
-          });
         }
         
-        // 3. Filter based on the 'active' or 'past' criteria
         const currentSemesterValue = getCurrentSemesterValue();
-        const filteredClassrooms = allClassrooms.filter(c => {
-          const classroomSemesterValue = getSemesterValue(c.semester);
-          if (classroomSemesterValue === 0) return false; 
-
-           if (filter === 'active') {
-            return classroomSemesterValue >= currentSemesterValue;
-          } else { 
-            return classroomSemesterValue < currentSemesterValue;
-          }
+        const filtered = allClassrooms.filter(c => {
+            const classroomSemesterValue = getSemesterValue(c.semester);
+            if (classroomSemesterValue === 0) return false;
+            
+            if (filter === 'active') {
+                return classroomSemesterValue >= currentSemesterValue;
+            } else {
+                return classroomSemesterValue < currentSemesterValue;
+            }
         });
 
-        setClassrooms(filteredClassrooms);
-
-      } catch (error) {
-        console.error("Error fetching classrooms:", error);
-        // Set an error state to show in the UI, this is a real permission error
+        setClassrooms(filtered);
+      } catch(e) {
+          console.error("Error fetching classrooms for courses: ", e)
       } finally {
-        setIsLoading(false);
+          setIsLoading(false);
       }
     }
 
-    fetchClassroomsAndCourses();
-  }, [user, firestore, filter]);
+    if (!coursesLoading) {
+      fetchAllClassrooms();
+    }
+    
+  }, [user, firestore, courses, coursesLoading, filter]);
 
   if (isLoading) {
     return (
@@ -112,6 +118,14 @@ export function ClassroomsList({ filter }: ClassroomsListProps) {
         <Skeleton className="h-10 w-full" />
       </div>
     );
+  }
+
+  if (coursesError) {
+    return (
+         <p className="p-4 text-center text-destructive">
+            Ocorreu um erro de permissão ao buscar as turmas.
+        </p>
+    )
   }
 
   if (classrooms.length === 0) {
