@@ -93,42 +93,37 @@ export function StudentUploadDialog({
       reader.onload = (event) => {
         try {
           const text = event.target?.result as string;
-          const rows = text.split(/\r?\n/).filter((row) => row.trim() !== '');
+          // Split into rows and remove any blank lines
+          const rows = text.split(/\r?\n/).filter(row => row.trim() !== '');
   
           if (rows.length < 2) {
-            return reject(new Error('O arquivo CSV está vazio ou contém apenas o cabeçalho.'));
+            return reject(new Error('O arquivo CSV está vazio ou contém apenas o cabeçalho. Ele deve ter um cabeçalho e pelo menos uma linha de dados.'));
           }
   
-          const headerRow = rows.shift()!;
+          const headerRow = rows.shift()!; // Remove header row
           
-          // Auto-detect delimiter
+          // Auto-detect delimiter by checking the header
           const delimiter = headerRow.includes(';') ? ';' : ',';
   
-          const cleanHeader = (h: string) => h.trim().toLowerCase().replace(/["']/g, '');
-          const header = headerRow.split(delimiter).map(cleanHeader);
-  
-          if (!header || header.length === 0) {
-            return reject(new Error('O cabeçalho do CSV é inválido.'));
-          }
-  
-          const nameIndex = header.findIndex((h) => h === 'name' || h === 'nome');
-          const emailIndex = header.findIndex((h) => h === 'email' || h === 'e-mail');
-  
-          if (nameIndex === -1 || emailIndex === -1) {
-            return reject(new Error("O CSV deve conter colunas para nome ('name' ou 'nome') e email ('email' ou 'e-mail')."));
-          }
-  
           const students = rows
-            .map((row) => {
+            .map((row, index) => {
               const columns = row.split(delimiter);
-              const name = (columns[nameIndex] || '').trim().replace(/["']/g, '');
-              const email = (columns[emailIndex] || '').trim().replace(/["']/g, '');
+              
+              // Assume first column is name, second is email
+              const name = (columns[0] || '').trim().replace(/["']/g, '');
+              const email = (columns[1] || '').trim().replace(/["']/g, '');
+  
               if (name && email) {
                 return { name, email };
               }
+              console.warn(`Linha ${index + 2} ignorada por dados ausentes: ${row}`);
               return null;
             })
             .filter((s): s is ParsedStudent => s !== null);
+          
+          if (students.length === 0) {
+            return reject(new Error('Nenhum aluno válido encontrado no arquivo. Verifique se as duas primeiras colunas contêm nome e e-mail.'));
+          }
   
           resolve(students);
         } catch (error: any) {
@@ -268,7 +263,7 @@ const handleAIExtraction = () => {
             <TabsContent value="csv">
                 <div className="space-y-4 py-4">
                      <p className="text-sm text-muted-foreground">
-                        Envie um arquivo CSV com as colunas &quot;name&quot; (ou &quot;nome&quot;) e &quot;email&quot; (ou &quot;e-mail&quot;).
+                        Envie um arquivo CSV. A primeira coluna deve ser o nome e a segunda o e-mail.
                     </p>
                     <div 
                         className="flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary"
@@ -349,5 +344,3 @@ const handleAIExtraction = () => {
     </Dialog>
   );
 }
-
-    
