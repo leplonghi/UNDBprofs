@@ -8,9 +8,12 @@ interface FirebaseClientProviderProps {
   children: ReactNode;
 }
 
+// This component now has a single responsibility: initializing Firebase
+// on the client-side and passing the services to the provider.
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
-  // initializeFirebase now ensures it only runs once and returns the services.
-  const { firebaseApp, auth, firestore } = initializeFirebase();
+  // The useMemo hook ensures that initializeFirebase() is called only once
+  // per component lifecycle, returning the singleton instance of Firebase services.
+  const { firebaseApp, auth, firestore } = useMemo(() => initializeFirebase(), []);
 
   return (
     <FirebaseProvider
