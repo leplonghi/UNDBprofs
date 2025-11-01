@@ -33,20 +33,21 @@ import { useUser, useFirestore, useCollection, useMemoFirebase, deleteDocumentNo
 import { collection, doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import type { Course } from '@/types';
 
 export function CoursesTable() {
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
-  const [courseToDelete, setCourseToDelete] = useState<any | null>(null);
+  const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
 
-  const coursesRef = useMemoFirebase(() => {
+  const coursesQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return collection(firestore, `professors/${user.uid}/courses`);
   }, [user, firestore]);
 
-  const { data: courses, isLoading } = useCollection(coursesRef);
+  const { data: courses, isLoading } = useCollection<Course>(coursesQuery);
 
   const handleDeleteCourse = async () => {
     if (!courseToDelete || !user || !firestore) return;
@@ -89,11 +90,13 @@ export function CoursesTable() {
         </TableHeader>
         <TableBody>
           {isLoading ? (
-            <TableRow>
-              <TableCell colSpan={3}>
-                <Skeleton className="h-10 w-full" />
-              </TableCell>
-            </TableRow>
+            Array.from({ length: 3 }).map((_, i) => (
+                <TableRow key={i}>
+                    <TableCell colSpan={3}>
+                        <Skeleton className="h-10 w-full" />
+                    </TableCell>
+                </TableRow>
+            ))
           ) : !courses || courses.length === 0 ? (
             <TableRow>
               <TableCell colSpan={3} className="h-24 text-center">
@@ -104,7 +107,8 @@ export function CoursesTable() {
             courses.map((course) => (
               <TableRow key={course.id}>
                 <TableCell className="font-medium">
-                  <Link href={`/disciplinas/${course.id}`} className="hover:underline">
+                  {/* The link will eventually go to a new details page */}
+                  <Link href={`#`} className="hover:underline">
                     {course.name}
                   </Link>
                 </TableCell>
@@ -122,7 +126,7 @@ export function CoursesTable() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Ações</DropdownMenuLabel>
                       <DropdownMenuItem asChild>
-                        <Link href={`/disciplinas/${course.id}`}>
+                        <Link href={`#`}>
                           <Eye className="mr-2 h-4 w-4" />
                           <span>Ver Detalhes</span>
                         </Link>

@@ -4,10 +4,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
-import { useFirestore, useUser, addDocumentNonBlocking } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
+import { doc, collection } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
-
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,12 +15,15 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import type { Course } from '@/types';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Nome da disciplina é obrigatório.'),
   code: z.string().min(1, 'Código é obrigatório.'),
   syllabus: z.string().min(1, 'Ementa é obrigatória.'),
   objectives: z.string().min(1, 'Objetivos são obrigatórios.'),
+  competencies: z.string().optional(),
+  bibliography: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -39,6 +41,8 @@ export default function NewCoursePage() {
       code: '',
       syllabus: '',
       objectives: '',
+      competencies: '',
+      bibliography: '',
     },
   });
 
@@ -53,35 +57,23 @@ export default function NewCoursePage() {
     }
 
     const courseId = uuidv4();
-    const courseData = {
+    const courseRef = doc(firestore, `professors/${user.uid}/courses/${courseId}`);
+
+    const courseData: Course = {
       id: courseId,
       professorId: user.uid,
-      name: values.name,
-      code: values.code,
-      syllabus: values.syllabus,
-      objectives: values.objectives,
+      ...values,
+      thematicTree: [], // Default empty value
     };
     
-    try {
-      const coursesCollection = collection(firestore, `professors/${user.uid}/courses`);
-      // Note: We are not awaiting this on purpose to make UI faster
-      addDocumentNonBlocking(coursesCollection, courseData);
+    setDocumentNonBlocking(courseRef, courseData, { merge: false });
 
-      toast({
-        title: 'Disciplina Criada com Sucesso!',
-        description: `A disciplina "${values.name}" foi adicionada.`,
-      });
-      
-      router.push('/disciplinas');
-
-    } catch (error) {
-      console.error('Error creating course: ', error);
-      toast({
-        variant: 'destructive',
-        title: 'Erro ao Salvar',
-        description: 'Não foi possível criar a disciplina. Tente novamente.',
-      });
-    }
+    toast({
+      title: 'Disciplina Criada com Sucesso!',
+      description: `A disciplina "${values.name}" foi adicionada.`,
+    });
+    
+    router.push('/disciplinas');
   }
 
   return (
@@ -89,7 +81,7 @@ export default function NewCoursePage() {
       <CardHeader>
         <CardTitle>Nova Disciplina</CardTitle>
         <CardDescription>
-          Preencha as informações abaixo para criar uma nova disciplina. As turmas serão criadas no próximo passo.
+          Preencha as informações abaixo para criar uma nova disciplina. As turmas poderão ser adicionadas a seguir.
         </CardDescription>
       </CardHeader>
       <Form {...form}>

@@ -1,8 +1,8 @@
 export interface Course {
   id: string;
+  professorId: string;
   name: string;
   code: string;
-  professorId: string;
   syllabus: string;
   objectives: string;
   competencies: string;
@@ -11,13 +11,10 @@ export interface Course {
 }
 
 export interface Classroom {
-    id: string;
-    courseId: string;
-    professorId: string;
-    name: string;
-    semester: string;
-    workload: string;
-    classType: string;
-    gradingRule: string;
-    classSchedule: { date: string; content: string; activity: string }[];
+  id: string;
+  courseId: string;
+  name: string;
+  semester: string;
+  workload: string;
+  classSchedule: { date: string; content: string; activity: string }[];
 }

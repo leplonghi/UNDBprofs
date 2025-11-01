@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,9 +14,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { useFirestore, useUser } from '@/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
+import { doc, writeBatch } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
+import type { Course, Classroom } from '@/types';
 
 const formSchema = z.object({
   courseName: z.string().min(1, 'Nome do curso é obrigatório.'),
@@ -34,7 +35,7 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 export function ImportForm() {
-  const [isPending, startTransition] = useTransition();
+  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const [extractedData, setExtractedData] = useState<ImportCourseFromLessonPlanOutput | null>(null);
   const router = useRouter();
@@ -75,7 +76,6 @@ export function ImportForm() {
             bibliography: data.bibliography,
             classSchedule: data.classSchedule,
         });
-        // Clean up session storage after use
         sessionStorage.removeItem('importedData');
       } catch (error) {
         console.error("Failed to parse stored data", error);
@@ -85,8 +85,12 @@ export function ImportForm() {
             description: 'Não foi possível ler os dados da importação anterior.',
         });
       }
+    } else {
+        // If there's no data, maybe redirect or show an error
+        router.push('/disciplinas');
+        toast({ title: 'Nenhum dado a ser importado.', description: 'Por favor, importe um arquivo PDF primeiro.' });
     }
-  }, [form, toast]);
+  }, [form, toast, router]);
 
 
   async function onSubmit(values: FormData) {
@@ -99,65 +103,65 @@ export function ImportForm() {
       return;
     }
 
-    startTransition(async () => {
-        const courseId = uuidv4();
-        const classroomId = uuidv4();
+    setIsSaving(true);
     
-        const courseData = {
-          id: courseId,
-          professorId: user.uid,
-          name: values.courseName,
-          code: values.courseCode,
-          syllabus: values.syllabus,
-          objectives: values.objectives,
-          competencies: values.competencies,
-          thematicTree: values.thematicTree,
-          bibliography: values.bibliography,
-          // semester and workload are now part of classroom
-        };
+    const courseId = uuidv4();
+    const classroomId = uuidv4();
+
+    const courseRef = doc(firestore, `professors/${user.uid}/courses/${courseId}`);
+    const classroomRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}`);
+
+    const courseData: Course = {
+        id: courseId,
+        professorId: user.uid,
+        name: values.courseName,
+        code: values.courseCode,
+        syllabus: values.syllabus,
+        objectives: values.objectives,
+        competencies: values.competencies || '',
+        thematicTree: values.thematicTree || [],
+        bibliography: values.bibliography || '',
+    };
+
+    const classroomData: Classroom = {
+        id: classroomId,
+        courseId: courseId,
+        name: `Turma de ${values.semester}`, // e.g., "Turma de 2025.1"
+        semester: values.semester,
+        workload: values.workload,
+        classSchedule: values.classSchedule ?? [],
+    };
     
-        const classroomData = {
-            id: classroomId,
-            courseId: courseId,
-            professorId: user.uid,
-            name: values.semester,
-            semester: values.semester,
-            workload: values.workload,
-            classSchedule: values.classSchedule ?? [],
-            classType: 'Regular', // Default value, can be extracted in future
-            gradingRule: '', // Default value, can be extracted in future
-        };
+    try {
+        const batch = writeBatch(firestore);
+        batch.set(courseRef, courseData);
+        batch.set(classroomRef, classroomData);
+        await batch.commit();
+
+        toast({
+        title: 'Disciplina e Turma Criadas!',
+        description: `A disciplina "${values.courseName}" e sua primeira turma foram salvas.`,
+        });
         
-        try {
-          const courseRef = doc(firestore, `professors/${user.uid}/courses/${courseId}`);
-          await setDoc(courseRef, courseData);
-          
-          const classroomRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}`);
-          await setDoc(classroomRef, classroomData);
-    
-          toast({
-            title: 'Disciplina e Turma Criadas!',
-            description: `A disciplina "${values.courseName}" e sua primeira turma foram salvas.`,
-          });
-          
-          router.push(`/disciplinas`);
-    
-        } catch (error) {
-          console.error('Error creating documents: ', error);
-          toast({
-            variant: 'destructive',
-            title: 'Erro ao Salvar',
-            description: 'Não foi possível salvar as informações. Tente novamente.',
-          });
-        }
-    });
+        router.push(`/disciplinas`);
+
+    } catch (error) {
+        console.error('Error creating documents: ', error);
+        toast({
+        variant: 'destructive',
+        title: 'Erro ao Salvar',
+        description: 'Não foi possível salvar as informações. Tente novamente.',
+        });
+    } finally {
+        setIsSaving(false);
+    }
   }
 
   if (!extractedData) {
     return (
         <div className="flex items-center justify-center space-x-2 text-muted-foreground p-8">
             <Loader2 className="h-5 w-5 animate-spin" />
-            <span>Carregando dados da importação...</span>
+            <span>Redirecionando...</span>
         </div>
     );
   }
@@ -166,8 +170,7 @@ export function ImportForm() {
         <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             
-            {(extractedData || form.formState.isDirty) && (
-              <div className="space-y-4 rounded-lg border p-4">
+            <div className="space-y-4 rounded-lg border p-4">
                 <h3 className="font-semibold">Revise os Dados Extraídos</h3>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <FormField
@@ -269,8 +272,8 @@ export function ImportForm() {
                     <FormItem>
                       <FormLabel>Árvore Temática</FormLabel>
                       <FormControl>
-                        <Textarea rows={5} value={field.value?.map(v => `${v.name}: ${v.description}`).join('\n')} onChange={(e) => {
-                          const value = e.target.value.split('\n').map(line => {
+                        <Textarea rows={5} value={field.value?.map(v => `${v.name}: ${v.description}`).join('\\n')} onChange={(e) => {
+                          const value = e.target.value.split('\\n').map(line => {
                             const [name, ...description] = line.split(':');
                             return {name: name.trim(), description: description.join(':').trim()};
                           });
@@ -301,8 +304,8 @@ export function ImportForm() {
                     <FormItem>
                       <FormLabel>Cronograma de Aulas (da Turma)</FormLabel>
                       <FormControl>
-                          <Textarea rows={8} value={field.value?.map(v => `${v.date} - ${v.content}: ${v.activity}`).join('\n')} onChange={(e) => {
-                          const value = e.target.value.split('\n').map(line => {
+                          <Textarea rows={8} value={field.value?.map(v => `${v.date} - ${v.content}: ${v.activity}`).join('\\n')} onChange={(e) => {
+                          const value = e.target.value.split('\\n').map(line => {
                             const [date, rest] = line.split(' - ');
                             const [content, ...activity] = rest ? rest.split(':') : ['', ''];
                             return {date: date.trim(), content: content.trim(), activity: activity.join(':').trim()};
@@ -314,14 +317,13 @@ export function ImportForm() {
                     </FormItem>
                   )}
                 />
-                 <Button type="submit" className="w-full" disabled={isPending}>
-                    {isPending ? (
+                 <Button type="submit" className="w-full" disabled={isSaving}>
+                    {isSaving ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : null}
                     Confirmar e Salvar
                 </Button>
               </div>
-            )}
         </form>
       </Form>
   );

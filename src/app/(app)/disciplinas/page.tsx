@@ -3,8 +3,8 @@
 import React, { useRef, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent } from '@/components/ui/card';
-import { ClassroomsList } from '@/components/courses/classrooms-list';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CoursesTable } from '@/components/courses/courses-table';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, FileText, Edit, Loader2 } from 'lucide-react';
 import {
@@ -37,7 +37,6 @@ export default function CoursesPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Reset file input to allow re-uploading the same file
     if(fileInputRef.current) {
         fileInputRef.current.value = '';
     }
@@ -96,7 +95,7 @@ export default function CoursesPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-primary">Minhas Turmas</h1>
+        <h1 className="text-2xl font-bold text-primary">Minhas Disciplinas</h1>
         
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -135,8 +134,11 @@ export default function CoursesPage() {
         />
       </div>
       <Card>
+        <CardHeader>
+            <CardTitle>Lista de Disciplinas</CardTitle>
+        </CardHeader>
         <CardContent className="p-0">
-          <ClassroomsList />
+          <CoursesTable />
         </CardContent>
       </Card>
     </div>
