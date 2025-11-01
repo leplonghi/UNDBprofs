@@ -84,6 +84,10 @@ export default function CourseDetailPage() {
          <Card>
             <CardHeader>
                 <CardTitle>{course.name} ({course.code})</CardTitle>
+                 <div className="flex gap-4 text-sm text-muted-foreground pt-2">
+                    <span>Carga Horária: <strong>{course.workload}</strong></span>
+                    <span>Semestre: <strong>{course.semester}</strong></span>
+                </div>
             </CardHeader>
             <CardContent className="space-y-6">
                 <div>
@@ -145,12 +149,6 @@ export default function CourseDetailPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Turmas</CardTitle>
-            <Button variant="outline" size="sm" asChild>
-                <Link href={`/disciplinas/${courseId}/turmas/nova`}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Nova Turma
-                </Link>
-            </Button>
           </div>
         </CardHeader>
         <CardContent>

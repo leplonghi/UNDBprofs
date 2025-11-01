@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { collection, getDocs, collectionGroup, query, where } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -54,6 +54,7 @@ export function ClassroomsList() {
               id: doc.id,
               courseName: course.name,
               courseCode: course.code,
+              courseId: course.id,
             }))
           );
         });
@@ -119,7 +120,9 @@ export function ClassroomsList() {
               <TableCell className="font-medium">{c.name}</TableCell>
               <TableCell>
                   <div className='flex flex-col'>
-                      <span>{c.courseName}</span>
+                      <Link href={`/disciplinas/${c.courseId}`} className="hover:underline font-medium">
+                        <span>{c.courseName}</span>
+                      </Link>
                       <Badge variant="outline" className='w-fit'>{c.courseCode}</Badge>
                   </div>
               </TableCell>
