@@ -8,32 +8,47 @@ import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebas
 import { collection, getDocs, type Firestore, query } from 'firebase/firestore';
 import type { Course } from '@/types';
 
-async function getTotalTurmas(firestore: Firestore, userId: string): Promise<number> {
+async function getBackendStats(firestore: Firestore, userId: string): Promise<{ totalTurmas: number; totalAlunos: number; totalAtividades: number }> {
     const coursesRef = collection(firestore, `professors/${userId}/courses`);
     const coursesSnapshot = await getDocs(coursesRef);
     if (coursesSnapshot.empty) {
-        return 0;
+        return { totalTurmas: 0, totalAlunos: 0, totalAtividades: 0 };
     }
 
-    let total = 0;
-    const classroomPromises = coursesSnapshot.docs.map(courseDoc => {
+    let totalTurmas = 0;
+    let totalAlunos = 0;
+    let totalAtividades = 0;
+
+    const promises = coursesSnapshot.docs.map(async (courseDoc) => {
+        // Count classrooms
         const classroomsRef = collection(firestore, `professors/${userId}/courses/${courseDoc.id}/classrooms`);
-        return getDocs(classroomsRef);
+        const classroomsSnapshot = await getDocs(classroomsRef);
+        totalTurmas += classroomsSnapshot.size;
+
+        // Count students in each classroom
+        const studentPromises = classroomsSnapshot.docs.map(async (classroomDoc) => {
+            const studentsRef = collection(firestore, `professors/${userId}/courses/${courseDoc.id}/classrooms/${classroomDoc.id}/classroomStudents`);
+            const studentsSnapshot = await getDocs(studentsRef);
+            totalAlunos += studentsSnapshot.size;
+        });
+        await Promise.all(studentPromises);
+
+        // Count academic events
+        const eventsRef = collection(firestore, `professors/${userId}/courses/${courseDoc.id}/academicEvents`);
+        const eventsSnapshot = await getDocs(eventsRef);
+        totalAtividades += eventsSnapshot.size;
     });
 
-    const classroomSnapshots = await Promise.all(classroomPromises);
-    classroomSnapshots.forEach(snapshot => {
-        total += snapshot.size;
-    });
+    await Promise.all(promises);
 
-    return total;
+    return { totalTurmas, totalAlunos, totalAtividades };
 }
 
 export default function DashboardPage() {
   const { user } = useUser();
   const firestore = useFirestore();
-  const [totalTurmas, setTotalTurmas] = useState(0);
-  const [isLoadingTurmas, setIsLoadingTurmas] = useState(true);
+  const [stats, setStats] = useState({ totalTurmas: 0, totalAlunos: 0, totalAtividades: 0 });
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
 
   const coursesQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -44,21 +59,21 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (user && firestore) {
-        setIsLoadingTurmas(true);
-        getTotalTurmas(firestore, user.uid)
-            .then(count => {
-                setTotalTurmas(count);
+        setIsLoadingStats(true);
+        getBackendStats(firestore, user.uid)
+            .then(newStats => {
+                setStats(newStats);
             })
             .catch(error => {
-                console.error("Error fetching total turmas:", error);
+                console.error("Error fetching backend stats:", error);
             })
             .finally(() => {
-                setIsLoadingTurmas(false);
+                setIsLoadingStats(false);
             });
     } else if (!user && !coursesLoading) {
-      // If there's no user and we are not loading courses, there are no classrooms.
-      setIsLoadingTurmas(false);
-      setTotalTurmas(0);
+      // If there's no user and we are not loading courses, all stats are 0.
+      setIsLoadingStats(false);
+      setStats({ totalTurmas: 0, totalAlunos: 0, totalAtividades: 0 });
     }
   }, [user, firestore, coursesLoading]);
 
@@ -68,12 +83,14 @@ export default function DashboardPage() {
       <h1 className="text-2xl font-bold text-primary">Painel do Professor</h1>
       <StatsCards 
         totalDisciplinas={courses?.length ?? 0}
-        totalTurmas={totalTurmas}
-        isLoading={coursesLoading || isLoadingTurmas}
+        totalTurmas={stats.totalTurmas}
+        totalAlunos={stats.totalAlunos}
+        totalAtividades={stats.totalAtividades}
+        isLoading={coursesLoading || isLoadingStats}
       />
       <div className="grid gap-6 lg:grid-cols-2">
         <OverviewChart />
-        <RecentCourses />
+        <RecentCourses courses={courses ?? []} isLoading={coursesLoading} />
       </div>
     </div>
   );

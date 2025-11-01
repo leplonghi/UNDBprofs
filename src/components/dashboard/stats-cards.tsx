@@ -12,16 +12,18 @@ const iconMap = {
 interface StatsCardsProps {
     totalDisciplinas: number;
     totalTurmas: number;
+    totalAlunos: number;
+    totalAtividades: number;
     isLoading: boolean;
 }
 
-export function StatsCards({ totalDisciplinas, totalTurmas, isLoading }: StatsCardsProps) {
+export function StatsCards({ totalDisciplinas, totalTurmas, totalAlunos, totalAtividades, isLoading }: StatsCardsProps) {
 
   const stats = [
     { title: "Total de Disciplinas", value: totalDisciplinas, change: "" },
     { title: "Total de Turmas", value: totalTurmas, change: "" },
-    { title: "Total de Alunos", value: "0", change: "" },
-    { title: "Atividades Agendadas", value: "0", change: "" },
+    { title: "Total de Alunos", value: totalAlunos, change: "" },
+    { title: "Atividades Agendadas", value: totalAtividades, change: "" },
   ];
 
   if (isLoading) {
