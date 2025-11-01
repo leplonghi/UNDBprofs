@@ -121,11 +121,12 @@ export default function CourseDetailPage({
 }) {
   const { user } = useUser();
   const firestore = useFirestore();
+  const { id } = params;
 
   const courseDocRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
-    return doc(firestore, `professors/${user.uid}/courses/${params.id}`);
-  }, [user, firestore, params.id]);
+    return doc(firestore, `professors/${user.uid}/courses/${id}`);
+  }, [user, firestore, id]);
 
   const { data: course, isLoading } = useDoc<Course>(courseDocRef);
 
