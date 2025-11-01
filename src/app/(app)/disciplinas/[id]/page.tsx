@@ -15,7 +15,7 @@ import {
   useMemoFirebase,
   useCollection,
 } from '@/firebase';
-import type { Course, Classroom, ClassroomStudent, Activity } from '@/types';
+import type { Course, Classroom, ClassroomStudent } from '@/types';
 import { doc, collection, query } from 'firebase/firestore';
 import {
   Table,
@@ -198,10 +198,10 @@ function ClassroomManager({ courseId, courseCode }: { courseId: string, courseCo
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold">Turma: {classroom.name}</h2>
-            <p className="text-muted-foreground">
+            <div className="text-muted-foreground">
               Semestre: {classroom.semester} | Carga Horária:{' '}
               {classroom.workload} | Tipo: <Badge variant="outline">{classroom.classType}</Badge>
-            </p>
+            </div>
           </div>
         </div>
 
