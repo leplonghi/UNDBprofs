@@ -64,7 +64,8 @@ export function ImportForm() {
       try {
         const data = JSON.parse(storedData) as ImportCourseFromLessonPlanOutput;
         setExtractedData(data);
-        sessionStorage.removeItem('importedData'); // Clear storage after moving to state
+        // DO NOT remove the item from session storage here.
+        // It will be cleared after successful submission.
       } catch (error) {
         console.error("Failed to parse stored data", error);
         toast({
@@ -74,8 +75,8 @@ export function ImportForm() {
         });
         router.push('/disciplinas');
       }
-    } else if (!extractedData) {
-        // Only redirect if there's no stored data and no data in state
+    } else {
+        // If there's no stored data, redirect.
         toast({ title: 'Nenhum dado a ser importado.', description: 'Por favor, importe um arquivo PDF primeiro.' });
         router.push('/disciplinas');
     }
@@ -150,6 +151,9 @@ export function ImportForm() {
         title: 'Disciplina e Turma Criadas!',
         description: `A disciplina "${values.courseName}" e sua primeira turma foram salvas com sucesso.`,
         });
+
+        // Clear storage only after successful save
+        sessionStorage.removeItem('importedData');
         
         router.push(`/disciplinas`);
 

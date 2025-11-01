@@ -20,64 +20,66 @@ export default function CoursesPage() {
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!user) {
-        toast({ variant: 'destructive', title: 'Acesso Negado', description: 'Você precisa estar logado para importar um arquivo.'});
-        return;
+      toast({ variant: 'destructive', title: 'Acesso Negado', description: 'Você precisa estar logado para importar um arquivo.' });
+      return;
     }
 
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if(fileInputRef.current) {
-        fileInputRef.current.value = '';
+    // Reset file input to allow re-uploading the same file
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
 
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-
+    // Start loading state immediately
     startTransition(() => {
-        reader.onload = async () => {
-            try {
-                const lessonPlanDataUri = reader.result as string;
-                
-                toast({
-                    title: 'Processando Arquivo...',
-                    description: 'Aguarde enquanto a IA extrai as informações do plano de ensino.',
-                });
+      // Show initial toast
+      toast({
+        title: 'Processando Arquivo...',
+        description: 'Aguarde enquanto a IA extrai as informações do plano de ensino.',
+      });
 
-                const result = await importCourseFromLessonPlan({ lessonPlanDataUri });
-                
-                sessionStorage.setItem('importedData', JSON.stringify(result));
-                
-                toast({
-                    title: 'Extração Concluída!',
-                    description: 'Revise os dados extraídos do plano de ensino.',
-                });
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
 
-                router.push('/disciplinas/importar');
+      reader.onload = async () => {
+        try {
+          const lessonPlanDataUri = reader.result as string;
+          const result = await importCourseFromLessonPlan({ lessonPlanDataUri });
 
-            } catch (error) {
-                console.error(error);
-                toast({
-                    variant: 'destructive',
-                    title: 'Erro na Extração',
-                    description: 'Não foi possível processar o arquivo. Tente novamente.',
-                });
-            }
-        };
-        reader.onerror = () => {
-             toast({
-                variant: 'destructive',
-                title: 'Erro de Leitura',
-                description: 'Não foi possível ler o arquivo selecionado.',
-            });
+          sessionStorage.setItem('importedData', JSON.stringify(result));
+
+          toast({
+            title: 'Extração Concluída!',
+            description: 'Revise os dados extraídos do plano de ensino.',
+          });
+
+          router.push('/disciplinas/importar');
+        } catch (error) {
+          console.error(error);
+          toast({
+            variant: 'destructive',
+            title: 'Erro na Extração',
+            description: 'Não foi possível processar o arquivo. Tente novamente.',
+          });
         }
+      };
+
+      reader.onerror = () => {
+        toast({
+          variant: 'destructive',
+          title: 'Erro de Leitura',
+          description: 'Não foi possível ler o arquivo selecionado.',
+        });
+      };
     });
   };
 
   const handleImportClick = () => {
     if (!user) {
-        toast({ variant: 'destructive', title: 'Acesso Negado', description: 'Você precisa estar logado.'});
-        return;
+      toast({ variant: 'destructive', title: 'Acesso Negado', description: 'Você precisa estar logado.' });
+      return;
     }
     fileInputRef.current?.click();
   };
@@ -86,7 +88,7 @@ export default function CoursesPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-primary">Minhas Disciplinas</h1>
-        
+
         <Button onClick={handleImportClick} disabled={isPending}>
           {isPending ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -96,18 +98,18 @@ export default function CoursesPage() {
           Adicionar Turma
         </Button>
 
-        <Input 
-            type="file" 
-            ref={fileInputRef}
-            className="sr-only" 
-            onChange={handleFileChange} 
-            accept=".pdf" 
-            disabled={isPending}
+        <Input
+          type="file"
+          ref={fileInputRef}
+          className="sr-only"
+          onChange={handleFileChange}
+          accept=".pdf"
+          disabled={isPending}
         />
       </div>
       <Card>
         <CardHeader>
-            <CardTitle>Lista de Disciplinas</CardTitle>
+          <CardTitle>Lista de Disciplinas</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <CoursesTable />
