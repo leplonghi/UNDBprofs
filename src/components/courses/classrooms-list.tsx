@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, collectionGroup, query, where } from 'firebase/firestore';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,7 @@ function getSemesterValue(semesterString: string): number {
 export function ClassroomsList() {
   const { user } = useUser();
   const firestore = useFirestore();
-  const [allClassrooms, setAllClassrooms] = useState<Classroom[]>([]);
+  const [allClassrooms, setAllClassrooms] = useState<(Classroom & { courseName?: string, courseCode?: string })[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<any>(null);
 
@@ -108,6 +108,7 @@ export function ClassroomsList() {
           <TableRow>
             <TableHead>Turma</TableHead>
             <TableHead>Disciplina</TableHead>
+            <TableHead>Ano</TableHead>
             <TableHead>Semestre</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
@@ -122,7 +123,8 @@ export function ClassroomsList() {
                       <Badge variant="outline" className='w-fit'>{c.courseCode}</Badge>
                   </div>
               </TableCell>
-              <TableCell>{c.semester}</TableCell>
+              <TableCell>{c.semester?.split('.')[0]}</TableCell>
+              <TableCell>{c.semester?.split('.')[1]}</TableCell>
               <TableCell className="text-right">
                 <Button asChild variant="ghost" size="sm">
                   <Link href={`/disciplinas/${c.courseId}/turmas/${c.id}`}>
