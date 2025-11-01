@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { placeholderStats } from '@/lib/placeholder-data';
-import { BookCopy, Users, GraduationCap, CalendarClock, Loader2 } from 'lucide-react';
+import { BookCopy, Users, GraduationCap, CalendarClock } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 
 const iconMap = {

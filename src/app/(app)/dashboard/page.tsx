@@ -56,6 +56,7 @@ export default function DashboardPage() {
                 setIsLoadingTurmas(false);
             });
     } else if (!user && !coursesLoading) {
+      // If there's no user and we are not loading courses, there are no classrooms.
       setIsLoadingTurmas(false);
       setTotalTurmas(0);
     }
