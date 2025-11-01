@@ -26,6 +26,8 @@ export default function LoginPage() {
     initiateGoogleSignIn(auth);
   };
 
+  // While checking auth state, or if the user is found, show a loading screen.
+  // This prevents the login UI from flashing before the redirect happens.
   if (isUserLoading || user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -34,6 +36,7 @@ export default function LoginPage() {
     );
   }
 
+  // Only show the login UI if loading is complete and there's no user.
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md shadow-2xl">
@@ -43,9 +46,11 @@ export default function LoginPage() {
               <Image
                 src={logo.imageUrl}
                 alt={logo.description}
-                width={150}
-                height={40}
-                className="object-contain"
+                width={160}
+                height={48}
+                className="h-8 w-auto"
+                unoptimized
+                priority
               />
             </div>
           )}
