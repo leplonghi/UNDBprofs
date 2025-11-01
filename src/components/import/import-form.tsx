@@ -12,12 +12,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useFirestore, useUser } from '@/firebase';
 import { doc, writeBatch } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
-import type { Course, Classroom } from '@/types';
+import type { Course, Classroom, ClassType } from '@/types';
 import { ThematicTreeEditor } from './ThematicTreeEditor';
 import { ClassScheduleEditor } from './ClassScheduleEditor';
 
@@ -28,6 +29,7 @@ const formSchema = z.object({
   objectives: z.string().min(1, 'Objetivos são obrigatórios.'),
   workload: z.string().min(1, 'Carga horária é obrigatória.'),
   semester: z.string().min(1, 'Semestre é obrigatório.'),
+  classType: z.enum(['Integradora', 'Modular'], { required_error: 'O tipo da turma é obrigatório.' }),
   competencies: z.string().min(1, 'Competências são obrigatórias.'),
   thematicTree: z.array(z.object({ name: z.string().min(1, 'O nome é obrigatório.'), description: z.string().min(1, 'A descrição é obrigatória.') })).optional(),
   bibliography: z.string().min(1, 'Bibliografia é obrigatória.'),
@@ -53,6 +55,7 @@ export function ImportForm() {
       objectives: '',
       workload: '',
       semester: '',
+      classType: 'Integradora',
       competencies: '',
       thematicTree: [],
       bibliography: '',
@@ -94,6 +97,7 @@ export function ImportForm() {
         thematicTree: extractedData.thematicTree || [],
         bibliography: extractedData.bibliography,
         classSchedule: extractedData.classSchedule || [],
+        classType: 'Integradora', // Default value
       });
     }
   }, [extractedData, form]);
@@ -135,6 +139,7 @@ export function ImportForm() {
         name: `Turma de ${values.semester}`, // e.g., "Turma de 2025.1"
         semester: values.semester,
         workload: values.workload,
+        classType: values.classType,
         classSchedule: values.classSchedule ?? [],
     };
     
@@ -293,6 +298,27 @@ export function ImportForm() {
                     )}
                   />
                 </div>
+                 <FormField
+                  control={form.control}
+                  name="classType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo da Turma</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o tipo da turma" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Integradora">Integradora</SelectItem>
+                          <SelectItem value="Modular">Modular</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <ClassScheduleEditor control={form.control} />
             </div>
             

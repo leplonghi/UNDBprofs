@@ -1,3 +1,5 @@
+export type ClassType = 'Integradora' | 'Modular';
+
 export interface Grade {
     id: string;
     activityId: string;
@@ -31,6 +33,7 @@ export interface Classroom {
   name: string;
   semester: string;
   workload: string;
+  classType: ClassType;
   classSchedule: { date: string; content: string; activity: string }[];
   activities?: Activity[];
 }

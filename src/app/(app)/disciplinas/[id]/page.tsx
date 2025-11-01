@@ -54,12 +54,18 @@ function CourseDetailsSkeleton() {
   );
 }
 
-function CourseInformation({ course }: { course: Course }) {
+function CourseInformation({
+  course,
+  classroom,
+}: {
+  course: Course;
+  classroom: Classroom | undefined;
+}) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Plano de Ensino</CardTitle>
-        <CardDescription>Detalhes e estrutura da disciplina.</CardDescription>
+        <CardTitle>Plano de Ensino e Cronograma</CardTitle>
+        <CardDescription>Detalhes, estrutura e cronograma da disciplina.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div>
@@ -99,6 +105,37 @@ function CourseInformation({ course }: { course: Course }) {
             </p>
           </div>
         )}
+        <div>
+          <h3 className="font-semibold">Cronograma de Aulas</h3>
+            {classroom && classroom.classSchedule && classroom.classSchedule.length > 0 ? (
+              <div className="mt-2 max-h-[600px] overflow-y-auto rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Conteúdo</TableHead>
+                      <TableHead>Atividade</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {classroom.classSchedule.map((scheduleItem, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium">
+                          {scheduleItem.date}
+                        </TableCell>
+                        <TableCell>{scheduleItem.content}</TableCell>
+                        <TableCell>{scheduleItem.activity}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="mt-2 py-10 text-center text-muted-foreground border-2 border-dashed rounded-lg">
+                Nenhum cronograma de aulas encontrado para esta turma.
+              </div>
+            )}
+        </div>
       </CardContent>
     </Card>
   );
@@ -164,17 +201,16 @@ function ClassroomManager({ courseId, courseCode }: { courseId: string, courseCo
             <h2 className="text-xl font-bold">Turma: {classroom.name}</h2>
             <p className="text-muted-foreground">
               Semestre: {classroom.semester} | Carga Horária:{' '}
-              {classroom.workload}
+              {classroom.workload} | Tipo: <Badge variant="outline">{classroom.classType}</Badge>
             </p>
           </div>
         </div>
 
         <Tabs defaultValue="students" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="students">Alunos</TabsTrigger>
             <TabsTrigger value="activities">Atividades</TabsTrigger>
             <TabsTrigger value="grades">Lançamento de Notas</TabsTrigger>
-            <TabsTrigger value="schedule">Cronograma</TabsTrigger>
           </TabsList>
           
           <TabsContent value="students" className="mt-6">
@@ -197,6 +233,7 @@ function ClassroomManager({ courseId, courseCode }: { courseId: string, courseCo
               courseId={courseId}
               classroomId={classroom.id}
               activities={activities}
+              classType={classroom.classType}
             />
           </TabsContent>
 
@@ -208,45 +245,6 @@ function ClassroomManager({ courseId, courseCode }: { courseId: string, courseCo
                 isLoading={isLoadingStudents}
                 activities={activities}
             />
-          </TabsContent>
-
-          <TabsContent value="schedule" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Cronograma de Aulas</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {classroom.classSchedule &&
-                classroom.classSchedule.length > 0 ? (
-                  <div className="max-h-[600px] overflow-y-auto rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Data</TableHead>
-                          <TableHead>Conteúdo</TableHead>
-                          <TableHead>Atividade</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {classroom.classSchedule.map((scheduleItem, index) => (
-                          <TableRow key={index}>
-                            <TableCell className="font-medium">
-                              {scheduleItem.date}
-                            </TableCell>
-                            <TableCell>{scheduleItem.content}</TableCell>
-                            <TableCell>{scheduleItem.activity}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                ) : (
-                  <div className="py-10 text-center text-muted-foreground">
-                    Nenhum cronograma de aulas encontrado para esta turma.
-                  </div>
-                )}
-              </CardContent>
-            </Card>
           </TabsContent>
         </Tabs>
       </div>
@@ -261,16 +259,25 @@ export default function CourseDetailPage({
 }) {
   const { user } = useUser();
   const firestore = useFirestore();
-  const { id } = React.use(params);
+  const { id } = params; // No need for React.use(params)
 
   const courseDocRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return doc(firestore, `professors/${user.uid}/courses/${id}`);
   }, [user, firestore, id]);
 
-  const { data: course, isLoading } = useDoc<Course>(courseDocRef);
+  const { data: course, isLoading: isCourseLoading } = useDoc<Course>(courseDocRef);
 
-  if (isLoading) {
+  const classroomQuery = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return query(collection(firestore, `professors/${user.uid}/courses/${id}/classrooms`));
+  }, [user, firestore, id]);
+
+  const { data: classrooms, isLoading: areClassroomsLoading } = useCollection<Classroom>(classroomQuery);
+
+  const classroom = classrooms?.[0]; // Assuming one classroom per course for now
+
+  if (isCourseLoading || areClassroomsLoading) {
     return <CourseDetailsSkeleton />;
   }
 
@@ -301,7 +308,7 @@ export default function CourseDetailPage({
           <TabsTrigger value="classroom">Gerenciamento da Turma</TabsTrigger>
         </TabsList>
         <TabsContent value="info" className="mt-6">
-          <CourseInformation course={course} />
+          <CourseInformation course={course} classroom={classroom} />
         </TabsContent>
         <TabsContent value="classroom" className="mt-6">
           <ClassroomManager courseId={course.id} courseCode={course.code} />

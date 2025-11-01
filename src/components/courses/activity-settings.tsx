@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useTransition } from 'react';
+import React, { useState, useTransition, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -19,7 +19,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import type { Activity } from '@/types';
+import type { Activity, ClassType } from '@/types';
 import { Loader2 } from 'lucide-react';
 import { useFirestore, useUser, updateDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -39,6 +39,7 @@ interface ActivitySettingsProps {
   courseId: string;
   classroomId: string;
   activities: Activity[];
+  classType: ClassType;
 }
 
 const integraPreset: Omit<Activity, 'id' | 'order' | 'active'>[] = [
@@ -60,35 +61,20 @@ export function ActivitySettings({
   courseId,
   classroomId,
   activities,
+  classType,
 }: ActivitySettingsProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
   const { user } = useUser();
   const [isPending, startTransition] = useTransition();
-  const [showConfirm, setShowConfirm] = useState<
-    'integradora' | 'modular' | null
-  >(null);
+  const [showConfirm, setShowConfirm] = useState<ClassType | null>(null);
 
-  const handleApplyPreset = (presetType: 'integradora' | 'modular') => {
-    if (!user || !firestore) {
-      toast({
-        variant: 'destructive',
-        title: 'Erro de autenticação',
-        description: 'Você não está logado.',
-      });
-      return;
-    }
-    if (activities && activities.length > 0) {
-      toast({
-        variant: 'destructive',
-        title: 'Preset já aplicado',
-        description: 'Um preset de atividades já existe para esta turma.',
-      });
-      return;
-    }
+  const applyPreset = (presetType: ClassType) => {
+    if (!user || !firestore) return;
 
     startTransition(() => {
-      const preset = presetType === 'integradora' ? integraPreset : modularPreset;
+      const preset =
+        presetType === 'Integradora' ? integraPreset : modularPreset;
       const newActivities: Activity[] = preset.map((item, index) => ({
         ...item,
         id: uuidv4(),
@@ -110,6 +96,27 @@ export function ActivitySettings({
       setShowConfirm(null);
     });
   };
+  
+  useEffect(() => {
+    if (activities.length === 0 && classType) {
+        applyPreset(classType);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activities, classType]);
+
+
+  const handleApplyPresetClick = (presetType: ClassType) => {
+    if (activities && activities.length > 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Preset já aplicado',
+        description: 'Um preset de atividades já existe para esta turma. Para reaplicar, limpe as atividades atuais.',
+      });
+      return;
+    }
+    setShowConfirm(presetType);
+  };
+
 
   const handleToggleActivity = (activityId: string, isActive: boolean) => {
      if (!user || !firestore) return;
@@ -126,8 +133,8 @@ export function ActivitySettings({
       updateDocumentNonBlocking(classroomRef, { activities: updatedActivities });
   }
 
-  const renderPresetSummary = (presetType: 'integradora' | 'modular') => {
-    const preset = presetType === 'integradora' ? integraPreset : modularPreset;
+  const renderPresetSummary = (presetType: ClassType) => {
+    const preset = presetType === 'Integradora' ? integraPreset : modularPreset;
     return (
       <ul className="list-disc space-y-1 pl-4 text-sm text-muted-foreground">
         {preset.map((item) => (
@@ -145,8 +152,7 @@ export function ActivitySettings({
       <CardHeader>
         <CardTitle>Configuração das Atividades Avaliativas</CardTitle>
         <CardDescription>
-          Defina a estrutura de avaliação da sua turma aplicando um preset. As
-          atividades aparecerão na aba "Lançamento de Notas".
+          A estrutura de avaliação da sua turma. O preset é aplicado automaticamente com base no tipo da turma.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -162,7 +168,7 @@ export function ActivitySettings({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {activities.map((act) => (
+                {activities.sort((a, b) => a.order - b.order).map((act) => (
                   <TableRow key={act.id}>
                     <TableCell className="font-medium">{act.name}</TableCell>
                     <TableCell><Badge variant="secondary">{act.group}</Badge></TableCell>
@@ -181,19 +187,12 @@ export function ActivitySettings({
         ) : (
           <div className="flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed p-8 text-center">
             <h3 className="font-semibold">
-              Escolha o tipo da turma para gerar as atividades
+              Aplicando preset de atividades...
             </h3>
-            <div className="flex gap-4">
-              <Button onClick={() => setShowConfirm('integradora')}>
-                Aplicar Preset Integradora
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() => setShowConfirm('modular')}
-              >
-                Aplicar Preset Modular
-              </Button>
-            </div>
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <p className="text-sm text-muted-foreground">
+              Aguarde enquanto a estrutura de avaliação para a turma do tipo "{classType}" é criada.
+            </p>
           </div>
         )}
       </CardContent>
@@ -214,7 +213,7 @@ export function ActivitySettings({
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => handleApplyPreset(showConfirm!)}
+              onClick={() => applyPreset(showConfirm!)}
               disabled={isPending}
             >
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
