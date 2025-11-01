@@ -2,47 +2,53 @@
 
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getAuth, type Auth } from 'firebase/auth';
+import { getFirestore, type Firestore } from 'firebase/firestore';
+
+interface FirebaseServices {
+  firebaseApp: FirebaseApp;
+  auth: Auth;
+  firestore: Firestore;
+}
+
+let firebaseServices: FirebaseServices | null = null;
 
 // This function is designed to work in both production (App Hosting) and local development.
-export function initializeFirebase() {
-  // If no Firebase app has been initialized yet...
-  if (!getApps().length) {
+// It ensures Firebase is initialized only once.
+export function initializeFirebase(): FirebaseServices {
+  if (firebaseServices) {
+    return firebaseServices;
+  }
+  
+  let app: FirebaseApp;
+  
+  if (getApps().length === 0) {
     // In a production App Hosting environment, the SDK is automatically configured.
     // In this case, `initializeApp()` can be called without arguments.
     try {
-      const app = initializeApp();
-      // If successful, return the SDKs for the automatically configured app.
-      return getSdks(app);
+      // First, try to initialize without a config. This will work in App Hosting.
+      app = initializeApp();
     } catch (e) {
-      // If automatic initialization fails (which is expected in local development),
-      // fall back to using the local firebaseConfig object.
-      // We only log a warning in production, as this fallback is the norm for local dev.
+      // If automatic initialization fails (expected in local dev), fall back to local config.
       if (process.env.NODE_ENV === 'production') {
         console.warn(
-          'Firebase automatic initialization failed. Falling back to local firebaseConfig.',
+          'Firebase automatic initialization failed. Falling back to local firebaseConfig. Ensure hosting environment is set up correctly.',
           e
         );
       }
-      const app = initializeApp(firebaseConfig);
-      return getSdks(app);
+      app = initializeApp(firebaseConfig);
     }
+  } else {
+    // If an app is already initialized, get it. This prevents re-initialization on hot-reloads.
+    app = getApp();
   }
 
-  // If an app is already initialized, get it and return its SDKs.
-  // This prevents re-initialization on every hot-reload in development.
-  const app = getApp();
-  return getSdks(app);
-}
+  const auth = getAuth(app);
+  const firestore = getFirestore(app);
 
-// Helper function to get the SDKs from a FirebaseApp instance.
-export function getSdks(firebaseApp: FirebaseApp) {
-  return {
-    firebaseApp,
-    auth: getAuth(firebaseApp),
-    firestore: getFirestore(firebaseApp),
-  };
+  firebaseServices = { firebaseApp: app, auth, firestore };
+  
+  return firebaseServices;
 }
 
 export * from './provider';
