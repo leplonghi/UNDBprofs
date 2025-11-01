@@ -9,6 +9,8 @@ export interface Course {
   thematicTree: { name: string; description: string }[];
   bibliography: string;
   classSchedule: { date: string; content: string; activity: string }[];
+  workload: string;
+  semester: string;
 }
 
 export interface Classroom {

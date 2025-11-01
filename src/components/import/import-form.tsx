@@ -114,17 +114,19 @@ export function ImportForm() {
           thematicTree: values.thematicTree,
           bibliography: values.bibliography,
           classSchedule: values.classSchedule,
+          workload: values.workload,
+          semester: values.semester,
         };
     
         const classroomData = {
             id: classroomId,
             courseId: courseId,
             professorId: user.uid,
-            name: `Turma 1`, // Generic name
+            name: values.semester, // Use semester as the name for the first class
             semester: values.semester,
             workload: values.workload,
-            classType: 'Regular', // Default value
-            gradingRule: '', // Default value
+            classType: 'Regular', // Default value, can be extracted in future
+            gradingRule: '', // Default value, can be extracted in future
         };
         
         try {
@@ -139,7 +141,7 @@ export function ImportForm() {
             description: `A disciplina "${values.courseName}" e sua primeira turma foram salvas.`,
           });
           
-          router.push(`/disciplinas/${courseId}`);
+          router.push(`/disciplinas`);
     
         } catch (error) {
           console.error('Error creating documents: ', error);
@@ -303,7 +305,7 @@ export function ImportForm() {
                           <Textarea rows={8} value={field.value?.map(v => `${v.date} - ${v.content}: ${v.activity}`).join('\n')} onChange={(e) => {
                           const value = e.target.value.split('\n').map(line => {
                             const [date, rest] = line.split(' - ');
-                            const [content, ...activity] = rest.split(':');
+                            const [content, ...activity] = rest ? rest.split(':') : ['', ''];
                             return {date: date.trim(), content: content.trim(), activity: activity.join(':').trim()};
                           });
                           field.onChange(value);
