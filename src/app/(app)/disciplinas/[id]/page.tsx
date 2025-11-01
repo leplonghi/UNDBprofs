@@ -110,7 +110,6 @@ function ClassroomManager({ courseId }: { courseId: string }) {
   const firestore = useFirestore();
   const [isStudentUploadOpen, setIsStudentUploadOpen] = React.useState(false);
 
-  // Query to get the first classroom for the course
   const classroomQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return query(
@@ -159,42 +158,38 @@ function ClassroomManager({ courseId }: { courseId: string }) {
                         </Button>
                     </div>
                 </CardHeader>
-            </Card>
-
-            <ClassroomStudentsTable courseId={courseId} classroomId={classroom.id} />
-            
-            <Card>
-                <CardHeader>
-                    <CardTitle>Cronograma de Aulas</CardTitle>
-                </CardHeader>
-                <CardContent>
-                {classroom.classSchedule && classroom.classSchedule.length > 0 ? (
-                    <div className="max-h-96 overflow-y-auto rounded-md border">
-                        <Table>
-                        <TableHeader>
-                            <TableRow>
-                            <TableHead>Data</TableHead>
-                            <TableHead>Conteúdo</TableHead>
-                            <TableHead>Atividade</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {classroom.classSchedule.map((scheduleItem, index) => (
-                            <TableRow key={index}>
-                                <TableCell className="font-medium">{scheduleItem.date}</TableCell>
-                                <TableCell>{scheduleItem.content}</TableCell>
-                                <TableCell>{scheduleItem.activity}</TableCell>
-                            </TableRow>
-                            ))}
-                        </TableBody>
-                        </Table>
+                 <CardContent className='space-y-6'>
+                    <ClassroomStudentsTable courseId={courseId} classroomId={classroom.id} />
+                    <div>
+                        <h3 className='text-lg font-semibold mb-4'>Cronograma de Aulas</h3>
+                        {classroom.classSchedule && classroom.classSchedule.length > 0 ? (
+                            <div className="max-h-96 overflow-y-auto rounded-md border">
+                                <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                    <TableHead>Data</TableHead>
+                                    <TableHead>Conteúdo</TableHead>
+                                    <TableHead>Atividade</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {classroom.classSchedule.map((scheduleItem, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell className="font-medium">{scheduleItem.date}</TableCell>
+                                        <TableCell>{scheduleItem.content}</TableCell>
+                                        <TableCell>{scheduleItem.activity}</TableCell>
+                                    </TableRow>
+                                    ))}
+                                </TableBody>
+                                </Table>
+                            </div>
+                        ) : (
+                            <div className="py-10 text-center text-muted-foreground">
+                                Nenhum cronograma de aulas encontrado para esta turma.
+                            </div>
+                        )}
                     </div>
-                ) : (
-                    <div className="py-10 text-center text-muted-foreground">
-                        Nenhum cronograma de aulas encontrado para esta turma.
-                    </div>
-                )}
-                </CardContent>
+                 </CardContent>
             </Card>
        </div>
     </>
@@ -245,7 +240,7 @@ export default function CourseDetailPage({
       <Tabs defaultValue="classroom" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="info">Plano de Ensino</TabsTrigger>
-          <TabsTrigger value="classroom">Turma e Alunos</TabsTrigger>
+          <TabsTrigger value="classroom">Gerenciamento da Turma</TabsTrigger>
         </TabsList>
         <TabsContent value="info" className="mt-6">
             <CourseInformation course={course} />
