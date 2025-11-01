@@ -14,7 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
 import { doc, writeBatch } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import type { Course, Classroom } from '@/types';
@@ -76,6 +76,7 @@ export function ImportForm() {
             bibliography: data.bibliography,
             classSchedule: data.classSchedule,
         });
+        // Clear the data from session storage after loading it
         sessionStorage.removeItem('importedData');
       } catch (error) {
         console.error("Failed to parse stored data", error);
@@ -105,12 +106,15 @@ export function ImportForm() {
 
     setIsSaving(true);
     
+    // Generate unique IDs for the new course and classroom
     const courseId = uuidv4();
     const classroomId = uuidv4();
 
+    // Create document references
     const courseRef = doc(firestore, `professors/${user.uid}/courses/${courseId}`);
     const classroomRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}`);
 
+    // Prepare the data for the Course document
     const courseData: Course = {
         id: courseId,
         professorId: user.uid,
@@ -123,6 +127,7 @@ export function ImportForm() {
         bibliography: values.bibliography || '',
     };
 
+    // Prepare the data for the Classroom document
     const classroomData: Classroom = {
         id: classroomId,
         courseId: courseId,
@@ -133,6 +138,7 @@ export function ImportForm() {
     };
     
     try {
+        // Use a batch write to save both documents atomically
         const batch = writeBatch(firestore);
         batch.set(courseRef, courseData);
         batch.set(classroomRef, classroomData);
@@ -140,7 +146,7 @@ export function ImportForm() {
 
         toast({
         title: 'Disciplina e Turma Criadas!',
-        description: `A disciplina "${values.courseName}" e sua primeira turma foram salvas.`,
+        description: `A disciplina "${values.courseName}" e sua primeira turma foram salvas com sucesso.`,
         });
         
         router.push(`/disciplinas`);
@@ -171,8 +177,8 @@ export function ImportForm() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             
             <div className="space-y-4 rounded-lg border p-4">
-                <h3 className="font-semibold">Revise os Dados Extraídos</h3>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <h3 className="font-semibold text-lg text-primary">Dados da Disciplina</h3>
+                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <FormField
                     control={form.control}
                     name="courseName"
@@ -199,34 +205,8 @@ export function ImportForm() {
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={form.control}
-                    name="semester"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Semestre (da Turma)</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="workload"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Carga Horária (da Turma)</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </div>
-                <FormField
+                 <FormField
                   control={form.control}
                   name="syllabus"
                   render={({ field }) => (
@@ -297,12 +277,44 @@ export function ImportForm() {
                     </FormItem>
                   )}
                 />
-                <FormField
+              </div>
+
+            <div className="space-y-4 rounded-lg border p-4">
+                <h3 className="font-semibold text-lg text-primary">Dados da Turma</h3>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="semester"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Semestre</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="workload"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Carga Horária</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                 <FormField
                   control={form.control}
                   name="classSchedule"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Cronograma de Aulas (da Turma)</FormLabel>
+                      <FormLabel>Cronograma de Aulas</FormLabel>
                       <FormControl>
                           <Textarea rows={8} value={field.value?.map(v => `${v.date} - ${v.content}: ${v.activity}`).join('\\n')} onChange={(e) => {
                           const value = e.target.value.split('\\n').map(line => {
@@ -317,13 +329,14 @@ export function ImportForm() {
                     </FormItem>
                   )}
                 />
-                 <Button type="submit" className="w-full" disabled={isSaving}>
-                    {isSaving ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : null}
-                    Confirmar e Salvar
-                </Button>
-              </div>
+            </div>
+            
+            <Button type="submit" className="w-full" disabled={isSaving}>
+                {isSaving ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
+                Confirmar e Salvar
+            </Button>
         </form>
       </Form>
   );

@@ -1,25 +1,15 @@
 'use client';
 
 import React, { useRef, useTransition } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CoursesTable } from '@/components/courses/courses-table';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, FileText, Edit, Loader2 } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { PlusCircle, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useUser } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { importCourseFromLessonPlan } from '@/ai/flows/import-course-from-lesson-plan';
-
 
 export default function CoursesPage() {
   const [isPending, startTransition] = useTransition();
@@ -97,32 +87,14 @@ export default function CoursesPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-primary">Minhas Disciplinas</h1>
         
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Adicionar Disciplina
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Escolha um método</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                    <Link href="/disciplinas/nova">
-                        <Edit className="mr-2 h-4 w-4" />
-                        <span>Criação Manual</span>
-                    </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={handleImportClick} disabled={isPending}>
-                    {isPending ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                        <FileText className="mr-2 h-4 w-4" />
-                    )}
-                    <span>Importar de PDF</span>
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
+        <Button onClick={handleImportClick} disabled={isPending}>
+          {isPending ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <PlusCircle className="mr-2 h-4 w-4" />
+          )}
+          Adicionar Turma
+        </Button>
 
         <Input 
             type="file" 

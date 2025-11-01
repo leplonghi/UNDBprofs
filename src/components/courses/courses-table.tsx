@@ -100,7 +100,7 @@ export function CoursesTable() {
           ) : !courses || courses.length === 0 ? (
             <TableRow>
               <TableCell colSpan={3} className="h-24 text-center">
-                Nenhuma disciplina encontrada.
+                Nenhuma disciplina encontrada. Adicione uma para começar.
               </TableCell>
             </TableRow>
           ) : (
