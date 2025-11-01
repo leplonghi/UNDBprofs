@@ -11,35 +11,40 @@ import type { Course } from '@/types';
 async function getBackendStats(firestore: Firestore, userId: string): Promise<{ totalTurmas: number; totalAlunos: number; totalAtividades: number }> {
     const coursesRef = collection(firestore, `professors/${userId}/courses`);
     const coursesSnapshot = await getDocs(coursesRef);
+
     if (coursesSnapshot.empty) {
         return { totalTurmas: 0, totalAlunos: 0, totalAtividades: 0 };
     }
 
-    let totalTurmas = 0;
-    let totalAlunos = 0;
-    let totalAtividades = 0;
+    const classroomPromises: Promise<any>[] = [];
+    const eventPromises: Promise<any>[] = [];
 
-    const promises = coursesSnapshot.docs.map(async (courseDoc) => {
-        // Count classrooms
+    coursesSnapshot.docs.forEach(courseDoc => {
         const classroomsRef = collection(firestore, `professors/${userId}/courses/${courseDoc.id}/classrooms`);
-        const classroomsSnapshot = await getDocs(classroomsRef);
-        totalTurmas += classroomsSnapshot.size;
+        classroomPromises.push(getDocs(classroomsRef));
 
-        // Count students in each classroom
-        const studentPromises = classroomsSnapshot.docs.map(async (classroomDoc) => {
-            const studentsRef = collection(firestore, `professors/${userId}/courses/${courseDoc.id}/classrooms/${classroomDoc.id}/classroomStudents`);
-            const studentsSnapshot = await getDocs(studentsRef);
-            totalAlunos += studentsSnapshot.size;
-        });
-        await Promise.all(studentPromises);
-
-        // Count academic events
         const eventsRef = collection(firestore, `professors/${userId}/courses/${courseDoc.id}/academicEvents`);
-        const eventsSnapshot = await getDocs(eventsRef);
-        totalAtividades += eventsSnapshot.size;
+        eventPromises.push(getDocs(eventsRef));
     });
 
-    await Promise.all(promises);
+    const classroomSnapshots = await Promise.all(classroomPromises);
+    const eventSnapshots = await Promise.all(eventPromises);
+
+    const totalTurmas = classroomSnapshots.reduce((sum, snap) => sum + snap.size, 0);
+    const totalAtividades = eventSnapshots.reduce((sum, snap) => sum + snap.size, 0);
+
+    const studentPromises: Promise<any>[] = [];
+    let courseIndex = 0;
+    for (const courseDoc of coursesSnapshot.docs) {
+        const classroomSnapshot = classroomSnapshots[courseIndex++];
+        classroomSnapshot.docs.forEach((classroomDoc: any) => {
+            const studentsRef = collection(firestore, `professors/${userId}/courses/${courseDoc.id}/classrooms/${classroomDoc.id}/classroomStudents`);
+            studentPromises.push(getDocs(studentsRef));
+        });
+    }
+
+    const studentSnapshots = await Promise.all(studentPromises);
+    const totalAlunos = studentSnapshots.reduce((sum, snap) => sum + snap.size, 0);
 
     return { totalTurmas, totalAlunos, totalAtividades };
 }

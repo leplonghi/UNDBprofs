@@ -40,7 +40,7 @@ import {
   useMemoFirebase,
   updateDocumentNonBlocking,
 } from '@/firebase';
-import { doc, writeBatch, getDoc, collection, addDoc, deleteDoc } from 'firebase/firestore';
+import { doc, writeBatch, getDoc, collection, addDoc, deleteDoc, getDocs, query as firestoreQuery, where } from 'firebase/firestore';
 import type { ClassroomStudent, Student, Grade, Activity, Group } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 import { Skeleton } from '../ui/skeleton';
@@ -112,14 +112,30 @@ export function StudentGroups({
       }
       setIsStudentDataLoading(true);
       const studentDataMap: Record<string, Student> = {};
-      const promises = classroomStudents.map(async (cs) => {
-        const studentRef = doc(firestore, 'students', cs.studentId);
-        const studentSnap = await getDoc(studentRef);
-        if (studentSnap.exists()) {
-          studentDataMap[cs.id] = studentSnap.data() as Student;
-        }
+      const studentIds = classroomStudents.map(cs => cs.studentId);
+      
+      // Fetch student documents in batches of 10 (Firestore 'in' query limit)
+      const studentPromises = [];
+      for (let i = 0; i < studentIds.length; i += 10) {
+          const batchIds = studentIds.slice(i, i + 10);
+          const studentQuery = firestoreQuery(collection(firestore, 'students'), where('id', 'in', batchIds));
+          studentPromises.push(getDocs(studentQuery));
+      }
+
+      const studentSnapshots = await Promise.all(studentPromises);
+      const studentDocs = studentSnapshots.flatMap(snap => snap.docs);
+
+      const studentDataById: Record<string, Student> = {};
+      studentDocs.forEach(doc => {
+          studentDataById[doc.id] = doc.data() as Student;
       });
-      await Promise.all(promises);
+
+      classroomStudents.forEach(cs => {
+          if (studentDataById[cs.studentId]) {
+              studentDataMap[cs.id] = studentDataById[cs.studentId];
+          }
+      });
+      
       setAllStudentsData(studentDataMap);
       setIsStudentDataLoading(false);
     }
@@ -143,7 +159,7 @@ export function StudentGroups({
       initialGrades[cs.id] = studentGrades;
     }
     setLocalGrades(initialGrades);
-  }, [classroomStudents, isLoading, isStudentDataLoading, gradeStructure, allStudentsData]);
+  }, [classroomStudents, isLoading, isStudentDataLoading, gradeStructure]);
 
   const { studentGroups, ungroupedStudents } = useMemo(() => {
      if (!groups || !classroomStudents) {
@@ -160,7 +176,7 @@ export function StudentGroups({
 
       members.forEach(id => allCsIdsInGroups.add(id));
       return { ...group, members };
-    });
+    }).sort((a,b) => a.name.localeCompare(b.name));
 
     const ungroupedStudents = classroomStudents
       .filter(cs => !allCsIdsInGroups.has(cs.id))
@@ -177,6 +193,7 @@ export function StudentGroups({
       if (!user || !firestore || Object.keys(gradesToSave).length === 0) return;
 
       setIsSaving(true);
+      const batch = writeBatch(firestore);
 
       try {
         for (const [csId, grades] of Object.entries(gradesToSave)) {
@@ -184,8 +201,11 @@ export function StudentGroups({
             firestore,
             `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/classroomStudents/${csId}`
           );
-          updateDocumentNonBlocking(studentRef, { grades });
+          batch.update(studentRef, { grades });
         }
+        
+        await batch.commit();
+
         toast({
           title: 'Notas Salvas!',
           description: 'As alterações foram salvas com sucesso.',
@@ -461,25 +481,31 @@ export function StudentGroups({
     );
   }, [filter, ungroupedStudents, allStudentsData]);
 
-    const renderGradeInputs = (studentId: string, isGroup: boolean) => {
-    const grades = localGrades[studentId] || [];
+    const renderGradeInputs = (studentOrGroupId: string, isGroup: boolean) => {
+    const studentIdForGrades = isGroup 
+        ? studentGroups.find(g => g.id === studentOrGroupId)?.members[0] 
+        : studentOrGroupId;
+
+    if (!studentIdForGrades) return null;
+
+    const grades = localGrades[studentIdForGrades] || [];
     const getGrade = (activityId: string) => grades.find((g) => g.activityId === activityId)?.score ?? 0;
 
     return (
       <div className="grid grid-cols-2 gap-4 mt-4">
         {gradeStructure.map(activity => (
           <div key={activity.id} className="space-y-2">
-            <Label htmlFor={`${studentId}-${activity.id}`}>
+            <Label htmlFor={`${studentOrGroupId}-${activity.id}`}>
               {activity.name} <span className="text-muted-foreground">({activity.maxScore.toFixed(1)})</span>
             </Label>
             <Input
-              id={`${studentId}-${activity.id}`}
+              id={`${studentOrGroupId}-${activity.id}`}
               type="number"
               step="0.5"
               min="0"
               max={activity.maxScore}
               value={getGrade(activity.id)}
-              onChange={(e) => handleGradeChange(studentId, isGroup ? studentId : studentId, parseFloat(e.target.value) || 0, isGroup)}
+              onChange={(e) => handleGradeChange(studentOrGroupId, activity.id, parseFloat(e.target.value) || 0, isGroup)}
               className="w-full"
               disabled={isSaving}
             />
@@ -491,7 +517,7 @@ export function StudentGroups({
   
     const renderTotals = (studentId: string) => {
         const grades = localGrades[studentId] || [];
-        if (!grades) return null;
+        if (!grades || grades.length === 0) return null;
         const { n1Total, n2Total, finalGrade, modularTotals } = calculateTotals(grades);
         const isModular = modularActivities.length > 0;
 
