@@ -130,13 +130,27 @@ export function StudentGroups({
       }
       return acc;
     }, {} as Record<string, string[]>);
+    
+    // Sort students within each group alphabetically
+    const sortedGroups = Object.values(groups).map(group =>
+      group.sort((a, b) =>
+        allStudentsData[a]?.name.localeCompare(allStudentsData[b]?.name)
+      )
+    );
 
-    setStudentGroups(Object.values(groups));
+    setStudentGroups(sortedGroups);
+
     const ungrouped = Array.from(allStudentIds).filter(
       (id) => !groupedStudentIds.has(id)
     );
+
+    // Sort ungrouped students alphabetically
+    ungrouped.sort((a, b) => 
+      allStudentsData[a]?.name.localeCompare(allStudentsData[b]?.name)
+    );
+
     setUngroupedStudents(ungrouped);
-  }, [classroomStudents, isLoading, isStudentDataLoading, gradeStructure]);
+  }, [classroomStudents, isLoading, isStudentDataLoading, gradeStructure, allStudentsData]);
 
   const debouncedSaveChanges = useCallback(
     debounce(async (gradesToSave: Record<string, Grade[]>) => {
