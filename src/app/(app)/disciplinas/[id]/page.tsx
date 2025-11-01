@@ -27,6 +27,9 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Users } from 'lucide-react';
+import { StudentUploadDialog } from '@/components/courses/student-upload-dialog';
 
 function CourseDetailsSkeleton() {
   return (
@@ -51,6 +54,7 @@ function CourseDetailsSkeleton() {
 function CourseScheduleTab({ courseId }: { courseId: string }) {
   const { user } = useUser();
   const firestore = useFirestore();
+  const [isStudentUploadOpen, setIsStudentUploadOpen] = React.useState(false);
 
   // Query to get the first classroom for the course
   const classroomQuery = useMemoFirebase(() => {
@@ -71,45 +75,63 @@ function CourseScheduleTab({ courseId }: { courseId: string }) {
     return <Skeleton className="h-60 w-full" />;
   }
   
-  if (!classroom || !classroom.classSchedule || classroom.classSchedule.length === 0) {
+  if (!classroom) {
       return (
           <div className="py-10 text-center text-muted-foreground">
-              Nenhum cronograma de aulas encontrado para a primeira turma desta disciplina.
+              Nenhuma turma encontrada para esta disciplina.
           </div>
       );
   }
 
   return (
-    <Card>
-        <CardHeader>
-            <div className='flex items-center justify-between'>
-                <div>
-                    <CardTitle>Cronograma da Turma: {classroom.name}</CardTitle>
-                    <CardDescription>Semestre: {classroom.semester} | Carga Horária: {classroom.workload}</CardDescription>
-                </div>
-            </div>
-        </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Data</TableHead>
-              <TableHead>Conteúdo</TableHead>
-              <TableHead>Atividade</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {classroom.classSchedule.map((scheduleItem, index) => (
-              <TableRow key={index}>
-                <TableCell className="font-medium">{scheduleItem.date}</TableCell>
-                <TableCell>{scheduleItem.content}</TableCell>
-                <TableCell>{scheduleItem.activity}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+    <>
+      <StudentUploadDialog
+        isOpen={isStudentUploadOpen}
+        onOpenChange={setIsStudentUploadOpen}
+        classroomId={classroom.id}
+        courseId={courseId}
+      />
+      <Card>
+          <CardHeader>
+              <div className='flex items-center justify-between'>
+                  <div>
+                      <CardTitle>Cronograma da Turma: {classroom.name}</CardTitle>
+                      <CardDescription>Semestre: {classroom.semester} | Carga Horária: {classroom.workload}</CardDescription>
+                  </div>
+                  <Button onClick={() => setIsStudentUploadOpen(true)}>
+                    <Users className="mr-2 h-4 w-4" />
+                    Adicionar Alunos
+                  </Button>
+              </div>
+          </CardHeader>
+        <CardContent>
+          {classroom.classSchedule && classroom.classSchedule.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Conteúdo</TableHead>
+                  <TableHead>Atividade</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {classroom.classSchedule.map((scheduleItem, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="font-medium">{scheduleItem.date}</TableCell>
+                    <TableCell>{scheduleItem.content}</TableCell>
+                    <TableCell>{scheduleItem.activity}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+             <div className="py-10 text-center text-muted-foreground">
+                Nenhum cronograma de aulas encontrado para esta turma.
+             </div>
+          )}
+        </CardContent>
+      </Card>
+    </>
   );
 }
 
@@ -154,7 +176,7 @@ export default function CourseDetailPage({
         <Badge variant="outline">{course.code}</Badge>
       </div>
 
-      <Tabs defaultValue="info" className="w-full">
+      <Tabs defaultValue="schedule" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="info">Informações Gerais</TabsTrigger>
           <TabsTrigger value="schedule">Cronograma de Aulas</TabsTrigger>

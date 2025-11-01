@@ -18,3 +18,15 @@ export interface Classroom {
   workload: string;
   classSchedule: { date: string; content: string; activity: string }[];
 }
+
+export interface Student {
+    id: string;
+    name: string;
+    email: string;
+}
+
+export interface ClassroomStudent {
+    id: string;
+    classroomId: string;
+    studentId: string;
+}
