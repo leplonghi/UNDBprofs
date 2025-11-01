@@ -2,9 +2,11 @@
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
-import { Firestore } from 'firebase/firestore';
+import { Firestore, doc, getDoc, setDoc } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
+import { FirestorePermissionError } from './errors';
+import { errorEmitter } from './error-emitter';
 
 interface FirebaseProviderProps {
   children: ReactNode;
@@ -53,6 +55,45 @@ export interface UserHookResult { // Renamed from UserAuthHookResult for consist
 export const FirebaseContext = createContext<FirebaseContextState | undefined>(undefined);
 
 /**
+ * Creates a professor document if it's their first login.
+ */
+async function createProfessorOnFirstLogin(firestore: Firestore, user: User) {
+  const professorRef = doc(firestore, `professors/${user.uid}`);
+  try {
+    const docSnap = await getDoc(professorRef);
+    if (!docSnap.exists()) {
+      const professorData = {
+        id: user.uid,
+        email: user.email,
+        name: user.displayName,
+        registrationDate: new Date().toISOString(),
+      };
+
+      // Use a non-blocking write but with our new error handling
+      setDoc(professorRef, professorData).catch(() => {
+        errorEmitter.emit(
+          'permission-error',
+          new FirestorePermissionError({
+            path: professorRef.path,
+            operation: 'create',
+            requestResourceData: professorData,
+          })
+        );
+      });
+    }
+  } catch (error) {
+     errorEmitter.emit(
+        'permission-error',
+        new FirestorePermissionError({
+          path: professorRef.path,
+          operation: 'get',
+        })
+      );
+  }
+}
+
+
+/**
  * FirebaseProvider manages and provides Firebase services and user authentication state.
  */
 export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
@@ -69,8 +110,8 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
   // Effect to subscribe to Firebase auth state changes
   useEffect(() => {
-    if (!auth) { // If no Auth service instance, cannot determine user state
-      setUserAuthState({ user: null, isUserLoading: false, userError: new Error("Auth service not provided.") });
+    if (!auth || !firestore) { // If no Auth service instance, cannot determine user state
+      setUserAuthState({ user: null, isUserLoading: false, userError: new Error("Auth or Firestore service not provided.") });
       return;
     }
 
@@ -78,7 +119,10 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
     const unsubscribe = onAuthStateChanged(
       auth,
-      (firebaseUser) => { // Auth state determined
+      async (firebaseUser) => { // Auth state determined
+        if (firebaseUser) {
+          await createProfessorOnFirstLogin(firestore, firebaseUser);
+        }
         setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
       },
       (error) => { // Auth listener error
@@ -87,7 +131,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       }
     );
     return () => unsubscribe(); // Cleanup
-  }, [auth]); // Depends on the auth instance
+  }, [auth, firestore]); // Depends on the auth instance
 
   // Memoize the context value
   const contextValue = useMemo((): FirebaseContextState => {
