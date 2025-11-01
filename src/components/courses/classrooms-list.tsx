@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { collection, getDocs, query, DocumentData, collectionGroup } from 'firebase/firestore';
+import { collection, getDocs, query, DocumentData } from 'firebase/firestore';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -33,11 +33,9 @@ function getSemesterValue(semesterString: string): number {
 }
 
 function getCurrentSemesterValue(): number {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth(); // 0-11
-  // Semestre 1: Jan-Jul (0-6), Semestre 2: Ago-Dez (7-11)
-  const semester = month <= 6 ? 1 : 2;
+  // Simulating being in October 2025 as requested
+  const year = 2025;
+  const semester = 2; // .2 for second semester
   return year * 10 + semester;
 }
 
@@ -67,6 +65,7 @@ export function ClassroomsList({ filter }: ClassroomsListProps) {
       const allClassrooms: Classroom[] = [];
 
       try {
+        // Fetch all classrooms for all courses
         for (const course of courses) {
             const classroomsRef = collection(firestore, `professors/${user.uid}/courses/${course.id}/classrooms`);
             const classroomsSnapshot = await getDocs(classroomsRef);
@@ -87,11 +86,11 @@ export function ClassroomsList({ filter }: ClassroomsListProps) {
         const currentSemesterValue = getCurrentSemesterValue();
         const filtered = allClassrooms.filter(c => {
             const classroomSemesterValue = getSemesterValue(c.semester);
-            if (classroomSemesterValue === 0) return false;
+            if (classroomSemesterValue === 0) return false; // Ignore improperly formatted semesters
             
             if (filter === 'active') {
                 return classroomSemesterValue >= currentSemesterValue;
-            } else {
+            } else { // filter === 'past'
                 return classroomSemesterValue < currentSemesterValue;
             }
         });
