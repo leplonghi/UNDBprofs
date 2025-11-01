@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuth } from 'firebase-admin/auth';
 import { initAdmin } from '@/firebase/admin';
 
+// Force the middleware to run on the Node.js runtime.
+// This is required to use the Firebase Admin SDK.
+export const runtime = 'nodejs';
+
 // Initialize the Firebase Admin SDK.
 initAdmin();
 
