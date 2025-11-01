@@ -3,13 +3,13 @@
     {
       "id": "undb-logo",
       "description": "UNDB institution logo",
-      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/Branding%2Fpublic%2Flogoundbprofs.png?alt=media",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.firebasestorage.app/o/Branding%2Fpublic%2Flogoundbprofs.png?alt=media&token=8658ca45-42bc-43c8-a918-56764fa0f60d",
       "imageHint": "logo brand"
     },
     {
       "id": "user-avatar",
       "description": "User avatar placeholder",
-      "imageUrl": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxwZXJzb24lMjBwb3J0cmFpdHxlbnwwfHx8fDE3NjE4ODIwMzV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d",
       "imageHint": "person portrait"
     }
   ]
