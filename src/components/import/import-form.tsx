@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useFirestore, useUser } from '@/firebase';
@@ -22,6 +21,7 @@ import type { Course, Classroom, ClassType } from '@/types';
 import { ThematicTreeEditor } from './ThematicTreeEditor';
 import { ClassScheduleEditor } from './ClassScheduleEditor';
 import { createActivitiesFromPreset } from '@/lib/presets';
+import { Badge } from '../ui/badge';
 
 const formSchema = z.object({
   courseName: z.string().min(1, 'Nome do curso é obrigatório.'),
@@ -98,7 +98,7 @@ export function ImportForm() {
         thematicTree: extractedData.thematicTree || [],
         bibliography: extractedData.bibliography,
         classSchedule: extractedData.classSchedule || [],
-        classType: 'Integradora', // Default value
+        classType: extractedData.classType || 'Modular',
       });
     }
   }, [extractedData, form]);
@@ -173,6 +173,8 @@ export function ImportForm() {
         setIsSaving(false);
     }
   }
+
+  const detectedClassType = form.watch('classType');
 
   if (!extractedData) {
     return (
@@ -274,7 +276,7 @@ export function ImportForm() {
 
             <div className="space-y-4 rounded-lg border p-4">
                 <h3 className="font-semibold text-lg text-primary">Dados da Turma</h3>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                   <FormField
                     control={form.control}
                     name="semester"
@@ -301,28 +303,18 @@ export function ImportForm() {
                       </FormItem>
                     )}
                   />
+                  <div className="space-y-2">
+                    <FormLabel>Tipo da Turma (Detectado)</FormLabel>
+                    <div className="flex items-center h-10">
+                        <Badge variant={detectedClassType === 'Integradora' ? 'default' : 'secondary'}>
+                            {detectedClassType}
+                        </Badge>
+                    </div>
+                    <p className='text-sm text-muted-foreground'>
+                        A IA detectou este tipo e aplicará o preset de avaliação correspondente.
+                    </p>
+                  </div>
                 </div>
-                 <FormField
-                  control={form.control}
-                  name="classType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tipo da Turma</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o tipo da turma" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Integradora">Integradora</SelectItem>
-                          <SelectItem value="Modular">Modular</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
                 <ClassScheduleEditor control={form.control} />
             </div>
             

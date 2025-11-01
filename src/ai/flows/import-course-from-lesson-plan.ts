@@ -28,6 +28,7 @@ const ImportCourseFromLessonPlanOutputSchema = z.object({
   objectives: z.string().describe('The objectives of the course.'),
   workload: z.string().describe('The workload of the course'),
   semester: z.string().describe('The semester of the course'),
+  classType: z.enum(['Integradora', 'Modular']).describe('The type of the class, determined by analyzing the course content. Should be "Integradora" for project-based studio disciplines or "Modular" for others.'),
   competencies: z.string().describe('The competencies of the course.'),
   thematicTree: z
     .array(
@@ -65,24 +66,31 @@ const prompt = ai.definePrompt({
   input: {schema: ImportCourseFromLessonPlanInputSchema},
   output: {schema: ImportCourseFromLessonPlanOutputSchema},
   prompt: `
-  You are an expert in academic document analysis.
+  You are an expert in academic document analysis for UNDB.
   Your task is to extract key information from the provided lesson plan PDF and structure it into a JSON format.
 
-  Identify and extract the following fields:
-  - courseName
-  - courseCode
-  - syllabus
-  - objectives
-  - workload
-  - semester
-  - competencies
-  - thematicTree: This is a list of project stages or thematic units. Each item should have a 'name' (the title of the stage) and a 'description'.
-  - bibliography
-  - classSchedule: This is a list of all classes. Each class should have a 'date', the 'content' or topic to be covered, and the planned 'activity'.
+  **Analysis and Extraction Steps:**
+  1.  **Extract Key Fields**: Identify and extract the following fields from the document:
+      - courseName
+      - courseCode
+      - syllabus
+      - objectives
+      - workload
+      - semester
+      - competencies
+      - thematicTree: This is a list of project stages or thematic units. Each item should have a 'name' (the title of the stage) and a 'description'.
+      - bibliography
+      - classSchedule: A list of all classes. Each class should have a 'date', 'content' (topic), and planned 'activity'.
 
-  Please be as faithful as possible to the original text. Do not summarize or alter technical content.
-  If a field is not present in the document, leave the corresponding JSON field empty or as an empty array for lists.
-  The final output must be a clean and complete JSON, ready for automatic integration into an academic system.
+  2.  **Determine classType**: This is a critical step. Analyze the document's content (course name, syllabus, objectives) to classify the discipline.
+      - If the discipline is project-based, a "Studio", or has a clear project development cycle (e.g., analysis, preliminary solution, final delivery), set classType to **"Integradora"**.
+      - Otherwise, for more traditional or theoretical disciplines, set classType to **"Modular"**.
+      - You MUST provide a value for classType. Default to "Modular" if uncertain.
+
+  **Output Instructions**:
+  - Be as faithful as possible to the original text. Do not summarize or alter technical content.
+  - If a field is not present, leave the corresponding JSON field as an empty string or an empty array for lists.
+  - The final output must be a clean and complete JSON, ready for automatic integration.
 
   Lesson Plan: {{media url=lessonPlanDataUri}}`,
 });
