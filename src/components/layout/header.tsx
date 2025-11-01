@@ -9,7 +9,7 @@ export function Header() {
     <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
       <Link href="/dashboard" className="flex items-center gap-2">
         <Image
-            src="https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/branding%2Fpublic%2Flogoundbprofs.png?alt=media"
+            src="https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.firebasestorage.app/o/Branding%2Fpublic%2Flogoundbprofs.png?alt=media"
             alt="UNDBprof Logo"
             width={32}
             height={32}
