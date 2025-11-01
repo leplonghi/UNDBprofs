@@ -15,7 +15,7 @@ import {
   useMemoFirebase,
   useCollection,
 } from '@/firebase';
-import type { Course, Classroom, ClassroomStudent } from '@/types';
+import type { Course, Classroom, ClassroomStudent, Activity } from '@/types';
 import { doc, collection, query } from 'firebase/firestore';
 import {
   Table,
@@ -169,7 +169,6 @@ function ClassroomManager({
   const { data: classrooms, isLoading: isLoadingClassrooms } =
     useCollection<Classroom>(classroomQuery);
 
-  // This logic is now safe because all hooks have been called.
   const classroom = classrooms?.[0];
   const classroomId = classroom?.id;
 
@@ -196,7 +195,7 @@ function ClassroomManager({
     );
   }
 
-  const activities = classroom.activities || [];
+  const activities: Activity[] = classroom.activities || [];
 
   return (
     <>
