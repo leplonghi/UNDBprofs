@@ -86,14 +86,20 @@ export default function CoursesPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-primary">Minhas Disciplinas</h1>
-        <Button onClick={handleImportClick} disabled={isPending}>
-          {isPending ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <PlusCircle className="mr-2 h-4 w-4" />
-          )}
-          Adicionar Turma
-        </Button>
+        <div className="flex items-center gap-2">
+            <Button onClick={() => router.push('/disciplinas/nova')}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Adicionar Disciplina
+            </Button>
+            <Button onClick={handleImportClick} disabled={isPending} variant="secondary">
+            {isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+                <PlusCircle className="mr-2 h-4 w-4" />
+            )}
+            Importar Turma
+            </Button>
+        </div>
         <Input
           type="file"
           ref={fileInputRef}

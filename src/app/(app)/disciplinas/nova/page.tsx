@@ -62,8 +62,13 @@ export default function NewCoursePage() {
     const courseData: Course = {
       id: courseId,
       professorId: user.uid,
-      ...values,
+      name: values.name,
+      code: values.code,
+      syllabus: values.syllabus,
+      objectives: values.objectives,
+      competencies: values.competencies || '',
       thematicTree: [], // Default empty value
+      bibliography: values.bibliography || '',
     };
     
     setDocumentNonBlocking(courseRef, courseData, { merge: false });
@@ -135,6 +140,32 @@ export default function NewCoursePage() {
                     <FormItem>
                       <FormLabel>Objetivos</FormLabel>
                       <FormControl>
+                        <Textarea rows={5} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="competencies"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Competências</FormLabel>
+                       <FormControl>
+                        <Textarea rows={5} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="bibliography"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bibliografia</FormLabel>
+                       <FormControl>
                         <Textarea rows={5} {...field} />
                       </FormControl>
                       <FormMessage />
