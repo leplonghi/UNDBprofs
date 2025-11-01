@@ -17,7 +17,7 @@ import { Loader2 } from 'lucide-react';
 import { useFirestore, useUser } from '@/firebase';
 import { doc, writeBatch } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
-import type { Course, Classroom, ClassScheduleItem } from '@/types';
+import type { Course, Classroom, ClassScheduleItem, Bibliography } from '@/types';
 import { ThematicTreeEditor } from './ThematicTreeEditor';
 import { ClassScheduleEditor } from './ClassScheduleEditor';
 import { createActivitiesFromPreset } from '@/lib/presets';
@@ -33,7 +33,11 @@ const formSchema = z.object({
   classType: z.enum(['Integradora', 'Modular'], { required_error: 'O tipo da turma é obrigatório.' }),
   competencies: z.string().min(1, 'Competências são obrigatórias.'),
   thematicTree: z.array(z.object({ name: z.string().min(1, 'O nome é obrigatório.'), description: z.string().min(1, 'A descrição é obrigatória.') })).optional(),
-  bibliography: z.string().min(1, 'Bibliografia é obrigatória.'),
+  bibliography: z.object({
+    basic: z.string().optional(),
+    complementary: z.string().optional(),
+    recommended: z.string().optional(),
+  }),
   classSchedule: z.array(z.object({ 
       date: z.string().min(1, 'A data é obrigatória.'), 
       type: z.string().min(1, 'O tipo é obrigatório.'), 
@@ -66,7 +70,11 @@ export function ImportForm() {
       classType: 'Integradora',
       competencies: '',
       thematicTree: [],
-      bibliography: '',
+      bibliography: {
+        basic: '',
+        complementary: '',
+        recommended: '',
+      },
       classSchedule: [],
     },
   });
@@ -103,7 +111,7 @@ export function ImportForm() {
         semester: extractedData.semester,
         competencies: extractedData.competencies,
         thematicTree: extractedData.thematicTree || [],
-        bibliography: extractedData.bibliography,
+        bibliography: extractedData.bibliography || { basic: '', complementary: '', recommended: '' },
         classSchedule: extractedData.classSchedule || [],
         classType: extractedData.classType || 'Modular',
       });
@@ -138,7 +146,11 @@ export function ImportForm() {
         objectives: values.objectives,
         competencies: values.competencies || '',
         thematicTree: values.thematicTree || [],
-        bibliography: values.bibliography || '',
+        bibliography: {
+            basic: values.bibliography.basic || '',
+            complementary: values.bibliography.complementary || '',
+            recommended: values.bibliography.recommended || '',
+        },
     };
     
     const newActivities = createActivitiesFromPreset(values.classType);
@@ -266,19 +278,48 @@ export function ImportForm() {
                   )}
                 />
                  <ThematicTreeEditor control={form.control} />
-                <FormField
-                  control={form.control}
-                  name="bibliography"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bibliografia</FormLabel>
-                      <FormControl>
-                        <Textarea rows={12} {...field} className="font-sans" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                 <div className='space-y-4'>
+                    <h4 className='font-medium'>Bibliografia</h4>
+                    <FormField
+                    control={form.control}
+                    name="bibliography.basic"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Básica</FormLabel>
+                        <FormControl>
+                            <Textarea rows={5} {...field} className="font-sans" />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                     <FormField
+                    control={form.control}
+                    name="bibliography.complementary"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Complementar</FormLabel>
+                        <FormControl>
+                            <Textarea rows={5} {...field} className="font-sans" />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                     <FormField
+                    control={form.control}
+                    name="bibliography.recommended"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Recomendada</FormLabel>
+                        <FormControl>
+                            <Textarea rows={3} {...field} className="font-sans" />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                 </div>
               </div>
 
             <div className="space-y-4 rounded-lg border p-4">

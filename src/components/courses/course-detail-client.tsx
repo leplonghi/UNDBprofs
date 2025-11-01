@@ -102,10 +102,37 @@ function CourseInformation({
         )}
         {course.bibliography && (
           <div>
-            <h3 className="font-semibold">Bibliografia</h3>
-            <pre className="whitespace-pre-wrap text-muted-foreground font-sans text-sm mt-2">
-              {course.bibliography}
-            </pre>
+            <h3 className="font-semibold mb-2">Bibliografia</h3>
+            <div className="rounded-md border">
+              <Table>
+                <TableBody>
+                  {course.bibliography.basic && (
+                    <TableRow>
+                      <TableCell className="w-[150px] font-medium text-muted-foreground bg-muted/50 align-top">Básica</TableCell>
+                      <TableCell>
+                        <pre className="whitespace-pre-wrap font-sans text-sm">{course.bibliography.basic}</pre>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {course.bibliography.complementary && (
+                    <TableRow>
+                      <TableCell className="w-[150px] font-medium text-muted-foreground bg-muted/50 align-top">Complementar</TableCell>
+                       <TableCell>
+                        <pre className="whitespace-pre-wrap font-sans text-sm">{course.bibliography.complementary}</pre>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {course.bibliography.recommended && (
+                    <TableRow>
+                      <TableCell className="w-[150px] font-medium text-muted-foreground bg-muted/50 align-top">Recomendada</TableCell>
+                       <TableCell>
+                        <pre className="whitespace-pre-wrap font-sans text-sm">{course.bibliography.recommended}</pre>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         )}
         <div>

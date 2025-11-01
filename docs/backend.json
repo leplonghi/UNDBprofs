@@ -79,8 +79,13 @@
           }
         },
         "bibliography": {
-          "type": "string",
-          "description": "The bibliography of the course."
+          "type": "object",
+          "description": "The bibliography of the course, separated into sections.",
+          "properties": {
+              "basic": { "type": "string", "description": "Basic bibliography." },
+              "complementary": { "type": "string", "description": "Complementary bibliography." },
+              "recommended": { "type": "string", "description": "Recommended bibliography." }
+          }
         }
       },
       "required": [

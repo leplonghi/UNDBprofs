@@ -40,7 +40,11 @@ const ImportCourseFromLessonPlanOutputSchema = z.object({
       })
     )
     .describe('The thematic tree or project process steps of the course.'),
-  bibliography: z.string().describe('The bibliography of the course. Preserve formatting with line breaks.'),
+  bibliography: z.object({
+    basic: z.string().describe('The basic bibliography items.'),
+    complementary: z.string().describe('The complementary bibliography items.'),
+    recommended: z.string().describe('The recommended bibliography items.'),
+  }).describe('The bibliography of the course, separated into basic, complementary, and recommended sections. Preserve formatting with line breaks.'),
   classSchedule: z
     .array(
       z.object({
@@ -82,7 +86,7 @@ const prompt = ai.definePrompt({
       - semester
       - competencies
       - thematicTree: This is a list of project stages or thematic units. Each item should have a 'name' (the title of the stage) and a 'description'.
-      - bibliography: Extract the entire bibliography, preserving the original formatting, including line breaks and section titles (Básica, Complementar).
+      - bibliography: Extract the bibliography, carefully separating the items into three categories: 'basic', 'complementary', and 'recommended' based on the section titles in the document (Básica, Complementar, Recomendada). Preserve the original formatting, including numbering and line breaks, for each category.
       - classSchedule: A list of all classes. For each class, extract: 'date', 'type' (e.g., TEÓRICA), 'topic' (e.g., UA I), 'content' (the detailed subject), 'activity' planned, and 'location'. If a day is a holiday, set the content to 'Feriado' and type to 'FERIADO'.
 
   2.  **Determine classType**: This is a critical step. Analyze the document's content to classify the discipline.
@@ -93,7 +97,7 @@ const prompt = ai.definePrompt({
 
   **Output Instructions**:
   - Be as faithful as possible to the original text. Do not summarize or alter technical content.
-  - If a field is not present, leave the corresponding JSON field as an empty string or an empty array for lists.
+  - If a field is not present, leave the corresponding JSON field as an empty string or an empty array for lists. For bibliography, if a section is empty, leave its corresponding string empty.
   - The final output must be a clean and complete JSON, ready for automatic integration.
 
   Lesson Plan: {{media url=lessonPlanDataUri}}`,

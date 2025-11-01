@@ -1,3 +1,5 @@
+'use client';
+
 export type ClassType = 'Integradora' | 'Modular';
 
 export interface Grade {
@@ -15,6 +17,12 @@ export interface Activity {
     active: boolean;
 }
 
+export interface Bibliography {
+    basic: string;
+    complementary: string;
+    recommended: string;
+}
+
 export interface Course {
   id: string;
   professorId: string;
@@ -24,7 +32,7 @@ export interface Course {
   objectives: string;
   competencies: string;
   thematicTree: { name: string; description: string }[];
-  bibliography: string;
+  bibliography: Bibliography;
 }
 
 export interface ClassScheduleItem {
