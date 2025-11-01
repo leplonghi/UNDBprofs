@@ -127,11 +127,6 @@ export function StudentGroups({
   useEffect(() => {
     if (isLoading || classroomStudents.length === 0) return;
 
-    const initialGrades: Record<string, Grade[]> = {};
-    let structure: Omit<Grade, 'score'>[] | null = null;
-    const allStudentIds = new Set<string>();
-    const groupedStudentIds = new Set<string>();
-
     let hasGrades = false;
     for (const cs of classroomStudents) {
       if (cs.grades && cs.grades.length > 0) {
@@ -141,9 +136,16 @@ export function StudentGroups({
     }
 
     if (!hasGrades) {
-      applyStudioTemplate();
-      return;
+        (async () => {
+            await applyStudioTemplate();
+        })();
+        return;
     }
+    
+    const initialGrades: Record<string, Grade[]> = {};
+    let structure: Omit<Grade, 'score'>[] | null = null;
+    const allStudentIds = new Set<string>();
+    const groupedStudentIds = new Set<string>();
     
     // Initialize grade structure and local grades
     for (const cs of classroomStudents) {
@@ -233,6 +235,7 @@ export function StudentGroups({
   };
 
     const handleCreateGroup = () => {
+        if (!user || !firestore) return;
         if (selectedStudents.length < 2) {
             toast({ variant: 'destructive', title: 'Seleção Inválida', description: 'Selecione pelo menos 2 alunos para criar um grupo.' });
             return;
@@ -257,6 +260,7 @@ export function StudentGroups({
     };
 
     const handleUngroup = (group: string[]) => {
+      if (!user || !firestore) return;
         const batch = writeBatch(firestore);
         group.forEach(csId => {
             const studentRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/classroomStudents/${csId}`);
@@ -363,11 +367,11 @@ export function StudentGroups({
             </div>
             <div className='flex items-center gap-2'>
                 <Button variant="outline" onClick={handleCreateGroup} disabled={isSaving || selectedStudents.length < 2}>
-                    <Users className="mr-2" />
+                    <Users className="mr-2 h-4 w-4" />
                     Agrupar Selecionados
                 </Button>
                  <Button variant="secondary" onClick={applyStudioTemplate} disabled={isSaving}>
-                    <ClipboardPaste className="mr-2" />
+                    <ClipboardPaste className="mr-2 h-4 w-4" />
                     Aplicar Template de Estúdio
                 </Button>
                 {isSaving && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
@@ -417,3 +421,5 @@ export function StudentGroups({
     </div>
   );
 }
+
+    
