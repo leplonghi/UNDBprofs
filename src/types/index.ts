@@ -27,6 +27,15 @@ export interface Course {
   bibliography: string;
 }
 
+export interface ClassScheduleItem {
+    date: string;
+    type: string;
+    topic: string;
+    content: string;
+    activity: string;
+    location: string;
+}
+
 export interface Classroom {
   id: string;
   courseId: string;
@@ -34,7 +43,7 @@ export interface Classroom {
   semester: string;
   workload: string;
   classType: ClassType;
-  classSchedule: { date: string; content: string; activity: string }[];
+  classSchedule: ClassScheduleItem[];
   activities?: Activity[];
 }
 

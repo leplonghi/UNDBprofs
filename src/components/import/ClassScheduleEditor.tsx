@@ -26,8 +26,11 @@ export function ClassScheduleEditor({ control }: ClassScheduleEditorProps) {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[150px]">Data</TableHead>
+              <TableHead>Tipo</TableHead>
+              <TableHead>Tópico</TableHead>
               <TableHead>Conteúdo</TableHead>
               <TableHead>Atividade</TableHead>
+              <TableHead>Local</TableHead>
               <TableHead className="w-[50px]"><span className="sr-only">Remover</span></TableHead>
             </TableRow>
           </TableHeader>
@@ -42,6 +45,34 @@ export function ClassScheduleEditor({ control }: ClassScheduleEditorProps) {
                       <FormItem>
                         <FormControl>
                           <Input {...field} placeholder="YYYY-MM-DD" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TableCell>
+                 <TableCell>
+                   <FormField
+                    control={control}
+                    name={`classSchedule.${index}.type`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input {...field} placeholder="Ex: TEÓRICA" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TableCell>
+                 <TableCell>
+                   <FormField
+                    control={control}
+                    name={`classSchedule.${index}.topic`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input {...field} placeholder="Ex: UA I" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -77,6 +108,20 @@ export function ClassScheduleEditor({ control }: ClassScheduleEditorProps) {
                   />
                 </TableCell>
                 <TableCell>
+                   <FormField
+                    control={control}
+                    name={`classSchedule.${index}.location`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                           <Input {...field} placeholder="Ex: Sala de Aula"/>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TableCell>
+                <TableCell>
                   <Button
                     type="button"
                     variant="ghost"
@@ -95,7 +140,7 @@ export function ClassScheduleEditor({ control }: ClassScheduleEditorProps) {
         type="button"
         variant="outline"
         size="sm"
-        onClick={() => append({ date: '', content: '', activity: '' })}
+        onClick={() => append({ date: '', type: '', topic: '', content: '', activity: '', location: '' })}
       >
         <PlusCircle className="mr-2 h-4 w-4" />
         Adicionar Aula

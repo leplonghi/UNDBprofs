@@ -40,13 +40,16 @@ const ImportCourseFromLessonPlanOutputSchema = z.object({
       })
     )
     .describe('The thematic tree or project process steps of the course.'),
-  bibliography: z.string().describe('The bibliography of the course.'),
+  bibliography: z.string().describe('The bibliography of the course. Preserve formatting with line breaks.'),
   classSchedule: z
     .array(
       z.object({
         date: z.string().describe('The date of the class (format: YYYY-MM-DD).'),
+        type: z.string().describe('The type of class (e.g., TEÓRICA, PRÁTICA, FERIADO).'),
+        topic: z.string().describe('The main topic or unit (e.g., UA I, UA II).'),
         content: z.string().describe('The content or topic of the class.'),
         activity: z.string().describe('The activity planned for the class.'),
+        location: z.string().describe('The location of the class (e.g., Sala de Aula, Laboratório).'),
       })
     )
     .describe('A structured list of class schedule events.'),
@@ -79,8 +82,8 @@ const prompt = ai.definePrompt({
       - semester
       - competencies
       - thematicTree: This is a list of project stages or thematic units. Each item should have a 'name' (the title of the stage) and a 'description'.
-      - bibliography
-      - classSchedule: A list of all classes. Each class should have a 'date', 'content' (topic), and planned 'activity'.
+      - bibliography: Extract the entire bibliography, preserving the original formatting, including line breaks and section titles (Básica, Complementar).
+      - classSchedule: A list of all classes. For each class, extract: 'date', 'type' (e.g., TEÓRICA), 'topic' (e.g., UA I), 'content' (the detailed subject), 'activity' planned, and 'location'. If a day is a holiday, set the content to 'Feriado' and type to 'FERIADO'.
 
   2.  **Determine classType**: This is a critical step. Analyze the document's content to classify the discipline.
       - **Rule 1 (Highest Priority):** If the course name contains the word "Estúdio", you MUST classify it as **"Integradora"**.

@@ -33,6 +33,7 @@ import { StudentUploadDialog } from '@/components/courses/student-upload-dialog'
 import { ClassroomStudentsTable } from '@/components/courses/classroom-students-table';
 import { StudentGroups } from '@/components/courses/student-groups';
 import { ActivitySettings } from '@/components/courses/activity-settings';
+import { cn } from '@/lib/utils';
 
 function CourseDetailsSkeleton() {
   return (
@@ -102,9 +103,9 @@ function CourseInformation({
         {course.bibliography && (
           <div>
             <h3 className="font-semibold">Bibliografia</h3>
-            <p className="whitespace-pre-wrap text-muted-foreground font-mono text-sm">
+            <pre className="whitespace-pre-wrap text-muted-foreground font-sans text-sm mt-2">
               {course.bibliography}
-            </p>
+            </pre>
           </div>
         )}
         <div>
@@ -116,21 +117,32 @@ function CourseInformation({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Data</TableHead>
+                    <TableHead className="w-[100px]">Data</TableHead>
+                    <TableHead className="w-[150px]">Tipo</TableHead>
+                    <TableHead>Tópico</TableHead>
                     <TableHead>Conteúdo</TableHead>
                     <TableHead>Atividade</TableHead>
+                    <TableHead className="w-[150px]">Local</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {classroom.classSchedule.map((scheduleItem, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">
-                        {scheduleItem.date}
-                      </TableCell>
-                      <TableCell>{scheduleItem.content}</TableCell>
-                      <TableCell>{scheduleItem.activity}</TableCell>
-                    </TableRow>
-                  ))}
+                  {classroom.classSchedule.map((scheduleItem, index) => {
+                    const isHoliday = scheduleItem.content.toLowerCase().includes('feriado');
+                    return (
+                        <TableRow key={index} className={cn(isHoliday && 'bg-muted/50 text-muted-foreground')}>
+                          <TableCell className="font-medium">
+                            {scheduleItem.date}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={isHoliday ? 'secondary': 'outline'}>{scheduleItem.type}</Badge>
+                          </TableCell>
+                          <TableCell className="font-medium">{scheduleItem.topic}</TableCell>
+                          <TableCell>{scheduleItem.content}</TableCell>
+                          <TableCell>{scheduleItem.activity}</TableCell>
+                          <TableCell>{scheduleItem.location}</TableCell>
+                        </TableRow>
+                    )
+                  })}
                 </TableBody>
               </Table>
             </div>

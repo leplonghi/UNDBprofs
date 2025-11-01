@@ -17,7 +17,7 @@ import { Loader2 } from 'lucide-react';
 import { useFirestore, useUser } from '@/firebase';
 import { doc, writeBatch } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
-import type { Course, Classroom, ClassType } from '@/types';
+import type { Course, Classroom, ClassScheduleItem } from '@/types';
 import { ThematicTreeEditor } from './ThematicTreeEditor';
 import { ClassScheduleEditor } from './ClassScheduleEditor';
 import { createActivitiesFromPreset } from '@/lib/presets';
@@ -34,7 +34,14 @@ const formSchema = z.object({
   competencies: z.string().min(1, 'Competências são obrigatórias.'),
   thematicTree: z.array(z.object({ name: z.string().min(1, 'O nome é obrigatório.'), description: z.string().min(1, 'A descrição é obrigatória.') })).optional(),
   bibliography: z.string().min(1, 'Bibliografia é obrigatória.'),
-  classSchedule: z.array(z.object({ date: z.string().min(1, 'A data é obrigatória.'), content: z.string().min(1, 'O conteúdo é obrigatório.'), activity: z.string().min(1, 'A atividade é obrigatória.') })).optional(),
+  classSchedule: z.array(z.object({ 
+      date: z.string().min(1, 'A data é obrigatória.'), 
+      type: z.string().min(1, 'O tipo é obrigatório.'), 
+      topic: z.string().min(1, 'O tópico é obrigatório.'),
+      content: z.string().min(1, 'O conteúdo é obrigatório.'), 
+      activity: z.string().min(1, 'A atividade é obrigatória.'),
+      location: z.string().min(1, 'O local é obrigatório.'),
+    })).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -136,7 +143,7 @@ export function ImportForm() {
     
     const newActivities = createActivitiesFromPreset(values.classType);
 
-    const classroomData: Classroom = {
+    const classroomData: Omit<Classroom, 'classSchedule'> & { classSchedule: ClassScheduleItem[] } = {
         id: classroomId,
         courseId: courseId,
         name: `Turma de ${values.semester}`, // e.g., "Turma de 2025.1"
@@ -266,7 +273,7 @@ export function ImportForm() {
                     <FormItem>
                       <FormLabel>Bibliografia</FormLabel>
                       <FormControl>
-                        <Textarea rows={12} {...field} className="font-mono text-xs" />
+                        <Textarea rows={12} {...field} className="font-sans" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
