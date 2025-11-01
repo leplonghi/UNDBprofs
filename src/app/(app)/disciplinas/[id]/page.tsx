@@ -15,7 +15,7 @@ import {
   useMemoFirebase,
   useCollection,
 } from '@/firebase';
-import type { Course, Classroom, ClassroomStudent, Activity } from '@/types';
+import type { Course, Classroom, ClassroomStudent } from '@/types';
 import { doc, collection, query } from 'firebase/firestore';
 import {
   Table,
@@ -122,20 +122,8 @@ function ClassroomManager({ courseId, courseCode }: { courseId: string, courseCo
   const { data: classrooms, isLoading } =
     useCollection<Classroom>(classroomQuery);
 
-  if (isLoading) {
-    return <Skeleton className="h-60 w-full" />;
-  }
-
-  if (!classrooms || classrooms.length === 0) {
-    return (
-      <div className="py-10 text-center text-muted-foreground">
-        Nenhuma turma encontrada para esta disciplina.
-      </div>
-    );
-  }
-
   // Assuming one classroom per course for now
-  const classroom = classrooms[0];
+  const classroom = classrooms?.[0];
 
   const studentsQuery = useMemoFirebase(() => {
     if (!user || !firestore || !classroom) return null;
@@ -147,6 +135,18 @@ function ClassroomManager({ courseId, courseCode }: { courseId: string, courseCo
 
   const { data: classroomStudents, isLoading: isLoadingStudents } =
     useCollection<ClassroomStudent>(studentsQuery);
+    
+  if (isLoading) {
+    return <Skeleton className="h-60 w-full" />;
+  }
+
+  if (!classroom) {
+    return (
+      <div className="py-10 text-center text-muted-foreground">
+        Nenhuma turma encontrada para esta disciplina.
+      </div>
+    );
+  }
     
   const activities = classroom.activities || [];
 
