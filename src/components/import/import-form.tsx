@@ -64,8 +64,6 @@ export function ImportForm() {
       try {
         const data = JSON.parse(storedData) as ImportCourseFromLessonPlanOutput;
         setExtractedData(data);
-        // DO NOT remove the item from session storage here.
-        // It will be cleared after successful submission.
       } catch (error) {
         console.error("Failed to parse stored data", error);
         toast({
@@ -76,14 +74,12 @@ export function ImportForm() {
         router.push('/disciplinas');
       }
     } else {
-        // If there's no stored data, redirect.
         toast({ title: 'Nenhum dado a ser importado.', description: 'Por favor, importe um arquivo PDF primeiro.' });
         router.push('/disciplinas');
     }
   }, [router, toast]);
 
   useEffect(() => {
-    // When extractedData is populated, reset the form
     if (extractedData) {
       form.reset({
         courseName: extractedData.courseName,
@@ -113,16 +109,15 @@ export function ImportForm() {
 
     setIsSaving(true);
     
-    // Generate unique IDs for the new course and classroom
     const courseId = uuidv4();
     const classroomId = uuidv4();
 
-    // Create document references
     const courseRef = doc(firestore, `professors/${user.uid}/courses/${courseId}`);
     const classroomRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}`);
 
-    // Prepare the data for the Course document
-    const courseData: Omit<Course, 'id' | 'professorId'> = {
+    const courseData: Course = {
+        id: courseId,
+        professorId: user.uid,
         name: values.courseName,
         code: values.courseCode,
         syllabus: values.syllabus,
@@ -132,8 +127,9 @@ export function ImportForm() {
         bibliography: values.bibliography || '',
     };
 
-    // Prepare the data for the Classroom document
-    const classroomData: Omit<Classroom, 'id'| 'courseId'> = {
+    const classroomData: Classroom = {
+        id: classroomId,
+        courseId: courseId,
         name: `Turma de ${values.semester}`, // e.g., "Turma de 2025.1"
         semester: values.semester,
         workload: values.workload,
@@ -141,10 +137,9 @@ export function ImportForm() {
     };
     
     try {
-        // Use a batch write to save both documents atomically
         const batch = writeBatch(firestore);
-        batch.set(courseRef, { ...courseData, id: courseId, professorId: user.uid });
-        batch.set(classroomRef, { ...classroomData, id: classroomId, courseId: courseId });
+        batch.set(courseRef, courseData);
+        batch.set(classroomRef, classroomData);
         await batch.commit();
 
         toast({
@@ -152,7 +147,6 @@ export function ImportForm() {
         description: `A disciplina "${values.courseName}" e sua primeira turma foram salvas com sucesso.`,
         });
 
-        // Clear storage only after successful save
         sessionStorage.removeItem('importedData');
         
         router.push(`/disciplinas`);
