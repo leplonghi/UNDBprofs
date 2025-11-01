@@ -1,5 +1,5 @@
 'use client';
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,6 +23,7 @@ export function NewClassroomDialog() {
   const router = useRouter();
   const { toast } = useToast();
   const { user } = useUser();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleNavigate = (path: string) => {
     if (!user) {
@@ -42,6 +43,11 @@ export function NewClassroomDialog() {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Reset the file input value to allow re-uploading the same file
+    if(fileInputRef.current) {
+        fileInputRef.current.value = '';
+    }
+
     const reader = new FileReader();
     reader.readAsDataURL(file);
 
@@ -51,7 +57,6 @@ export function NewClassroomDialog() {
                 const lessonPlanDataUri = reader.result as string;
                 const result = await importCourseFromLessonPlan({ lessonPlanDataUri });
                 
-                // Store result in session storage to pass to the next page
                 sessionStorage.setItem('importedData', JSON.stringify(result));
                 
                 toast({
@@ -72,6 +77,14 @@ export function NewClassroomDialog() {
             }
         };
     });
+  };
+  
+  const handleImportClick = () => {
+    if (!user) {
+        toast({ variant: 'destructive', title: 'Acesso Negado', description: 'Você precisa estar logado.'});
+        return;
+    }
+    fileInputRef.current?.click();
   };
 
   return (
@@ -96,17 +109,23 @@ export function NewClassroomDialog() {
             Criar Manualmente
           </Button>
 
-          <Button asChild disabled={isPending}>
-            <label htmlFor="file-upload" className="cursor-pointer">
+          <Button onClick={handleImportClick} disabled={isPending}>
               {isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <FilePlus className="mr-2" />
               )}
               {isPending ? 'Processando...' : 'Importar de PDF'}
-            </label>
           </Button>
-          <Input id="file-upload" type="file" className="sr-only" onChange={handleFileChange} accept=".pdf" disabled={isPending}/>
+          <Input 
+            id="file-upload" 
+            type="file" 
+            ref={fileInputRef}
+            className="sr-only" 
+            onChange={handleFileChange} 
+            accept=".pdf" 
+            disabled={isPending}
+          />
 
         </div>
         <DialogFooter>
