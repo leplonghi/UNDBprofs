@@ -15,7 +15,7 @@ import {
   useMemoFirebase,
   useCollection,
 } from '@/firebase';
-import type { Course, Classroom, ClassroomStudent } from '@/types';
+import type { Course, Classroom, ClassroomStudent, Activity } from '@/types';
 import { doc, collection, query } from 'firebase/firestore';
 import {
   Table,
@@ -159,7 +159,6 @@ function ClassroomManager({ courseId, courseCode }: { courseId: string, courseCo
   const { data: classrooms, isLoading } =
     useCollection<Classroom>(classroomQuery);
 
-  // Assuming one classroom per course for now
   const classroom = classrooms?.[0];
 
   const studentsQuery = useMemoFirebase(() => {
@@ -259,19 +258,18 @@ export default function CourseDetailPage({
 }) {
   const { user } = useUser();
   const firestore = useFirestore();
-  const { id } = params; // No need for React.use(params)
 
   const courseDocRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
-    return doc(firestore, `professors/${user.uid}/courses/${id}`);
-  }, [user, firestore, id]);
+    return doc(firestore, `professors/${user.uid}/courses/${params.id}`);
+  }, [user, firestore, params.id]);
 
   const { data: course, isLoading: isCourseLoading } = useDoc<Course>(courseDocRef);
 
   const classroomQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
-    return query(collection(firestore, `professors/${user.uid}/courses/${id}/classrooms`));
-  }, [user, firestore, id]);
+    return query(collection(firestore, `professors/${user.uid}/courses/${params.id}/classrooms`));
+  }, [user, firestore, params.id]);
 
   const { data: classrooms, isLoading: areClassroomsLoading } = useCollection<Classroom>(classroomQuery);
 
