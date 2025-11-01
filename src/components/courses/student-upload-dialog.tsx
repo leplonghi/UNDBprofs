@@ -32,6 +32,7 @@ interface StudentUploadDialogProps {
 interface ParsedStudent {
   name: string;
   email: string;
+  registrationId?: string;
 }
 
 // Simple email validation regex
@@ -91,65 +92,69 @@ export function StudentUploadDialog({
   };
 
 const parseCSV = (file: File): Promise<ParsedStudent[]> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const text = event.target?.result as string;
-        const rows = text.split(/\r?\n/).filter(row => row.trim() !== '');
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const text = event.target?.result as string;
+                const rows = text.split(/\r?\n/).filter(row => row.trim() !== '');
 
-        if (rows.length < 2) {
-          return reject(new Error('O arquivo CSV está vazio ou contém apenas o cabeçalho.'));
-        }
+                if (rows.length < 2) {
+                    return reject(new Error('O arquivo CSV está vazio ou contém apenas o cabeçalho.'));
+                }
 
-        const headerRow = rows.shift()!;
-        const delimiter = headerRow.includes(';') ? ';' : ',';
-        const headers = headerRow.split(delimiter).map(h => h.trim().toLowerCase().replace(/["']/g, ''));
+                const headerRow = rows.shift()!;
+                const delimiter = headerRow.includes(';') ? ';' : ',';
+                const headers = headerRow.split(delimiter).map(h => h.trim().toLowerCase().replace(/["']/g, ''));
 
-        const nameIndex = headers.findIndex(h => h === 'nome' || h === 'name');
-        const lastNameIndex = headers.findIndex(h => h === 'sobrenome' || h === 'last name');
-        const emailIndex = headers.findIndex(h => h.includes('email') || h.includes('e-mail'));
+                const nameIndex = headers.findIndex(h => h === 'nome' || h === 'name');
+                const lastNameIndex = headers.findIndex(h => h === 'sobrenome' || h === 'last name');
+                const emailIndex = headers.findIndex(h => h.includes('email') || h.includes('e-mail'));
+                const registrationIdIndex = headers.findIndex(h => h.includes('matrícula') || h.includes('matricula') || h.includes('id'));
 
-        if (nameIndex === -1) {
-            return reject(new Error("A coluna 'Nome' não foi encontrada no arquivo CSV."));
-        }
-        if (emailIndex === -1) {
-            return reject(new Error("A coluna 'E-mail' não foi encontrada no arquivo CSV."));
-        }
+                if (nameIndex === -1 || emailIndex === -1) {
+                    return reject(new Error("As colunas 'Nome' e 'E-mail' são obrigatórias no arquivo CSV."));
+                }
+                
+                const students = rows.map((row, index) => {
+                    const columns = row.split(delimiter).map(c => c.trim().replace(/["']/g, ''));
 
-        const students = rows.map((row, index) => {
-          const columns = row.split(delimiter);
-          
-          const firstName = (columns[nameIndex] || '').trim().replace(/["']/g, '');
-          const lastName = lastNameIndex > -1 ? (columns[lastNameIndex] || '').trim().replace(/["']/g, '') : '';
-          const name = `${firstName} ${lastName}`.trim();
-          const email = (columns[emailIndex] || '').trim().replace(/["']/g, '');
-          
-          if (name && email && emailRegex.test(email)) {
-            return { name, email };
-          }
-          
-          if (name && email && !emailRegex.test(email)) {
-            console.warn(`Linha ${index + 2} ignorada: e-mail inválido.`, {name, email});
-          } else if (!name || !email) {
-            console.warn(`Linha ${index + 2} ignorada por dados ausentes.`, {name, email});
-          }
+                    const firstName = columns[nameIndex] || '';
+                    const lastName = lastNameIndex > -1 ? (columns[lastNameIndex] || '') : '';
+                    const name = `${firstName} ${lastName}`.trim();
+                    const email = columns[emailIndex] || '';
+                    const registrationId = registrationIdIndex > -1 ? (columns[registrationIdIndex] || '') : undefined;
+                    
+                    if (name && email && emailRegex.test(email)) {
+                        return { name, email, registrationId };
+                    }
+                    
+                    if (name && email && !emailRegex.test(email)) {
+                        console.warn(`Linha ${index + 2} ignorada: e-mail inválido.`, {name, email});
+                        toast({
+                            variant: 'destructive',
+                            title: 'Linha Ignorada',
+                            description: `A linha ${index + 2} foi ignorada por conter um e-mail inválido: ${email}`,
+                        });
+                    } else if (!name || !email) {
+                        console.warn(`Linha ${index + 2} ignorada por dados ausentes.`, {name, email});
+                    }
 
-          return null;
-        }).filter((s): s is ParsedStudent => s !== null);
+                    return null;
+                }).filter((s): s is ParsedStudent => s !== null);
 
-        if (students.length === 0) {
-          return reject(new Error('Nenhum aluno válido encontrado no arquivo. Verifique o conteúdo e o formato.'));
-        }
+                if (students.length === 0) {
+                    return reject(new Error('Nenhum aluno válido foi encontrado no arquivo. Verifique o conteúdo e o formato.'));
+                }
 
-        resolve(students);
-      } catch (error: any) {
-        reject(new Error(`Falha ao processar o CSV: ${error.message}`));
-      }
-    };
-    reader.onerror = () => reject(new Error('Falha ao ler o arquivo.'));
-    reader.readAsText(file, 'UTF-8');
-  });
+                resolve(students);
+            } catch (error: any) {
+                reject(new Error(`Falha ao processar o CSV: ${error.message}`));
+            }
+        };
+        reader.onerror = () => reject(new Error('Falha ao ler o arquivo.'));
+        reader.readAsText(file, 'UTF-8');
+    });
 };
 
 const handleAIExtraction = () => {
@@ -201,6 +206,7 @@ const handleAIExtraction = () => {
               id: studentId,
               name: studentData.name,
               email: studentData.email,
+              registrationId: studentData.registrationId,
             };
             
             // Create the student document first.
@@ -258,7 +264,7 @@ const handleAIExtraction = () => {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Adicionar Alunos à Turma</DialogTitle>
           <DialogDescription>
@@ -280,7 +286,7 @@ const handleAIExtraction = () => {
             <TabsContent value="csv">
                 <div className="space-y-4 py-4">
                      <p className="text-sm text-muted-foreground">
-                        Envie um arquivo CSV com as colunas "Nome", "Sobrenome" (opcional) e "E-mail".
+                        Envie um arquivo CSV com as colunas "Nome", "Sobrenome" (opcional), "E-mail" e "Matrícula" (opcional).
                     </p>
                     <div 
                         className="flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary"
@@ -313,7 +319,7 @@ const handleAIExtraction = () => {
             <TabsContent value="ai">
                  <div className="space-y-4 py-4">
                      <p className="text-sm text-muted-foreground">
-                       Envie um documento (imagem ou PDF) contendo a lista de alunos.
+                       Envie um documento (imagem ou PDF) contendo a lista de alunos. A IA tentará extrair nome, e-mail e matrícula.
                     </p>
                     {extractedStudents.length === 0 ? (
                         <>

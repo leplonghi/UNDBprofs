@@ -34,7 +34,7 @@ function StudentRow({ studentId }: { studentId: string }) {
   if (isLoading) {
     return (
       <TableRow>
-        <TableCell colSpan={2}>
+        <TableCell colSpan={3}>
           <Skeleton className="h-8 w-full" />
         </TableCell>
       </TableRow>
@@ -44,7 +44,7 @@ function StudentRow({ studentId }: { studentId: string }) {
   if (!student) {
     return (
       <TableRow>
-        <TableCell colSpan={2} className="text-destructive">
+        <TableCell colSpan={3} className="text-destructive">
           Aluno com ID {studentId} não encontrado.
         </TableCell>
       </TableRow>
@@ -62,6 +62,7 @@ function StudentRow({ studentId }: { studentId: string }) {
         </div>
       </TableCell>
       <TableCell className="text-muted-foreground">{student.email}</TableCell>
+      <TableCell className="text-muted-foreground">{student.registrationId || 'N/A'}</TableCell>
     </TableRow>
   );
 }
@@ -100,20 +101,21 @@ export function ClassroomStudentsTable({
               <TableRow>
                 <TableHead>Nome</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Matrícula</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell colSpan={2}>
+                    <TableCell colSpan={3}>
                       <Skeleton className="h-8 w-full" />
                     </TableCell>
                   </TableRow>
                 ))
               ) : !classroomStudents || classroomStudents.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={2} className="h-24 text-center">
+                  <TableCell colSpan={3} className="h-24 text-center">
                     Nenhum aluno encontrado nesta turma.
                   </TableCell>
                 </TableRow>

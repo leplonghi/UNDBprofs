@@ -24,6 +24,8 @@ export type ExtractStudentsFromDocumentInput = z.infer<
 const StudentSchema = z.object({
     name: z.string().describe("The full name of the student."),
     email: z.string().describe("The email address of the student."),
+    registrationId: z.string().optional().describe("The student's registration ID or number, if available."),
+    confidence: z.number().min(0).max(1).describe("A confidence score from 0.0 to 1.0 on the accuracy of the extracted data.")
 });
 
 const ExtractStudentsFromDocumentOutputSchema = z.object({
@@ -47,13 +49,23 @@ const prompt = ai.definePrompt({
   input: { schema: ExtractStudentsFromDocumentInputSchema },
   output: { schema: ExtractStudentsFromDocumentOutputSchema },
   prompt: `
-  You are an expert in analyzing academic documents and lists.
-  Your task is to extract all student names and their corresponding email addresses from the provided document (image or PDF).
+  You are a meticulous data analysis assistant specializing in academic documents.
+  Your task is to extract a list of students from the provided document (image or PDF) with high accuracy.
 
-  - Identify each student listed in the document.
-  - For each student, extract their full name and their email address.
-  - Structure the output as a JSON object containing a 'students' array. Each object in the array should have a 'name' and 'email' field.
-  - Be as accurate as possible. If an email is not present for a student, you may need to infer it based on a common pattern if one is obvious, but prefer leaving it empty if uncertain. If a name is unclear, do your best to transcribe it.
+  Follow these steps carefully:
+  1.  **Analyze Structure**: First, analyze the document's structure. Identify columns, headers (like "Name", "Email", "ID", "Registration"), and data patterns.
+  2.  **Extract Data**: For each student listed, extract the following information:
+      *   **Full Name**: Combine first and last names if they are in separate columns.
+      *   **Email Address**: Find the student's email.
+      *   **Registration ID**: Look for a student ID, registration number, or matrícula. If it's not present, leave it blank.
+  3.  **Validate and Score Confidence**:
+      *   Review each extracted record. Is the name a plausible name? Is the email a valid email format?
+      *   Assign a **confidence score** from 0.0 (very uncertain) to 1.0 (very certain) for each student record. Base the score on the clarity of the document, the consistency of the data, and whether all expected fields were found. For example, if a name is smudged or an email is clearly just another name, the confidence should be low.
+  4.  **Format Output**: Structure the final output as a JSON object containing a 'students' array. Each object in the array must have 'name', 'email', 'registrationId' (optional), and 'confidence' fields.
+
+  **CRITICAL INSTRUCTIONS**:
+  - Do NOT confuse a name with an email. If a field that should be an email looks like a name, the confidence score for that record must be very low (e.g., 0.2).
+  - Be as accurate as possible. It is better to have a low confidence score than to present incorrect data as certain.
 
   Document: {{media url=documentDataUri}}`,
 });

@@ -23,6 +23,7 @@ export interface Student {
     id: string;
     name: string;
     email: string;
+    registrationId?: string;
 }
 
 export interface ClassroomStudent {
@@ -34,4 +35,6 @@ export interface ClassroomStudent {
 export interface ExtractedStudent {
     name: string;
     email: string;
+    registrationId?: string;
+    confidence: number;
 }
