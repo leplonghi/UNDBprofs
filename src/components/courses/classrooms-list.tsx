@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { collection, getDocs, query, collectionGroup, where } from 'firebase/firestore';
+import { collection, getDocs, query, DocumentData } from 'firebase/firestore';
 import { useUser, useFirestore } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -53,35 +53,30 @@ export function ClassroomsList({ filter }: ClassroomsListProps) {
       setIsLoading(true);
       
       try {
-        // 1. Fetch all courses for the professor to create a map
+        const allClassrooms: Classroom[] = [];
+
+        // 1. Fetch all courses for the professor
         const coursesRef = collection(firestore, `professors/${user.uid}/courses`);
         const coursesSnapshot = await getDocs(coursesRef);
-        const coursesMap = new Map<string, { name: string; code: string }>();
-        coursesSnapshot.forEach(doc => {
-            const data = doc.data();
-            coursesMap.set(doc.id, { name: data.name || 'Disciplina Desconhecida', code: data.code || 'N/A' });
-        });
 
-        // 2. Fetch all classrooms belonging to the user using a collectionGroup query
-        const classroomsQuery = query(collectionGroup(firestore, 'classrooms'), where('professorId', '==', user.uid));
-        const classroomsSnapshot = await getDocs(classroomsQuery);
-        
-        const allClassrooms: Classroom[] = [];
-        classroomsSnapshot.forEach(doc => {
-            const classroomData = doc.data();
-            const courseInfo = coursesMap.get(classroomData.courseId);
-
-            if (courseInfo) {
-                 allClassrooms.push({
-                    id: doc.id,
-                    name: classroomData.name,
-                    semester: classroomData.semester,
-                    courseId: classroomData.courseId,
-                    courseName: courseInfo.name,
-                    courseCode: courseInfo.code,
-                });
-            }
-        });
+        // 2. For each course, fetch its classrooms
+        for (const courseDoc of coursesSnapshot.docs) {
+          const courseData = courseDoc.data();
+          const classroomsRef = collection(firestore, `professors/${user.uid}/courses/${courseDoc.id}/classrooms`);
+          const classroomsSnapshot = await getDocs(classroomsRef);
+          
+          classroomsSnapshot.forEach(classroomDoc => {
+            const classroomData = classroomDoc.data();
+            allClassrooms.push({
+              id: classroomDoc.id,
+              name: classroomData.name,
+              semester: classroomData.semester,
+              courseId: courseDoc.id,
+              courseName: courseData.name,
+              courseCode: courseData.code,
+            });
+          });
+        }
         
         // 3. Filter based on the 'active' or 'past' criteria
         const currentSemesterValue = getCurrentSemesterValue();
@@ -100,7 +95,7 @@ export function ClassroomsList({ filter }: ClassroomsListProps) {
 
       } catch (error) {
         console.error("Error fetching classrooms:", error);
-        // Optionally, set an error state to show in the UI
+        // Set an error state to show in the UI, this is a real permission error
       } finally {
         setIsLoading(false);
       }
