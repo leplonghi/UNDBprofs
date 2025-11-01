@@ -89,51 +89,47 @@ export function StudentUploadDialog({
 
   const parseCSV = (file: File): Promise<ParsedStudent[]> => {
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          const text = event.target?.result as string;
-          // Split into rows and remove any blank lines
-          const rows = text.split(/\r?\n/).filter(row => row.trim() !== '');
-  
-          if (rows.length < 2) {
-            return reject(new Error('O arquivo CSV está vazio ou contém apenas o cabeçalho. Ele deve ter um cabeçalho e pelo menos uma linha de dados.'));
-          }
-  
-          const headerRow = rows.shift()!; // Remove header row
-          
-          // Auto-detect delimiter by checking the header
-          const delimiter = headerRow.includes(';') ? ';' : ',';
-  
-          const students = rows
-            .map((row, index) => {
-              const columns = row.split(delimiter);
-              
-              // Assume first column is name, second is email
-              const name = (columns[0] || '').trim().replace(/["']/g, '');
-              const email = (columns[1] || '').trim().replace(/["']/g, '');
-  
-              if (name && email) {
-                return { name, email };
-              }
-              console.warn(`Linha ${index + 2} ignorada por dados ausentes: ${row}`);
-              return null;
-            })
-            .filter((s): s is ParsedStudent => s !== null);
-          
-          if (students.length === 0) {
-            return reject(new Error('Nenhum aluno válido encontrado no arquivo. Verifique se as duas primeiras colunas contêm nome e e-mail.'));
-          }
-  
-          resolve(students);
-        } catch (error: any) {
-          reject(new Error(`Falha ao processar o CSV: ${error.message}`));
-        }
-      };
-      reader.onerror = () => reject(new Error('Falha ao ler o arquivo.'));
-      reader.readAsText(file, 'UTF-8');
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const text = event.target?.result as string;
+                const rows = text.split(/\r?\n/).filter(row => row.trim() !== '');
+
+                if (rows.length < 2) {
+                    return reject(new Error('O arquivo CSV está vazio ou contém apenas o cabeçalho.'));
+                }
+
+                const header = rows.shift()!;
+                const delimiter = header.includes(';') ? ';' : ',';
+
+                const students = rows.map((row, index) => {
+                    // Split the row and only take the first two columns
+                    const columns = row.split(delimiter).slice(0, 2);
+                    
+                    const name = (columns[0] || '').trim().replace(/["']/g, '');
+                    const email = (columns[1] || '').trim().replace(/["']/g, '');
+
+                    if (name && email) {
+                        return { name, email };
+                    }
+                    
+                    console.warn(`Linha ${index + 2} ignorada por dados ausentes ou incompletos: ${row}`);
+                    return null;
+                }).filter((s): s is ParsedStudent => s !== null);
+
+                if (students.length === 0) {
+                    return reject(new Error('Nenhum aluno válido encontrado. Verifique se as duas primeiras colunas contêm nome e e-mail.'));
+                }
+
+                resolve(students);
+            } catch (error: any) {
+                reject(new Error(`Falha ao processar o CSV: ${error.message}`));
+            }
+        };
+        reader.onerror = () => reject(new Error('Falha ao ler o arquivo.'));
+        reader.readAsText(file, 'UTF-8');
     });
-  };
+};
 
 const handleAIExtraction = () => {
     if (!selectedFile) {
@@ -344,3 +340,5 @@ const handleAIExtraction = () => {
     </Dialog>
   );
 }
+
+    

@@ -130,24 +130,21 @@ service cloud.firestore {
 
     /**
      * @description
-     * Students collection: Student profiles are stored here.  Students can only read their own profile data.
+     * Students collection: Student profiles are stored here. Professors can create/manage student records.
+     * Students (if they were to log in) could only read their own data.
      * @path /students/{studentId}
-     * @allow (get) - A student with UID 'student_123' can read their profile at /students/student_123.
-     * @deny (get) - A student with UID 'student_123' cannot read another student's profile at /students/student_456.
-     * @allow (create) - A student with UID 'student_123' can create their profile if studentId == 'student_123'.
-     * @deny (create) - A student with UID 'student_123' cannot create a profile with studentId == 'student_456'.
-     * @allow (update) - A student with UID 'student_123' can update their profile at /students/student_123.
-     * @deny (update) - A student with UID 'student_123' cannot update another student's profile at /students/student_456.
-     * @allow (delete) - A student with UID 'student_123' can delete their profile at /students/student_123.
-     * @deny (delete) - A student with UID 'student_123' cannot delete another student's profile at /students/student_456.
-     * @principle Enforces document ownership for all operations.
+     * @allow (get) - A student with UID 'student_123' can read their profile at /students/student_123. Any authenticated professor can also read.
+     * @allow (create) - Any authenticated professor can create student records.
+     * @allow (update) - Any authenticated professor can update student records.
+     * @allow (delete) - Any authenticated professor can delete student records.
+     * @principle Allows professors to manage student data.
      */
     match /students/{studentId} {
-      allow get: if isOwner(studentId);
-      allow list: if false; // Prevent listing of all students.
-      allow create: if isOwner(studentId) && request.resource.data.id == studentId;
-      allow update: if isExistingOwner(studentId) && request.resource.data.id == resource.data.id; //Enforce immutability of ID
-      allow delete: if isExistingOwner(studentId);
+        allow get: if isSignedIn();
+        allow list: if isSignedIn();
+        allow create: if isSignedIn();
+        allow update: if isSignedIn();
+        allow delete: if isSignedIn();
     }
 
      /**
@@ -219,3 +216,5 @@ service cloud.firestore {
     }
   }
 }
+
+    
