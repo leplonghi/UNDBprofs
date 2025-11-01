@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,15 +13,22 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CreditCard, LogOut, Settings, User } from 'lucide-react';
-import { useAuth, useUser } from '@/firebase';
+import { useUser, auth } from '@/firebase/client';
 import { signOut } from 'firebase/auth';
 
 export function UserNav() {
   const { user } = useUser();
-  const auth = useAuth();
+  const router = useRouter();
 
-  const handleSignOut = () => {
-    signOut(auth);
+  const handleSignOut = async () => {
+    // 1. Delete the server-side session cookie
+    await fetch('/api/session', { method: 'DELETE' });
+
+    // 2. Sign out from the client-side Firebase instance
+    await signOut(auth);
+
+    // 3. Redirect to the login page
+    router.replace('/');
   };
 
   return (

@@ -1,0 +1,50 @@
+import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from 'next/server';
+import { getAuth } from 'firebase-admin/auth';
+import { initAdmin } from '@/firebase/admin';
+
+// Initialize the Firebase Admin SDK.
+initAdmin();
+
+export async function POST(req: NextRequest) {
+  try {
+    const { idToken } = await req.json();
+    if (!idToken) {
+      return NextResponse.json({ error: 'No ID token provided.' }, { status: 400 });
+    }
+
+    const auth = getAuth();
+    // Set session expiration to 5 days.
+    const expiresIn = 60 * 60 * 24 * 5 * 1000;
+
+    const sessionCookie = await auth.createSessionCookie(idToken, { expiresIn });
+    const options = {
+      name: 'session',
+      value: sessionCookie,
+      maxAge: expiresIn / 1000, // maxAge is in seconds
+      httpOnly: true,
+      secure: true, // Use secure cookies in production
+      sameSite: 'lax' as const,
+      path: '/',
+    };
+
+    // Set cookie in the response.
+    cookies().set(options);
+
+    return NextResponse.json({ status: 'success' });
+  } catch (error) {
+    console.error('Session login error:', error);
+    return NextResponse.json({ error: 'Failed to create session.' }, { status: 401 });
+  }
+}
+
+export async function DELETE() {
+  try {
+    // Clear the session cookie.
+    cookies().set('session', '', { path: '/', maxAge: 0 });
+    return NextResponse.json({ status: 'signed-out' });
+  } catch (error) {
+    console.error('Session logout error:', error);
+    return NextResponse.json({ error: 'Failed to sign out.' }, { status: 500 });
+  }
+}
