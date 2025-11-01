@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
-import { doc, writeBatch } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import { Loader2, UploadCloud, FileScan, FileText } from 'lucide-react';
 import type { Student, ClassroomStudent, ExtractedStudent } from '@/types';
@@ -97,7 +97,7 @@ export function StudentUploadDialog({
             if (rows.length === 0) {
                 return reject(new Error('O arquivo CSV está vazio.'));
             }
-            const header = rows.shift()?.split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
+            const header = rows.shift()?.split(',').map(h => h.trim().toLowerCase().replace(/["']/g, ''));
 
             if (!header) {
                 return reject(new Error('O arquivo CSV está vazio ou o cabeçalho não foi encontrado.'));
@@ -113,8 +113,8 @@ export function StudentUploadDialog({
             const students = rows.map(row => {
                 const columns = row.split(',');
                 return {
-                    name: columns[nameIndex]?.trim().replace(/"/g, ''),
-                    email: columns[emailIndex]?.trim().replace(/"/g, ''),
+                    name: columns[nameIndex]?.trim().replace(/["']/g, ''),
+                    email: columns[emailIndex]?.trim().replace(/["']/g, ''),
                 };
             }).filter(s => s.name && s.email);
 
@@ -180,7 +180,7 @@ const handleAIExtraction = () => {
             };
             
             // Create the student document first.
-            await setDoc(studentRef, studentPayload);
+            await setDocumentNonBlocking(studentRef, studentPayload, { merge: false });
 
             // Then create the association in a batch (or individually if preferred)
             const classroomStudentId = uuidv4();
@@ -337,5 +337,3 @@ const handleAIExtraction = () => {
     </Dialog>
   );
 }
-
-    
