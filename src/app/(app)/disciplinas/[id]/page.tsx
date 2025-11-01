@@ -30,6 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Users } from 'lucide-react';
 import { StudentUploadDialog } from '@/components/courses/student-upload-dialog';
+import { ClassroomStudentsTable } from '@/components/courses/classroom-students-table';
 
 function CourseDetailsSkeleton() {
   return (
@@ -51,7 +52,7 @@ function CourseDetailsSkeleton() {
   );
 }
 
-function CourseScheduleTab({ courseId }: { courseId: string }) {
+function ClassroomDetails({ courseId }: { courseId: string }) {
   const { user } = useUser();
   const firestore = useFirestore();
   const [isStudentUploadOpen, setIsStudentUploadOpen] = React.useState(false);
@@ -91,46 +92,65 @@ function CourseScheduleTab({ courseId }: { courseId: string }) {
         classroomId={classroom.id}
         courseId={courseId}
       />
-      <Card>
-          <CardHeader>
-              <div className='flex items-center justify-between'>
-                  <div>
-                      <CardTitle>Cronograma da Turma: {classroom.name}</CardTitle>
-                      <CardDescription>Semestre: {classroom.semester} | Carga Horária: {classroom.workload}</CardDescription>
-                  </div>
-                  <Button onClick={() => setIsStudentUploadOpen(true)}>
-                    <Users className="mr-2 h-4 w-4" />
-                    Adicionar Alunos
-                  </Button>
-              </div>
-          </CardHeader>
-        <CardContent>
-          {classroom.classSchedule && classroom.classSchedule.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Conteúdo</TableHead>
-                  <TableHead>Atividade</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {classroom.classSchedule.map((scheduleItem, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium">{scheduleItem.date}</TableCell>
-                    <TableCell>{scheduleItem.content}</TableCell>
-                    <TableCell>{scheduleItem.activity}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-             <div className="py-10 text-center text-muted-foreground">
-                Nenhum cronograma de aulas encontrado para esta turma.
-             </div>
-          )}
-        </CardContent>
-      </Card>
+       <Tabs defaultValue="students" className="w-full">
+            <Card>
+                <CardHeader>
+                    <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
+                        <div>
+                            <CardTitle>Turma: {classroom.name}</CardTitle>
+                            <CardDescription>Semestre: {classroom.semester} | Carga Horária: {classroom.workload}</CardDescription>
+                        </div>
+                        <div className="flex w-full sm:w-auto items-center gap-2">
+                             <Button onClick={() => setIsStudentUploadOpen(true)} className="w-full sm:w-auto">
+                                <Users className="mr-2 h-4 w-4" />
+                                Adicionar Alunos
+                            </Button>
+                             <TabsList className="grid grid-cols-2 w-full sm:w-auto">
+                                <TabsTrigger value="students">Alunos</TabsTrigger>
+                                <TabsTrigger value="schedule">Cronograma</TabsTrigger>
+                            </TabsList>
+                        </div>
+                    </div>
+                </CardHeader>
+            </Card>
+
+            <TabsContent value="students" className="mt-6">
+                <ClassroomStudentsTable courseId={courseId} classroomId={classroom.id} />
+            </TabsContent>
+            <TabsContent value="schedule" className="mt-6">
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Cronograma de Aulas</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                    {classroom.classSchedule && classroom.classSchedule.length > 0 ? (
+                        <Table>
+                        <TableHeader>
+                            <TableRow>
+                            <TableHead>Data</TableHead>
+                            <TableHead>Conteúdo</TableHead>
+                            <TableHead>Atividade</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {classroom.classSchedule.map((scheduleItem, index) => (
+                            <TableRow key={index}>
+                                <TableCell className="font-medium">{scheduleItem.date}</TableCell>
+                                <TableCell>{scheduleItem.content}</TableCell>
+                                <TableCell>{scheduleItem.activity}</TableCell>
+                            </TableRow>
+                            ))}
+                        </TableBody>
+                        </Table>
+                    ) : (
+                        <div className="py-10 text-center text-muted-foreground">
+                            Nenhum cronograma de aulas encontrado para esta turma.
+                        </div>
+                    )}
+                    </CardContent>
+                </Card>
+            </TabsContent>
+       </Tabs>
     </>
   );
 }
@@ -176,10 +196,10 @@ export default function CourseDetailPage({
         <Badge variant="outline">{course.code}</Badge>
       </div>
 
-      <Tabs defaultValue="schedule" className="w-full">
+      <Tabs defaultValue="classroom" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="info">Informações Gerais</TabsTrigger>
-          <TabsTrigger value="schedule">Cronograma de Aulas</TabsTrigger>
+          <TabsTrigger value="classroom">Turma e Alunos</TabsTrigger>
         </TabsList>
         <TabsContent value="info" className="mt-6">
             <Card>
@@ -229,8 +249,8 @@ export default function CourseDetailPage({
               </CardContent>
             </Card>
         </TabsContent>
-        <TabsContent value="schedule" className="mt-6">
-            <CourseScheduleTab courseId={course.id} />
+        <TabsContent value="classroom" className="mt-6">
+            <ClassroomDetails courseId={course.id} />
         </TabsContent>
       </Tabs>
     </div>
