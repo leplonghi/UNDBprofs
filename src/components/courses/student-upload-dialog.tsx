@@ -91,7 +91,7 @@ export function StudentUploadDialog({
     }
   };
 
-const parseCSV = (file: File): Promise<ParsedStudent[]> => {
+  const parseCSV = (file: File): Promise<ParsedStudent[]> => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (event) => {

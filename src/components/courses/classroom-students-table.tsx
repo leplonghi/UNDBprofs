@@ -102,7 +102,7 @@ function StudentRow({ studentId, classroomStudentId, courseId, classroomId }: { 
       <TableCell>
         <div className="flex items-center gap-3">
           <Avatar className="h-8 w-8">
-             <AvatarFallback>{student.name.charAt(0)}</AvatarFallback>
+             <AvatarFallback>{student.name ? student.name.charAt(0) : '?'}</AvatarFallback>
           </Avatar>
           <span className="font-medium">{student.name}</span>
         </div>

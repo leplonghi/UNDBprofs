@@ -124,24 +124,26 @@ function ClassroomDetails({ courseId }: { courseId: string }) {
                     </CardHeader>
                     <CardContent>
                     {classroom.classSchedule && classroom.classSchedule.length > 0 ? (
-                        <Table>
-                        <TableHeader>
-                            <TableRow>
-                            <TableHead>Data</TableHead>
-                            <TableHead>Conteúdo</TableHead>
-                            <TableHead>Atividade</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {classroom.classSchedule.map((scheduleItem, index) => (
-                            <TableRow key={index}>
-                                <TableCell className="font-medium">{scheduleItem.date}</TableCell>
-                                <TableCell>{scheduleItem.content}</TableCell>
-                                <TableCell>{scheduleItem.activity}</TableCell>
-                            </TableRow>
-                            ))}
-                        </TableBody>
-                        </Table>
+                        <div className="max-h-96 overflow-y-auto rounded-md border">
+                            <Table>
+                            <TableHeader>
+                                <TableRow>
+                                <TableHead>Data</TableHead>
+                                <TableHead>Conteúdo</TableHead>
+                                <TableHead>Atividade</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {classroom.classSchedule.map((scheduleItem, index) => (
+                                <TableRow key={index}>
+                                    <TableCell className="font-medium">{scheduleItem.date}</TableCell>
+                                    <TableCell>{scheduleItem.content}</TableCell>
+                                    <TableCell>{scheduleItem.activity}</TableCell>
+                                </TableRow>
+                                ))}
+                            </TableBody>
+                            </Table>
+                        </div>
                     ) : (
                         <div className="py-10 text-center text-muted-foreground">
                             Nenhum cronograma de aulas encontrado para esta turma.
