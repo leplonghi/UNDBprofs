@@ -20,7 +20,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, updateDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, ClipboardPaste } from 'lucide-react';
 import type { Student, ClassroomStudent, Grade } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -37,6 +37,8 @@ const gradeSchema = z.object({
   id: z.string(),
   description: z.string().min(1, 'Descrição é obrigatória.'),
   score: z.coerce.number().min(0, 'Nota deve ser positiva.').max(10, 'Nota não pode ser maior que 10.'),
+  maxScore: z.coerce.number().optional(),
+  group: z.enum(['N1', 'N2']).optional(),
 });
 
 const formSchema = z.object({
@@ -44,6 +46,15 @@ const formSchema = z.object({
 });
 
 type FormData = z.infer<typeof formSchema>;
+
+
+const studioTemplate: Omit<Grade, 'id'>[] = [
+    { description: 'Relatório de Análise e Benchmarking', score: 0, maxScore: 2, group: 'N1' },
+    { description: 'Solução Preliminar', score: 0, maxScore: 2, group: 'N1' },
+    { description: 'Checks de Desenvolvimento', score: 0, maxScore: 1, group: 'N2' },
+    { description: 'Caderno Técnico', score: 0, maxScore: 3, group: 'N2' },
+];
+
 
 export function StudentGradesDialog({
   isOpen,
@@ -65,7 +76,7 @@ export function StudentGradesDialog({
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control: form.control,
     name: "grades",
   });
@@ -74,7 +85,7 @@ export function StudentGradesDialog({
     form.reset({
         grades: classroomStudent.grades || []
     })
-  }, [classroomStudent, form])
+  }, [classroomStudent, form, isOpen]);
 
   const onSubmit = async (values: FormData) => {
     if (!user || !firestore) {
@@ -110,17 +121,28 @@ export function StudentGradesDialog({
   const handleAddNewGrade = () => {
     append({ id: uuidv4(), description: '', score: 0 });
   };
-  
-  const average = form.watch('grades').reduce((acc, grade) => acc + (grade.score || 0), 0) / (form.watch('grades').length || 1);
 
+  const applyStudioTemplate = () => {
+    const templateWithIds = studioTemplate.map(item => ({ ...item, id: uuidv4() }));
+    replace(templateWithIds);
+    toast({
+        title: 'Template Aplicado!',
+        description: 'As notas do template de estúdio foram carregadas.'
+    })
+  }
+
+  const watchedGrades = form.watch('grades');
+  const n1Total = watchedGrades.filter(g => g.group === 'N1').reduce((acc, grade) => acc + (grade.score || 0), 0);
+  const n2Total = watchedGrades.filter(g => g.group === 'N2').reduce((acc, grade) => acc + (grade.score || 0), 0);
+  const finalGrade = n1Total + n2Total;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Notas de {student.name}</DialogTitle>
           <DialogDescription>
-            Gerencie as notas do aluno para esta turma. A média atual é {average.toFixed(1)}.
+            Gerencie as notas do aluno. N1: <span className="font-bold">{n1Total.toFixed(1)}</span> | N2: <span className="font-bold">{n2Total.toFixed(1)}</span> | Final: <span className="font-bold text-primary">{finalGrade.toFixed(1)}</span>
           </DialogDescription>
         </DialogHeader>
         
@@ -130,8 +152,8 @@ export function StudentGradesDialog({
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Descrição</TableHead>
-                            <TableHead className="w-[100px]">Nota</TableHead>
+                            <TableHead>Descrição da Avaliação</TableHead>
+                            <TableHead className="w-[120px]">Nota</TableHead>
                             <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
                     </TableHeader>
@@ -142,10 +164,10 @@ export function StudentGradesDialog({
                                     <FormField
                                         control={form.control}
                                         name={`grades.${index}.description`}
-                                        render={({ field }) => (
+                                        render={({ field: formField }) => (
                                             <FormItem>
                                                 <FormControl>
-                                                    <Input {...field} placeholder="Ex: Prova 1" />
+                                                    <Input {...formField} placeholder="Ex: Prova 1" />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -156,10 +178,13 @@ export function StudentGradesDialog({
                                      <FormField
                                         control={form.control}
                                         name={`grades.${index}.score`}
-                                        render={({ field }) => (
+                                        render={({ field: formField }) => (
                                             <FormItem>
                                                 <FormControl>
-                                                    <Input type="number" step="0.1" {...field} />
+                                                    <div className="flex items-center gap-2">
+                                                        <Input type="number" step="0.1" {...formField} />
+                                                        {field.maxScore && <span className="text-sm text-muted-foreground">/ {field.maxScore.toFixed(1)}</span>}
+                                                    </div>
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -183,10 +208,14 @@ export function StudentGradesDialog({
                     </TableBody>
                 </Table>
              </div>
-             <div className='flex justify-start'>
+             <div className='flex justify-start gap-2'>
                 <Button type="button" variant="outline" size="sm" onClick={handleAddNewGrade}>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Adicionar Nota
+                </Button>
+                 <Button type="button" variant="secondary" size="sm" onClick={applyStudioTemplate}>
+                    <ClipboardPaste className="mr-2 h-4 w-4" />
+                    Aplicar Template de Estúdio
                 </Button>
              </div>
             <DialogFooter>

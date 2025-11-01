@@ -2,6 +2,8 @@ export interface Grade {
     id: string;
     description: string;
     score: number;
+    maxScore?: number;
+    group?: 'N1' | 'N2';
 }
 
 export interface Course {
