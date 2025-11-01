@@ -26,7 +26,7 @@ import { Avatar, AvatarFallback } from '../ui/avatar';
 import { debounce } from 'lodash';
 import { Loader2, Users, Trash2, Search } from 'lucide-react';
 
-function StudentRow({ student }: { student: Student }) {
+function StudentRowDisplay({ student }: { student: Student }) {
   if (!student) return null;
 
   return (
@@ -67,7 +67,7 @@ export function StudentGroups({
   const [filter, setFilter] = useState('');
 
   const gradeStructure = useMemo(
-    () => activities.filter((a) => a.active),
+    () => activities.filter((a) => a.active).sort((a, b) => a.order - b.order),
     [activities]
   );
   
@@ -203,7 +203,7 @@ export function StudentGroups({
       const newGrades = { ...prev };
 
       const studentIdsToUpdate: string[] = isGroup
-        ? studentGroups.find((g) => g.includes(studentOrGroupId)) || []
+        ? studentGroups.find((g) => g[0] === studentOrGroupId) || []
         : [studentOrGroupId];
 
       studentIdsToUpdate?.forEach((studentId) => {
@@ -281,7 +281,9 @@ export function StudentGroups({
       .commit()
       .then(() => {
         setStudentGroups((prev) => prev.filter((g) => g !== group));
-        setUngroupedStudents((prev) => [...prev, ...group]);
+        setUngroupedStudents((prev) => [...prev, ...group].sort((a, b) =>
+          allStudentsData[a]?.name.localeCompare(allStudentsData[b]?.name)
+        ));
         toast({ title: 'Grupo Desfeito!' });
       })
       .catch((err) => {
@@ -346,11 +348,10 @@ export function StudentGroups({
 
   const renderGradeRow = (
     studentId: string,
-    isGroup: boolean,
-    isGroupMember = false
+    isGroupRow: boolean
   ) => {
     const student = allStudentsData[studentId];
-    if (!student) return null;
+    if (!student && !isGroupRow) return null;
     const grades = localGrades[studentId] || [];
 
     const getGrade = (activityId: string) =>
@@ -358,41 +359,35 @@ export function StudentGroups({
 
     const { n1Total, n2Total, finalGrade, modularTotals } =
       calculateTotals(grades);
+    
+    const studentCellContent = isGroupRow ? (
+      <div className="flex items-center justify-between">
+        <span className="font-semibold">{`Grupo ${filteredGroups.findIndex(g => g.includes(studentId)) + 1}`}</span>
+      </div>
+    ) : (
+      <div className="flex items-center gap-2">
+        <Checkbox
+          checked={selectedStudents.includes(studentId)}
+          onCheckedChange={(checked) => {
+            setSelectedStudents((prev) =>
+              checked
+                ? [...prev, studentId]
+                : prev.filter((id) => id !== studentId)
+            );
+          }}
+        />
+        <StudentRowDisplay student={student} />
+      </div>
+    );
+    
+     const rowClassName = isGroupRow ? "bg-muted/50 hover:bg-muted/50" : "";
+     const studentCellClassName = isGroupRow ? "sticky left-0 bg-muted/50 z-10" : "sticky left-0 bg-background z-10 w-[250px]";
 
-    if (isGroupMember) {
-      return (
-        <TableRow key={studentId} className="border-l-2 border-primary">
-          <TableCell className="sticky left-0 bg-background z-10 pl-8">
-            <StudentRow student={student} />
-          </TableCell>
-          <TableCell
-            colSpan={gradeStructure.length + 3}
-            className="text-center text-muted-foreground"
-          >
-            As notas deste aluno são sincronizadas com as do grupo.
-          </TableCell>
-        </TableRow>
-      );
-    }
 
     return (
-      <TableRow key={studentId}>
-        <TableCell className="sticky left-0 bg-background z-10 w-[250px]">
-          <div className="flex items-center gap-2">
-            {!isGroup && (
-              <Checkbox
-                checked={selectedStudents.includes(studentId)}
-                onCheckedChange={(checked) => {
-                  setSelectedStudents((prev) =>
-                    checked
-                      ? [...prev, studentId]
-                      : prev.filter((id) => id !== studentId)
-                  );
-                }}
-              />
-            )}
-            <StudentRow student={student} />
-          </div>
+      <TableRow key={studentId} className={rowClassName}>
+        <TableCell className={studentCellClassName}>
+          {studentCellContent}
         </TableCell>
         {gradeStructure.map((activity) => (
           <TableCell key={activity.id}>
@@ -401,13 +396,13 @@ export function StudentGroups({
               step="0.5"
               min="0"
               max={activity.maxScore}
-              defaultValue={getGrade(activity.id)}
+              value={getGrade(activity.id)}
               onChange={(e) =>
                 handleGradeChange(
                   studentId,
                   activity.id,
                   parseFloat(e.target.value) || 0,
-                  isGroup
+                  isGroupRow
                 )
               }
               className="w-24"
@@ -430,44 +425,73 @@ export function StudentGroups({
             {finalGrade.toFixed(1)}
           </TableCell>
         )}
-        {modularTotals.map((mt) => (
-          <TableCell key={mt.name} className="font-semibold text-center">
+        {modularTotals.map((mt, index) => (
+          <TableCell key={index} className="font-semibold text-center">
             {mt.score.toFixed(1)}
           </TableCell>
         ))}
       </TableRow>
     );
   };
-
-  const renderGroupRow = (group: string[], groupIndex: number) => {
+  
+  const renderGroupRows = (group: string[], groupIndex: number) => {
     const firstStudentId = group[0];
     if (!firstStudentId) return null;
 
     return (
       <React.Fragment key={`group-${groupIndex}`}>
-        <TableRow className="bg-muted/50 hover:bg-muted/50">
-          <TableCell
-            className="sticky left-0 bg-muted/50 z-10 font-semibold"
-            colSpan={1}
-          >
-            <div className="flex items-center justify-between">
-              <span>Grupo {groupIndex + 1}</span>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleUngroup(group)}
-              >
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </Button>
-            </div>
-          </TableCell>
-          <TableCell colSpan={gradeStructure.length + 3}></TableCell>
-        </TableRow>
+        {/* Group Grade Entry Row */}
         {renderGradeRow(firstStudentId, true)}
-        {group.slice(1).map((csId) => renderGradeRow(csId, false, true))}
+
+        {/* Individual Student Display Rows */}
+        {group.map((csId) => {
+          const student = allStudentsData[csId];
+          const grades = localGrades[csId] || [];
+          const { n1Total, n2Total, finalGrade, modularTotals } = calculateTotals(grades);
+          
+          return (
+            <TableRow key={csId} className="border-l-4 border-primary/50 bg-background hover:bg-muted/30">
+              <TableCell className="sticky left-0 bg-inherit z-10 pl-8">
+                 <StudentRowDisplay student={student} />
+              </TableCell>
+              {gradeStructure.map((activity) => (
+                <TableCell key={activity.id}>
+                  <Input
+                    type="number"
+                    value={grades.find(g => g.activityId === activity.id)?.score ?? 0}
+                    className="w-24 border-0 bg-transparent"
+                    readOnly
+                    disabled
+                  />
+                </TableCell>
+              ))}
+               {n1Activities.length > 0 && (
+                <TableCell className="font-semibold text-center text-muted-foreground">{n1Total.toFixed(1)}</TableCell>
+              )}
+              {n2Activities.length > 0 && (
+                <TableCell className="font-semibold text-center text-muted-foreground">{n2Total.toFixed(1)}</TableCell>
+              )}
+              {(n1Activities.length > 0 || n2Activities.length > 0) && (
+                <TableCell className="font-bold text-primary/80 text-center">{finalGrade.toFixed(1)}</TableCell>
+              )}
+              {modularTotals.map((mt, index) => (
+                <TableCell key={index} className="font-semibold text-center text-muted-foreground">{mt.score.toFixed(1)}</TableCell>
+              ))}
+            </TableRow>
+          );
+        })}
+         <TableRow className="bg-muted/50 hover:bg-muted/50">
+             <TableCell colSpan={gradeStructure.length + 4} className="py-2 text-right">
+                <Button variant="ghost" size="sm" onClick={() => handleUngroup(group)}>
+                    <Trash2 className="mr-2 h-4 w-4 text-destructive" />
+                    Desfazer Grupo {groupIndex + 1}
+                </Button>
+            </TableCell>
+        </TableRow>
       </React.Fragment>
     );
   };
+
 
   if (isLoading || isStudentDataLoading) {
       return <Skeleton className="h-96 w-full" />
@@ -522,7 +546,7 @@ export function StudentGroups({
           <TableHeader>
             <TableRow>
               <TableHead className="sticky left-0 bg-background z-10 w-[250px] min-w-[250px]">
-                Aluno
+                Aluno / Grupo
               </TableHead>
               {n1Activities.length > 0 && (
                 <TableHead
@@ -554,6 +578,14 @@ export function StudentGroups({
                   Totais
                 </TableHead>
               )}
+               {modularActivities.length > 0 &&
+                modularActivities.map((act) => (
+                  <TableHead
+                    key={act.id}
+                    className="text-center min-w-[150px]"
+                  >
+                  </TableHead>
+                ))}
             </TableRow>
             <TableRow>
               <TableHead className="sticky left-0 bg-background z-10"></TableHead>
@@ -604,7 +636,7 @@ export function StudentGroups({
             ) : (
               <>
                 {filteredGroups.map((group, index) =>
-                  renderGroupRow(group, index)
+                  renderGroupRows(group, index)
                 )}
                 {filteredUngroupedStudents.map((csId) =>
                   renderGradeRow(csId, false)
@@ -617,3 +649,5 @@ export function StudentGroups({
     </div>
   );
 }
+
+    
