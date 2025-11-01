@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -28,7 +29,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Users } from 'lucide-react';
+import { Users, Edit } from 'lucide-react';
 import { StudentUploadDialog } from '@/components/courses/student-upload-dialog';
 import { ClassroomStudentsTable } from '@/components/courses/classroom-students-table';
 import { StudentGroups } from '@/components/courses/student-groups';
@@ -62,13 +63,25 @@ function CourseInformation({
   course: Course;
   classroom: Classroom | undefined;
 }) {
+  const router = useRouter();
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Plano de Ensino e Cronograma</CardTitle>
-        <CardDescription>
-          Detalhes, estrutura e cronograma da disciplina.
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Plano de Ensino e Cronograma</CardTitle>
+            <CardDescription>
+              Detalhes, estrutura e cronograma da disciplina.
+            </CardDescription>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => router.push(`/disciplinas/${course.id}/editar`)}
+          >
+            <Edit className="mr-2 h-4 w-4" />
+            Editar
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         <div>
@@ -108,25 +121,37 @@ function CourseInformation({
                 <TableBody>
                   {course.bibliography.basic && (
                     <TableRow>
-                      <TableCell className="w-[150px] font-medium text-muted-foreground bg-muted/50 align-top">Básica</TableCell>
+                      <TableCell className="w-[150px] font-medium text-muted-foreground bg-muted/50 align-top">
+                        Básica
+                      </TableCell>
                       <TableCell>
-                        <pre className="whitespace-pre-wrap font-sans text-sm">{course.bibliography.basic}</pre>
+                        <pre className="whitespace-pre-wrap font-sans text-sm">
+                          {course.bibliography.basic}
+                        </pre>
                       </TableCell>
                     </TableRow>
                   )}
                   {course.bibliography.complementary && (
                     <TableRow>
-                      <TableCell className="w-[150px] font-medium text-muted-foreground bg-muted/50 align-top">Complementar</TableCell>
-                       <TableCell>
-                        <pre className="whitespace-pre-wrap font-sans text-sm">{course.bibliography.complementary}</pre>
+                      <TableCell className="w-[150px] font-medium text-muted-foreground bg-muted/50 align-top">
+                        Complementar
+                      </TableCell>
+                      <TableCell>
+                        <pre className="whitespace-pre-wrap font-sans text-sm">
+                          {course.bibliography.complementary}
+                        </pre>
                       </TableCell>
                     </TableRow>
                   )}
                   {course.bibliography.recommended && (
                     <TableRow>
-                      <TableCell className="w-[150px] font-medium text-muted-foreground bg-muted/50 align-top">Recomendada</TableCell>
-                       <TableCell>
-                        <pre className="whitespace-pre-wrap font-sans text-sm">{course.bibliography.recommended}</pre>
+                      <TableCell className="w-[150px] font-medium text-muted-foreground bg-muted/50 align-top">
+                        Recomendada
+                      </TableCell>
+                      <TableCell>
+                        <pre className="whitespace-pre-wrap font-sans text-sm">
+                          {course.bibliography.recommended}
+                        </pre>
                       </TableCell>
                     </TableRow>
                   )}
@@ -153,23 +178,39 @@ function CourseInformation({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {classroom.classSchedule.map((scheduleItem, index) => {
-                    const isHoliday = scheduleItem.content.toLowerCase().includes('feriado');
-                    return (
-                        <TableRow key={index} className={cn(isHoliday && 'bg-muted/50 text-muted-foreground')}>
+                  {classroom.classSchedule
+                    .sort(
+                      (a, b) =>
+                        new Date(a.date).getTime() - new Date(b.date).getTime()
+                    )
+                    .map((scheduleItem, index) => {
+                      const isHoliday = scheduleItem.content
+                        .toLowerCase()
+                        .includes('feriado');
+                      return (
+                        <TableRow
+                          key={index}
+                          className={cn(
+                            isHoliday && 'bg-muted/50 text-muted-foreground'
+                          )}
+                        >
                           <TableCell className="font-medium">
                             {scheduleItem.date}
                           </TableCell>
                           <TableCell>
-                            <Badge variant={isHoliday ? 'secondary': 'outline'}>{scheduleItem.type}</Badge>
+                            <Badge variant={isHoliday ? 'secondary' : 'outline'}>
+                              {scheduleItem.type}
+                            </Badge>
                           </TableCell>
-                          <TableCell className="font-medium">{scheduleItem.topic}</TableCell>
+                          <TableCell className="font-medium">
+                            {scheduleItem.topic}
+                          </TableCell>
                           <TableCell>{scheduleItem.content}</TableCell>
                           <TableCell>{scheduleItem.activity}</TableCell>
                           <TableCell>{scheduleItem.location}</TableCell>
                         </TableRow>
-                    )
-                  })}
+                      );
+                    })}
                 </TableBody>
               </Table>
             </div>
@@ -317,7 +358,10 @@ export function CourseDetailClient({ courseId }: { courseId: string }) {
   const classroomQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return query(
-      collection(firestore, `professors/${user.uid}/courses/${courseId}/classrooms`)
+      collection(
+        firestore,
+        `professors/${user.uid}/courses/${courseId}/classrooms`
+      )
     );
   }, [user, firestore, courseId]);
 
