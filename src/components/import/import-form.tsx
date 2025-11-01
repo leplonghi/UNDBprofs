@@ -58,26 +58,13 @@ export function ImportForm() {
     },
   });
 
-  useEffect(() => {
+   useEffect(() => {
     const storedData = sessionStorage.getItem('importedData');
     if (storedData) {
       try {
         const data = JSON.parse(storedData) as ImportCourseFromLessonPlanOutput;
         setExtractedData(data);
-        form.reset({
-            courseName: data.courseName,
-            courseCode: data.courseCode,
-            syllabus: data.syllabus,
-            objectives: data.objectives,
-            workload: data.workload,
-            semester: data.semester,
-            competencies: data.competencies,
-            thematicTree: data.thematicTree,
-            bibliography: data.bibliography,
-            classSchedule: data.classSchedule,
-        });
-        // Clear the data from session storage after loading it
-        sessionStorage.removeItem('importedData');
+        sessionStorage.removeItem('importedData'); // Clear storage after moving to state
       } catch (error) {
         console.error("Failed to parse stored data", error);
         toast({
@@ -85,13 +72,32 @@ export function ImportForm() {
             title: 'Erro ao Carregar Dados',
             description: 'Não foi possível ler os dados da importação anterior.',
         });
-      }
-    } else {
-        // If there's no data, maybe redirect or show an error
         router.push('/disciplinas');
+      }
+    } else if (!extractedData) {
+        // Only redirect if there's no stored data and no data in state
         toast({ title: 'Nenhum dado a ser importado.', description: 'Por favor, importe um arquivo PDF primeiro.' });
+        router.push('/disciplinas');
     }
-  }, [form, toast, router]);
+  }, [router, toast]);
+
+  useEffect(() => {
+    // When extractedData is populated, reset the form
+    if (extractedData) {
+      form.reset({
+        courseName: extractedData.courseName,
+        courseCode: extractedData.courseCode,
+        syllabus: extractedData.syllabus,
+        objectives: extractedData.objectives,
+        workload: extractedData.workload,
+        semester: extractedData.semester,
+        competencies: extractedData.competencies,
+        thematicTree: extractedData.thematicTree,
+        bibliography: extractedData.bibliography,
+        classSchedule: extractedData.classSchedule,
+      });
+    }
+  }, [extractedData, form]);
 
 
   async function onSubmit(values: FormData) {
@@ -115,9 +121,7 @@ export function ImportForm() {
     const classroomRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}`);
 
     // Prepare the data for the Course document
-    const courseData: Course = {
-        id: courseId,
-        professorId: user.uid,
+    const courseData: Omit<Course, 'id' | 'professorId'> = {
         name: values.courseName,
         code: values.courseCode,
         syllabus: values.syllabus,
@@ -128,9 +132,7 @@ export function ImportForm() {
     };
 
     // Prepare the data for the Classroom document
-    const classroomData: Classroom = {
-        id: classroomId,
-        courseId: courseId,
+    const classroomData: Omit<Classroom, 'id'| 'courseId'> = {
         name: `Turma de ${values.semester}`, // e.g., "Turma de 2025.1"
         semester: values.semester,
         workload: values.workload,
@@ -140,8 +142,8 @@ export function ImportForm() {
     try {
         // Use a batch write to save both documents atomically
         const batch = writeBatch(firestore);
-        batch.set(courseRef, courseData);
-        batch.set(classroomRef, classroomData);
+        batch.set(courseRef, { ...courseData, id: courseId, professorId: user.uid });
+        batch.set(classroomRef, { ...classroomData, id: classroomId, courseId: courseId });
         await batch.commit();
 
         toast({
