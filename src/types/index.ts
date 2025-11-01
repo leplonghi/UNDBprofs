@@ -53,6 +53,13 @@ export interface ClassroomStudent {
     groupId?: string | null;
 }
 
+export interface Group {
+    id: string;
+    name: string;
+    classroomId: string;
+}
+
+
 export interface ExtractedStudent {
     name: string;
     email: string;

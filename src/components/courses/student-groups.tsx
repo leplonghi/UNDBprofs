@@ -14,6 +14,11 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,15 +27,17 @@ import { useToast } from '@/hooks/use-toast';
 import {
   useFirestore,
   useUser,
+  useCollection,
+  useMemoFirebase,
   updateDocumentNonBlocking,
 } from '@/firebase';
-import { doc, writeBatch, getDoc } from 'firebase/firestore';
-import type { ClassroomStudent, Student, Grade, Activity } from '@/types';
+import { doc, writeBatch, getDoc, collection, addDoc, deleteDoc } from 'firebase/firestore';
+import type { ClassroomStudent, Student, Grade, Activity, Group } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 import { Skeleton } from '../ui/skeleton';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { debounce } from 'lodash';
-import { Loader2, Users, Trash2, Search, ChevronDown } from 'lucide-react';
+import { Loader2, Users, Trash2, Search, X, PlusCircle } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
@@ -70,12 +77,18 @@ export function StudentGroups({
   const { user } = useUser();
   const [isSaving, setIsSaving] = useState(false);
   const [localGrades, setLocalGrades] = useState<Record<string, Grade[]>>({});
-  const [studentGroups, setStudentGroups] = useState<string[][]>([]);
+  
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
-  const [ungroupedStudents, setUngroupedStudents] = useState<string[]>([]);
   const [allStudentsData, setAllStudentsData] = useState<Record<string, Student>>({});
   const [isStudentDataLoading, setIsStudentDataLoading] = useState(true);
   const [filter, setFilter] = useState('');
+
+  const groupsQuery = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return collection(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/groups`)
+  }, [user, firestore, courseId, classroomId]);
+  
+  const { data: groups, isLoading: isLoadingGroups } = useCollection<Group>(groupsQuery);
 
   const gradeStructure = useMemo(
     () => activities.filter((a) => a.active).sort((a, b) => a.order - b.order),
@@ -108,12 +121,8 @@ export function StudentGroups({
     if (isLoading || isStudentDataLoading || !classroomStudents) return;
 
     const initialGrades: Record<string, Grade[]> = {};
-    const allStudentIds = new Set<string>();
-    const groupedStudentIds = new Set<string>();
-
+   
     for (const cs of classroomStudents) {
-      allStudentIds.add(cs.id);
-
       const studentGrades = gradeStructure.map((activity) => {
         const existingGrade = cs.grades?.find(
           (g) => g.activityId === activity.id
@@ -123,42 +132,36 @@ export function StudentGroups({
         );
       });
       initialGrades[cs.id] = studentGrades;
-
-      if (cs.groupId) {
-        groupedStudentIds.add(cs.id);
-      }
     }
-
     setLocalGrades(initialGrades);
-
-    const groups = classroomStudents.reduce((acc, cs) => {
-      if (cs.groupId) {
-        if (!acc[cs.groupId]) {
-          acc[cs.groupId] = [];
-        }
-        acc[cs.groupId].push(cs.id);
-      }
-      return acc;
-    }, {} as Record<string, string[]>);
-    
-    const sortedGroups = Object.values(groups).map(group =>
-      group.sort((a, b) =>
-        (allStudentsData[a]?.name || '').localeCompare(allStudentsData[b]?.name)
-      )
-    );
-
-    setStudentGroups(sortedGroups);
-
-    const ungrouped = Array.from(allStudentIds).filter(
-      (id) => !groupedStudentIds.has(id)
-    );
-
-    ungrouped.sort((a, b) => 
-      (allStudentsData[a]?.name || '').localeCompare(allStudentsData[b]?.name)
-    );
-
-    setUngroupedStudents(ungrouped);
   }, [classroomStudents, isLoading, isStudentDataLoading, gradeStructure, allStudentsData]);
+
+  const { studentGroups, ungroupedStudents } = useMemo(() => {
+     if (!groups || !classroomStudents) {
+      return { studentGroups: [], ungroupedStudents: [] };
+    }
+    
+    const allCsIdsInGroups = new Set<string>();
+    
+    const studentGroups = groups.map(group => {
+      const members = classroomStudents
+        .filter(cs => cs.groupId === group.id)
+        .map(cs => cs.id)
+        .sort((a, b) => (allStudentsData[a]?.name || '').localeCompare(allStudentsData[b]?.name || ''));
+
+      members.forEach(id => allCsIdsInGroups.add(id));
+      return { ...group, members };
+    });
+
+    const ungroupedStudents = classroomStudents
+      .filter(cs => !allCsIdsInGroups.has(cs.id))
+      .map(cs => cs.id)
+      .sort((a,b) => (allStudentsData[a]?.name || '').localeCompare(allStudentsData[b]?.name || ''));
+
+    return { studentGroups, ungroupedStudents };
+
+  }, [groups, classroomStudents, allStudentsData]);
+
 
   const debouncedSaveChanges = useCallback(
     debounce(async (gradesToSave: Record<string, Grade[]>) => {
@@ -207,9 +210,9 @@ export function StudentGroups({
   ) => {
     setLocalGrades((prev) => {
       const newGrades = { ...prev };
-
+      
       const studentIdsToUpdate: string[] = isGroup
-        ? studentGroups.find((g) => g[0] === studentOrGroupId) || []
+        ? studentGroups.find(g => g.id === studentOrGroupId)?.members || []
         : [studentOrGroupId];
 
       studentIdsToUpdate?.forEach((studentId) => {
@@ -238,7 +241,7 @@ export function StudentGroups({
     });
   };
 
-  const handleCreateGroup = () => {
+  const handleCreateGroup = async () => {
     if (!user || !firestore) return;
     if (selectedStudents.length < 1) {
       toast({
@@ -249,49 +252,73 @@ export function StudentGroups({
       return;
     }
 
-    const newGroupId = uuidv4();
-    const batch = writeBatch(firestore);
-    selectedStudents.forEach((csId) => {
-      const studentRef = doc(
-        firestore,
-        `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/classroomStudents/${csId}`
-      );
-      batch.update(studentRef, { groupId: newGroupId });
-    });
+    const groupName = `Grupo ${groups ? groups.length + 1 : 1}`;
+    const groupsCollectionRef = collection(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/groups`);
+    
+    try {
+      const newGroupRef = await addDoc(groupsCollectionRef, { name: groupName, classroomId });
+      const newGroupId = newGroupRef.id;
 
-    batch
-      .commit()
-      .then(() => {
-        setSelectedStudents([]);
-        toast({ title: 'Grupo Criado!', description: 'O grupo foi criado com sucesso.' });
-      })
-      .catch((err) => {
-        console.error('Error creating group:', err);
-        toast({ variant: 'destructive', title: 'Erro ao Criar Grupo' });
+      const batch = writeBatch(firestore);
+      selectedStudents.forEach((csId) => {
+        const studentRef = doc(
+          firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/classroomStudents/${csId}`
+        );
+        batch.update(studentRef, { groupId: newGroupId });
       });
+
+      await batch.commit();
+      
+      setSelectedStudents([]);
+      toast({ title: 'Grupo Criado!', description: `O grupo "${groupName}" foi criado com sucesso.` });
+
+    } catch(err) {
+      console.error('Error creating group:', err);
+      toast({ variant: 'destructive', title: 'Erro ao Criar Grupo' });
+    }
   };
 
-  const handleUngroup = (group: string[]) => {
+  const handleDeleteGroup = async (groupId: string) => {
     if (!user || !firestore) return;
     const batch = writeBatch(firestore);
-    group.forEach((csId) => {
-      const studentRef = doc(
-        firestore,
-        `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/classroomStudents/${csId}`
-      );
+    
+    // Find students in the group to ungroup them
+    const studentsInGroup = classroomStudents.filter(cs => cs.groupId === groupId);
+    studentsInGroup.forEach((cs) => {
+      const studentRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/classroomStudents/${cs.id}`);
       batch.update(studentRef, { groupId: null });
     });
 
-    batch
-      .commit()
-      .then(() => {
-        toast({ title: 'Grupo Desfeito!' });
-      })
-      .catch((err) => {
-        console.error('Error ungrouping:', err);
-        toast({ variant: 'destructive', title: 'Erro ao Desfazer Grupo' });
-      });
+    // Delete the group document
+    const groupRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/groups/${groupId}`);
+    batch.delete(groupRef);
+
+    try {
+      await batch.commit()
+      toast({ title: 'Grupo Excluído!' });
+    } catch(err) {
+      console.error('Error deleting group:', err);
+      toast({ variant: 'destructive', title: 'Erro ao Excluir Grupo' });
+    }
   };
+
+  const handleRemoveStudentFromGroup = async (csId: string) => {
+    if (!user || !firestore) return;
+    const studentRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/classroomStudents/${csId}`);
+    updateDocumentNonBlocking(studentRef, { groupId: null });
+  };
+  
+  const handleAddStudentToGroup = (groupId: string, csId: string) => {
+     if (!user || !firestore) return;
+    const studentRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/classroomStudents/${csId}`);
+    updateDocumentNonBlocking(studentRef, { groupId: groupId });
+  }
+
+  const handleGroupNameChange = debounce((groupId: string, newName: string) => {
+    if (!user || !firestore) return;
+    const groupRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/groups/${groupId}`);
+    updateDocumentNonBlocking(groupRef, { name: newName });
+  }, 500);
 
   const n1Activities = gradeStructure.filter((g) => g.group === 'N1');
   const n2Activities = gradeStructure.filter((g) => g.group === 'N2');
@@ -330,9 +357,9 @@ export function StudentGroups({
     if (!filter) return studentGroups;
     const lowerCaseFilter = filter.toLowerCase();
     return studentGroups.filter((group) => {
-      return group.some((csId) =>
+      return group.members.some((csId) =>
         allStudentsData[csId]?.name.toLowerCase().includes(lowerCaseFilter)
-      );
+      ) || group.name.toLowerCase().includes(lowerCaseFilter)
     });
   }, [filter, studentGroups, allStudentsData]);
 
@@ -362,7 +389,7 @@ export function StudentGroups({
               min="0"
               max={activity.maxScore}
               value={getGrade(activity.id)}
-              onChange={(e) => handleGradeChange(studentId, activity.id, parseFloat(e.target.value) || 0, isGroup)}
+              onChange={(e) => handleGradeChange(studentId, isGroup ? studentId : studentId, parseFloat(e.target.value) || 0, isGroup)}
               className="w-full"
               disabled={isSaving}
             />
@@ -374,6 +401,7 @@ export function StudentGroups({
   
     const renderTotals = (studentId: string) => {
         const grades = localGrades[studentId] || [];
+        if (!grades) return null;
         const { n1Total, n2Total, finalGrade, modularTotals } = calculateTotals(grades);
         const isModular = modularActivities.length > 0;
 
@@ -409,7 +437,7 @@ export function StudentGroups({
         )
     };
 
-  if (isLoading || isStudentDataLoading) {
+  if (isLoading || isStudentDataLoading || isLoadingGroups) {
       return <Skeleton className="h-96 w-full" />
   }
 
@@ -463,19 +491,23 @@ export function StudentGroups({
                 </TableRow>
             ) : (
               <>
-                {filteredGroups.map((group, index) => {
-                    const firstStudentId = group[0];
+                {filteredGroups.map((group) => {
+                    const firstStudentId = group.members[0];
                     if (!firstStudentId) return null;
                     const grades = localGrades[firstStudentId] || [];
                     const { n1Total, n2Total, finalGrade } = calculateTotals(grades);
 
                     return (
-                    <React.Fragment key={`group-desktop-${index}`}>
+                    <React.Fragment key={`group-desktop-${group.id}`}>
                         <TableRow className="bg-muted/80 hover:bg-muted/80">
                             <TableCell className="sticky left-0 bg-inherit z-10 font-semibold">
                                <div className="flex items-center justify-between">
-                                 <span>{`Grupo ${index + 1}`}</span>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleUngroup(group)}>
+                                  <Input 
+                                    defaultValue={group.name}
+                                    onChange={(e) => handleGroupNameChange(group.id, e.target.value)}
+                                    className="h-8 border-0 bg-transparent font-semibold p-0"
+                                  />
+                                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteGroup(group.id)}>
                                       <Trash2 className="h-4 w-4 text-destructive" />
                                   </Button>
                                 </div>
@@ -483,14 +515,14 @@ export function StudentGroups({
                             {gradeStructure.map((activity) => (
                                 <TableCell key={activity.id}>
                                     <Input
-                                    type="number"
-                                    step="0.5"
-                                    min="0"
-                                    max={activity.maxScore}
-                                    value={grades.find(g => g.activityId === activity.id)?.score ?? 0}
-                                    onChange={(e) => handleGradeChange(firstStudentId, activity.id, parseFloat(e.target.value) || 0, true)}
-                                    className="w-24 mx-auto text-center"
-                                    disabled={isSaving}
+                                      type="number"
+                                      step="0.5"
+                                      min="0"
+                                      max={activity.maxScore}
+                                      value={grades.find(g => g.activityId === activity.id)?.score ?? 0}
+                                      onChange={(e) => handleGradeChange(group.id, activity.id, parseFloat(e.target.value) || 0, true)}
+                                      className="w-24 mx-auto text-center"
+                                      disabled={isSaving}
                                     />
                                 </TableCell>
                             ))}
@@ -498,14 +530,19 @@ export function StudentGroups({
                             <TableCell className="font-semibold text-center">{n2Total.toFixed(1)}</TableCell>
                             <TableCell className="font-bold text-primary text-center">{finalGrade.toFixed(1)}</TableCell>
                         </TableRow>
-                        {group.map(csId => {
+                        {group.members.map(csId => {
                            const student = allStudentsData[csId];
                            const studentGrades = localGrades[csId] || [];
                            const { n1Total, n2Total, finalGrade } = calculateTotals(studentGrades);
                            return(
                             <TableRow key={csId} className="border-l-4 border-primary/50 bg-background hover:bg-muted/30">
-                               <TableCell className="sticky left-0 bg-inherit z-10 pl-8">
-                                    <StudentRowDisplay student={student} />
+                               <TableCell className="sticky left-0 bg-inherit z-10 pl-4">
+                                    <div className="flex items-center justify-between">
+                                      <StudentRowDisplay student={student} />
+                                      <Button variant="ghost" size="icon" className="h-6 w-6 opacity-50 hover:opacity-100" onClick={() => handleRemoveStudentFromGroup(csId)}>
+                                        <X className="h-4 w-4" />
+                                      </Button>
+                                    </div>
                                </TableCell>
                                {gradeStructure.map((activity) => (
                                     <TableCell key={activity.id} className="text-center text-muted-foreground">
@@ -518,6 +555,31 @@ export function StudentGroups({
                             </TableRow>
                            )
                         })}
+                        <TableRow>
+                          <TableCell className="sticky left-0 bg-inherit z-10 pl-8 py-1">
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button variant="outline" size="sm" className="h-7">
+                                  <PlusCircle className="mr-2 h-3 w-3" /> Adicionar Aluno
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="p-0">
+                                <div className="flex flex-col max-h-60 overflow-y-auto">
+                                  {ungroupedStudents.length > 0 ? ungroupedStudents.map(csId => (
+                                    <button 
+                                      key={csId} 
+                                      onClick={() => handleAddStudentToGroup(group.id, csId)}
+                                      className="text-left text-sm p-2 hover:bg-accent"
+                                    >
+                                      {allStudentsData[csId]?.name || 'Aluno sem nome'}
+                                    </button>
+                                  )) : <p className="p-2 text-sm text-muted-foreground">Nenhum aluno disponível.</p>}
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                          </TableCell>
+                          <TableCell colSpan={gradeStructure.length + 3}></TableCell>
+                        </TableRow>
                     </React.Fragment>
                     )
                 })}
@@ -546,14 +608,14 @@ export function StudentGroups({
                              {gradeStructure.map((activity) => (
                                 <TableCell key={activity.id}>
                                     <Input
-                                    type="number"
-                                    step="0.5"
-                                    min="0"
-                                    max={activity.maxScore}
-                                    value={grades.find(g => g.activityId === activity.id)?.score ?? 0}
-                                    onChange={(e) => handleGradeChange(csId, activity.id, parseFloat(e.target.value) || 0, false)}
-                                    className="w-24 mx-auto text-center"
-                                    disabled={isSaving}
+                                      type="number"
+                                      step="0.5"
+                                      min="0"
+                                      max={activity.maxScore}
+                                      value={grades.find(g => g.activityId === activity.id)?.score ?? 0}
+                                      onChange={(e) => handleGradeChange(csId, activity.id, parseFloat(e.target.value) || 0, false)}
+                                      className="w-24 mx-auto text-center"
+                                      disabled={isSaving}
                                     />
                                 </TableCell>
                             ))}
@@ -590,30 +652,59 @@ export function StudentGroups({
                   </CardHeader>
                   <CardContent>
                      <Accordion type="multiple" className="w-full">
-                       {filteredGroups.map((group, index) => {
-                         const firstStudentId = group[0];
+                       {filteredGroups.map((group) => {
+                         const firstStudentId = group.members[0];
                          if (!firstStudentId) return null;
                          return (
-                           <AccordionItem value={`group-${index}`} key={`group-mobile-${index}`}>
+                           <AccordionItem value={group.id} key={`group-mobile-${group.id}`}>
                              <AccordionTrigger>
                                <div className="flex items-center justify-between w-full pr-4">
-                                 <span>Grupo {index + 1}</span>
-                                 <Badge variant="secondary">{group.length} membros</Badge>
+                                  <Input 
+                                    defaultValue={group.name}
+                                    onChange={(e) => handleGroupNameChange(group.id, e.target.value)}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="h-8 border-0 bg-transparent font-semibold p-0 text-base"
+                                  />
+                                 <Badge variant="secondary">{group.members.length} membros</Badge>
                                </div>
                              </AccordionTrigger>
                              <AccordionContent>
-                                {renderGradeInputs(firstStudentId, true)}
+                                {renderGradeInputs(group.id, true)}
                                 {renderTotals(firstStudentId)}
                                 <div className="mt-4 space-y-2">
-                                   {group.map(csId => (
-                                     <div key={csId} className="flex items-center gap-2 p-2 rounded-md bg-background">
+                                   <h4 className="font-semibold text-sm">Membros</h4>
+                                   {group.members.map(csId => (
+                                     <div key={csId} className="flex items-center justify-between gap-2 p-2 rounded-md bg-background">
                                        <StudentRowDisplay student={allStudentsData[csId]} />
+                                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleRemoveStudentFromGroup(csId)}>
+                                            <X className="h-4 w-4" />
+                                        </Button>
                                      </div>
                                    ))}
                                 </div>
-                                <Button variant="outline" size="sm" onClick={() => handleUngroup(group)} className="w-full mt-4">
-                                    <Trash2 className="mr-2 h-4 w-4 text-destructive" />
-                                    Desfazer Grupo
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <Button variant="outline" size="sm" className="w-full mt-4">
+                                        <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Membro
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="p-0">
+                                    <div className="flex flex-col max-h-60 overflow-y-auto">
+                                      {ungroupedStudents.length > 0 ? ungroupedStudents.map(csId => (
+                                        <button 
+                                          key={csId} 
+                                          onClick={() => handleAddStudentToGroup(group.id, csId)}
+                                          className="text-left text-sm p-2 hover:bg-accent"
+                                        >
+                                          {allStudentsData[csId]?.name || 'Aluno sem nome'}
+                                        </button>
+                                      )) : <p className="p-2 text-sm text-muted-foreground">Nenhum aluno disponível.</p>}
+                                    </div>
+                                  </PopoverContent>
+                                </Popover>
+                                <Button variant="destructive" size="sm" onClick={() => handleDeleteGroup(group.id)} className="w-full mt-2">
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Excluir Grupo
                                 </Button>
                              </AccordionContent>
                            </AccordionItem>
@@ -672,36 +763,36 @@ export function StudentGroups({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="space-y-1 flex-grow">
-          <h3 className="text-lg font-semibold">Lançamento de Notas</h3>
-          <p className="text-sm text-muted-foreground">
-            Crie grupos, edite as notas e filtre. As alterações são salvas
-            automaticamente.
-          </p>
+      <div className="space-y-4 rounded-lg border p-4">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="space-y-1 flex-grow">
+              <h3 className="text-lg font-semibold">Lançamento de Notas</h3>
+              <p className="text-sm text-muted-foreground">
+                Selecione alunos individuais e clique em "Agrupar" para criar um novo grupo.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 self-end md:self-center">
+              <Button
+                onClick={handleCreateGroup}
+                disabled={isSaving || selectedStudents.length === 0}
+              >
+                <Users className="mr-2 h-4 w-4" />
+                Agrupar Selecionados
+              </Button>
+              {isSaving && (
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              )}
+            </div>
         </div>
-        <div className="flex items-center gap-2 self-end md:self-center">
-          <Button
-            variant="outline"
-            onClick={handleCreateGroup}
-            disabled={isSaving || selectedStudents.length === 0}
-          >
-            <Users className="mr-2 h-4 w-4" />
-            Agrupar
-          </Button>
-          {isSaving && (
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          )}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Filtrar por nome do aluno ou grupo..."
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="pl-10"
+          />
         </div>
-      </div>
-       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Filtrar por nome do aluno..."
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="pl-10"
-        />
       </div>
       
       {isMobile === undefined ? (
@@ -715,5 +806,3 @@ export function StudentGroups({
     </div>
   );
 }
-
-    

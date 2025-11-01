@@ -81,19 +81,6 @@
         "bibliography": {
           "type": "string",
           "description": "The bibliography of the course."
-        },
-        "classSchedule": {
-          "type": "array",
-          "description": "The class schedule of the course.",
-           "items": {
-            "type": "object",
-            "properties": {
-              "date": { "type": "string" },
-              "content": { "type": "string" },
-              "activity": { "type": "string" }
-            },
-            "required": ["date", "content", "activity"]
-          }
         }
       },
       "required": [
@@ -191,6 +178,10 @@
           "type": "string",
           "description": "Reference to Student. (Relationship: Student 1:N ClassroomStudent)"
         },
+        "groupId": {
+            "type": ["string", "null"],
+            "description": "Reference to the Group this student belongs to. (Relationship: Group 1:N ClassroomStudent)"
+        },
         "grades": {
           "type": "array",
           "description": "An array of grades for the student in this classroom.",
@@ -209,6 +200,31 @@
         "id",
         "classroomId",
         "studentId"
+      ]
+    },
+     "Group": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Group",
+      "type": "object",
+      "description": "Represents a group of students within a classroom.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Group entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the group."
+        },
+        "classroomId": {
+          "type": "string",
+          "description": "Reference to Classroom. (Relationship: Classroom 1:N Group)"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "classroomId"
       ]
     },
     "Document": {
@@ -400,6 +416,34 @@
             {
               "name": "classRoomStudentId",
               "description": "The unique identifier of the classroomStudent."
+            }
+          ]
+        }
+      },
+       {
+        "path": "/professors/{professorId}/courses/{courseId}/classrooms/{classroomId}/groups/{groupId}",
+        "definition": {
+          "entityName": "Group",
+          "schema": {
+            "$ref": "#/backend/entities/Group"
+          },
+          "description": "Stores student groups within a classroom, owned by the professor.",
+          "params": [
+            {
+              "name": "professorId",
+              "description": "The unique identifier of the professor."
+            },
+            {
+              "name": "courseId",
+              "description": "The unique identifier of the course."
+            },
+            {
+              "name": "classroomId",
+              "description": "The unique identifier of the classroom."
+            },
+            {
+              "name": "groupId",
+              "description": "The unique identifier of the group."
             }
           ]
         }
