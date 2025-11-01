@@ -68,7 +68,7 @@ export default function NewCoursePage() {
       objectives: values.objectives,
       competencies: values.competencies || '',
       thematicTree: [], // Default empty value
-      bibliography: values.bibliography || '',
+      bibliography: { basic: values.bibliography, complementary: '', recommended: '' },
     };
     
     setDocumentNonBlocking(courseRef, courseData, { merge: false });

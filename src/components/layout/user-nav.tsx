@@ -13,8 +13,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CreditCard, LogOut, Settings, User } from 'lucide-react';
-import { useUser, auth } from '@/firebase/client';
+import { useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
+import { auth } from '@/firebase/client';
 
 export function UserNav() {
   const { user } = useUser();

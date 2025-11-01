@@ -223,6 +223,7 @@ const handleAIExtraction = () => {
               classroomId: classroomId,
               studentId: studentId,
               grades: [],
+              groupId: null
             };
             setDocumentNonBlocking(classroomStudentRef, classroomStudentPayload, { merge: false });
       }

@@ -33,6 +33,7 @@ export interface Course {
   competencies: string;
   thematicTree: { name: string; description: string }[];
   bibliography: Bibliography;
+  semester?: string;
 }
 
 export interface ClassScheduleItem {

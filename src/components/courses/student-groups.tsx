@@ -45,7 +45,7 @@ import type { ClassroomStudent, Student, Grade, Activity, Group } from '@/types'
 import { v4 as uuidv4 } from 'uuid';
 import { Skeleton } from '../ui/skeleton';
 import { Avatar, AvatarFallback } from '../ui/avatar';
-import { debounce } from 'lodash';
+import debounce from 'lodash.debounce';
 import { Loader2, Users, Trash2, Search, X, PlusCircle, Download } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
