@@ -32,9 +32,7 @@ export default function CoursesPage() {
       fileInputRef.current.value = '';
     }
 
-    // Start loading state immediately
     startTransition(() => {
-      // Show initial toast
       toast({
         title: 'Processando Arquivo...',
         description: 'Aguarde enquanto a IA extrai as informações do plano de ensino.',
@@ -88,7 +86,6 @@ export default function CoursesPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-primary">Minhas Disciplinas</h1>
-
         <Button onClick={handleImportClick} disabled={isPending}>
           {isPending ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -97,7 +94,6 @@ export default function CoursesPage() {
           )}
           Adicionar Turma
         </Button>
-
         <Input
           type="file"
           ref={fileInputRef}
