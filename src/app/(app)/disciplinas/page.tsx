@@ -27,7 +27,6 @@ export default function CoursesPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Reset file input to allow re-uploading the same file
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -87,27 +86,27 @@ export default function CoursesPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-primary">Minhas Disciplinas</h1>
         <div className="flex items-center gap-2">
-            <Button onClick={() => router.push('/disciplinas/nova')}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Adicionar Disciplina
-            </Button>
-            <Button onClick={handleImportClick} disabled={isPending} variant="secondary">
+          <Button onClick={() => router.push('/disciplinas/nova')}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Adicionar Disciplina
+          </Button>
+          <Button onClick={handleImportClick} disabled={isPending} variant="secondary">
             {isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-                <PlusCircle className="mr-2 h-4 w-4" />
+              <PlusCircle className="mr-2 h-4 w-4" />
             )}
             Importar Turma
-            </Button>
-        </div>
-        <Input
-          type="file"
-          ref={fileInputRef}
-          className="sr-only"
-          onChange={handleFileChange}
-          accept=".pdf"
-          disabled={isPending}
+          </Button>
+          <Input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            onChange={handleFileChange}
+            accept=".pdf"
+            disabled={isPending}
         />
+        </div>
       </div>
       <Card>
         <CardHeader>
