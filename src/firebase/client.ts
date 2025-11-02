@@ -11,5 +11,5 @@ export const auth = getAuth(app);
 export const firestore = getFirestore(app);
 export const provider = new GoogleAuthProvider();
 
-// Set persistence to local
+// Set persistence to local to keep user signed in across browser sessions.
 setPersistence(auth, browserLocalPersistence);

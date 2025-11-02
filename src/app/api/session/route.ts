@@ -3,11 +3,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuth } from 'firebase-admin/auth';
 import { initAdmin } from '@/firebase/admin';
 
-// This ensures the route is not statically rendered
+// This ensures the route is not statically rendered and uses the Node.js runtime.
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
-  initAdmin(); // Initialize lazily
+  initAdmin(); // Initialize lazily inside the handler
 
   try {
     const { idToken } = await req.json();

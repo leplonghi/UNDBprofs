@@ -4,13 +4,15 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { signInWithPopup } from 'firebase/auth';
-import { auth, provider } from '@/firebase/client';
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { auth } from '@/firebase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useUser } from '@/firebase';
+
+const provider = new GoogleAuthProvider();
 
 export default function LoginPage() {
   const router = useRouter();
