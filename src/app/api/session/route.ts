@@ -3,10 +3,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuth } from 'firebase-admin/auth';
 import { initAdmin } from '@/firebase/admin';
 
-// Initialize the Firebase Admin SDK.
-initAdmin();
+// This ensures the route is not statically rendered
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
+  initAdmin(); // Initialize lazily
+
   try {
     const { idToken } = await req.json();
     if (!idToken) {
@@ -28,7 +30,6 @@ export async function POST(req: NextRequest) {
       path: '/',
     };
 
-    // Set cookie in the response.
     cookies().set(options);
 
     return NextResponse.json({ status: 'success' });
@@ -50,16 +51,19 @@ export async function DELETE() {
 }
 
 export async function GET(req: NextRequest) {
-    const session = cookies().get('session')?.value;
-    if (!session) {
-      return NextResponse.json({ isAuthenticated: false }, { status: 200 });
-    }
+  initAdmin(); // Initialize lazily
 
-    try {
-        const auth = getAuth();
-        const decodedClaims = await auth.verifySessionCookie(session, true);
-        return NextResponse.json({ isAuthenticated: true, user: decodedClaims }, { status: 200 });
-    } catch (error) {
-        return NextResponse.json({ isAuthenticated: false }, { status: 200 });
-    }
+  const session = cookies().get('session')?.value;
+  if (!session) {
+    return NextResponse.json({ isAuthenticated: false }, { status: 200 });
+  }
+
+  try {
+      const auth = getAuth();
+      const decodedClaims = await auth.verifySessionCookie(session, true);
+      return NextResponse.json({ isAuthenticated: true, user: decodedClaims }, { status: 200 });
+  } catch (error) {
+      // Session cookie is invalid or expired.
+      return NextResponse.json({ isAuthenticated: false }, { status: 200 });
+  }
 }

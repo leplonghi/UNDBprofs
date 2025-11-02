@@ -1,21 +1,28 @@
-import { cert, getApps, initializeApp, App } from 'firebase-admin/app';
-
-// Ensure you have these environment variables set in your Vercel/hosting environment.
-const serviceAccount = {
-  projectId: process.env.FIREBASE_PROJECT_ID!,
-  clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
-  // The private key must be correctly formatted. Replace '\\n' with actual newlines.
-  privateKey: (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
-};
+import { getApps, initializeApp, App, applicationDefault, cert } from 'firebase-admin/app';
 
 export function initAdmin() {
-  // Return existing app if already initialized.
-  if (getApps().length) {
+  if (getApps().length > 0) {
     return;
   }
 
-  // Initialize the Firebase Admin SDK.
-  initializeApp({
-    credential: cert(serviceAccount),
-  });
+  const hasServiceAccount =
+    !!process.env.FIREBASE_PROJECT_ID &&
+    !!process.env.FIREBASE_CLIENT_EMAIL &&
+    !!process.env.FIREBASE_PRIVATE_KEY;
+
+  if (hasServiceAccount) {
+    // Running in an environment with service account credentials
+    initializeApp({
+      credential: cert({
+        projectId: process.env.FIREBASE_PROJECT_ID!,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
+        privateKey: (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
+      }),
+    });
+  } else {
+    // Fallback for environments like App Hosting or Cloud Run
+    initializeApp({
+      credential: applicationDefault(),
+    });
+  }
 }
