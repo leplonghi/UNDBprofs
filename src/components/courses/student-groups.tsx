@@ -505,7 +505,14 @@ export function StudentGroups({
               min="0"
               max={activity.maxScore}
               value={getGrade(activity.id)}
-              onChange={(e) => handleGradeChange(studentOrGroupId, activity.id, parseFloat(e.target.value) || 0, isGroup)}
+              onChange={(e) => {
+                const newScore = parseFloat(e.target.value) || 0;
+                const score = Math.max(0, Math.min(activity.maxScore, newScore));
+                if (newScore !== score) {
+                    e.target.value = String(score);
+                }
+                handleGradeChange(studentOrGroupId, activity.id, score, isGroup)
+              }}
               className="w-full"
               disabled={isSaving}
             />
@@ -934,3 +941,5 @@ export function StudentGroups({
     </div>
   );
 }
+
+    
