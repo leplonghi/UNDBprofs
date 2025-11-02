@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// IMPORTANT: This export forces the middleware to run on the Node.js runtime.
-// This is required for the Firebase Admin SDK to work.
-export const runtime = 'nodejs';
-
 const PROTECTED_ROUTES = ['/dashboard', '/disciplinas', '/documentos', '/calendario', '/perfil'];
 
 export async function middleware(req: NextRequest) {
