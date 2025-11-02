@@ -59,6 +59,23 @@ const events: CalendarEvent[] = [
   { date: new Date(2025, 9, 13), description: 'Antecipação do Dia dos Professores', category: 'feriado' },
   { date: new Date(2025, 9, 28), description: 'N2 - II MODULAR', category: 'modular-ii' },
   { date: new Date(2025, 9, 30), description: 'Início III MODULAR', category: 'modular-iii' },
+  // Novembro
+  { date: new Date(2025, 10, 6), description: 'SUBSTITUTIVA - II MODULAR', category: 'substitutiva' },
+  { date: new Date(2025, 10, 11), description: 'PROVA FINAL - II MODULAR', category: 'prova-final' },
+  { date: new Date(2025, 10, 13), description: 'N1 - III MODULAR', category: 'modular-iii' },
+  { date: new Date(2025, 10, 15), description: 'Feriado (Proclamação da República)', category: 'feriado' },
+  { date: new Date(2025, 10, 20), description: 'Feriado (Consciência Negra)', category: 'feriado' },
+  { date: new Date(2025, 10, 24), description: 'N2 - INTEGRADORA SEGUNDA FEIRA', category: 'integradora-segunda' },
+  { date: new Date(2025, 10, 26), description: 'N2 - INTEGRADORA QUARTA FEIRA', category: 'integradora-quarta' },
+  { date: new Date(2025, 10, 27), description: 'N2 - III MODULAR', category: 'modular-iii' },
+   // Dezembro
+  { date: new Date(2025, 11, 4), description: 'SUBSTITUTIVA - III MODULAR', category: 'substitutiva' },
+  { date: new Date(2025, 11, 6), description: 'SUBSTITUTIVA - INTEGRADORA', category: 'substitutiva' },
+  { date: new Date(2025, 11, 11), description: 'PROVA FINAL - III MODULAR', category: 'prova-final' },
+  { date: new Date(2025, 11, 13), description: 'PROVA FINAL - INTEGRADORA', category: 'prova-final' },
+  { date: new Date(2025, 11, 24), description: 'Recesso Natalino', category: 'feriado' },
+  { date: new Date(2025, 11, 25), description: 'Natal', category: 'feriado' },
+  { date: new Date(2025, 11, 31), description: 'Recesso de Ano Novo', category: 'feriado' },
 ];
 
 const categoryColors: Record<EventCategory, string> = {
@@ -66,11 +83,11 @@ const categoryColors: Record<EventCategory, string> = {
   'integradora-quarta': 'bg-blue-500',
   'integradora-sexta': 'bg-purple-500',
   'modular-i': 'bg-green-500',
-  'modular-ii': 'bg-red-500',
+  'modular-ii': 'bg-teal-500',
   'modular-iii': 'bg-pink-500',
   'feriado': 'bg-yellow-400 text-black',
   'substitutiva': 'bg-red-500',
-  'prova-final': 'bg-red-500',
+  'prova-final': 'bg-red-700',
 };
 
 const categoryLabels: Record<EventCategory, string> = {
@@ -85,7 +102,7 @@ const categoryLabels: Record<EventCategory, string> = {
   'prova-final': 'Prova Final',
 };
 
-const monthNames = [ "Agosto", "Setembro", "Outubro" ];
+const monthNames = [ "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro" ];
 
 const CalendarMonth = ({ month, year, events }: { month: number, year: number, events: CalendarEvent[]}) => {
   const firstDay = new Date(year, month, 1);
@@ -156,13 +173,14 @@ const CalendarMonth = ({ month, year, events }: { month: number, year: number, e
 export default function CalendarPage() {
   const [currentMonth, setCurrentMonth] = useState(7); // 7 = Agosto
   const year = 2025;
+  const lastMonth = 11; // 11 = Dezembro
 
   const handlePrevMonth = () => {
     setCurrentMonth(m => m > 7 ? m - 1 : 7);
   };
 
   const handleNextMonth = () => {
-    setCurrentMonth(m => m < 9 ? m + 1 : 9);
+    setCurrentMonth(m => m < lastMonth ? m + 1 : lastMonth);
   };
   
   const currentMonthEvents = events.filter(e => e.date.getMonth() === currentMonth && e.date.getFullYear() === year)
@@ -183,7 +201,7 @@ export default function CalendarPage() {
                     <ChevronLeft className="h-4 w-4" />
                 </Button>
                 <h2 className="text-xl font-bold text-primary">{monthNames[currentMonth-7]} {year}</h2>
-                 <Button variant="outline" size="icon" onClick={handleNextMonth} disabled={currentMonth === 9}>
+                 <Button variant="outline" size="icon" onClick={handleNextMonth} disabled={currentMonth === lastMonth}>
                     <ChevronRight className="h-4 w-4" />
                 </Button>
             </div>
@@ -193,6 +211,8 @@ export default function CalendarPage() {
                 <CalendarMonth month={7} year={year} events={events} />
                 <CalendarMonth month={8} year={year} events={events} />
                 <CalendarMonth month={9} year={year} events={events} />
+                <CalendarMonth month={10} year={year} events={events} />
+                <CalendarMonth month={11} year={year} events={events} />
             </div>
 
             {/* Visão Mobile */}
