@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
-import { doc, collection } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from '@/components/ui/button';
@@ -23,7 +23,9 @@ const formSchema = z.object({
   syllabus: z.string().min(1, 'Ementa é obrigatória.'),
   objectives: z.string().min(1, 'Objetivos são obrigatórios.'),
   competencies: z.string().optional(),
-  bibliography: z.string().optional(),
+  bibliography_basic: z.string().optional(),
+  bibliography_complementary: z.string().optional(),
+  bibliography_recommended: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -42,7 +44,9 @@ export default function NewCoursePage() {
       syllabus: '',
       objectives: '',
       competencies: '',
-      bibliography: '',
+      bibliography_basic: '',
+      bibliography_complementary: '',
+      bibliography_recommended: '',
     },
   });
 
@@ -68,7 +72,11 @@ export default function NewCoursePage() {
       objectives: values.objectives,
       competencies: values.competencies || '',
       thematicTree: [], // Default empty value
-      bibliography: { basic: values.bibliography, complementary: '', recommended: '' },
+      bibliography: {
+        basic: values.bibliography_basic || '',
+        complementary: values.bibliography_complementary || '',
+        recommended: values.bibliography_recommended || ''
+      },
     };
     
     setDocumentNonBlocking(courseRef, courseData, { merge: false });
@@ -159,19 +167,48 @@ export default function NewCoursePage() {
                     </FormItem>
                   )}
                 />
-                 <FormField
-                  control={form.control}
-                  name="bibliography"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bibliografia</FormLabel>
-                       <FormControl>
-                        <Textarea rows={5} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className='space-y-2'>
+                    <h3 className='font-medium text-sm'>Bibliografia</h3>
+                    <FormField
+                    control={form.control}
+                    name="bibliography_basic"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Básica</FormLabel>
+                        <FormControl>
+                            <Textarea rows={5} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <FormField
+                    control={form.control}
+                    name="bibliography_complementary"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Complementar</FormLabel>
+                        <FormControl>
+                            <Textarea rows={5} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <FormField
+                    control={form.control}
+                    name="bibliography_recommended"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Recomendada</FormLabel>
+                        <FormControl>
+                            <Textarea rows={3} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                </div>
           </CardContent>
           <CardFooter>
               <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>

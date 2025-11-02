@@ -9,23 +9,22 @@ import { collection, getDocs, type Firestore, query } from 'firebase/firestore';
 import type { Course } from '@/types';
 
 async function getBackendStats(firestore: Firestore, userId: string): Promise<{ totalTurmas: number; totalAlunos: number; totalAtividades: number }> {
-    const coursesRef = collection(firestore, `professors/${userId}/courses`);
-    const coursesSnapshot = await getDocs(coursesRef);
+    const coursesQuery = query(collection(firestore, `professors/${userId}/courses`));
+    const coursesSnapshot = await getDocs(coursesQuery);
 
     if (coursesSnapshot.empty) {
         return { totalTurmas: 0, totalAlunos: 0, totalAtividades: 0 };
     }
 
-    const classroomPromises: Promise<any>[] = [];
-    const eventPromises: Promise<any>[] = [];
+    const courseIds = coursesSnapshot.docs.map(doc => doc.id);
+    
+    const classroomPromises = courseIds.map(courseId => 
+        getDocs(collection(firestore, `professors/${userId}/courses/${courseId}/classrooms`))
+    );
 
-    coursesSnapshot.docs.forEach(courseDoc => {
-        const classroomsRef = collection(firestore, `professors/${userId}/courses/${courseDoc.id}/classrooms`);
-        classroomPromises.push(getDocs(classroomsRef));
-
-        const eventsRef = collection(firestore, `professors/${userId}/courses/${courseDoc.id}/academicEvents`);
-        eventPromises.push(getDocs(eventsRef));
-    });
+    const eventPromises = courseIds.map(courseId => 
+        getDocs(collection(firestore, `professors/${userId}/courses/${courseId}/academicEvents`))
+    );
 
     const classroomSnapshots = await Promise.all(classroomPromises);
     const eventSnapshots = await Promise.all(eventPromises);
@@ -34,15 +33,14 @@ async function getBackendStats(firestore: Firestore, userId: string): Promise<{ 
     const totalAtividades = eventSnapshots.reduce((sum, snap) => sum + snap.size, 0);
 
     const studentPromises: Promise<any>[] = [];
-    let courseIndex = 0;
-    for (const courseDoc of coursesSnapshot.docs) {
-        const classroomSnapshot = classroomSnapshots[courseIndex++];
-        classroomSnapshot.docs.forEach((classroomDoc: any) => {
-            const studentsRef = collection(firestore, `professors/${userId}/courses/${courseDoc.id}/classrooms/${classroomDoc.id}/classroomStudents`);
+    classroomSnapshots.forEach((classroomSnapshot, index) => {
+        const courseId = courseIds[index];
+        classroomSnapshot.docs.forEach(classroomDoc => {
+            const studentsRef = collection(firestore, `professors/${userId}/courses/${courseId}/classrooms/${classroomDoc.id}/classroomStudents`);
             studentPromises.push(getDocs(studentsRef));
         });
-    }
-
+    });
+    
     const studentSnapshots = await Promise.all(studentPromises);
     const totalAlunos = studentSnapshots.reduce((sum, snap) => sum + snap.size, 0);
 
@@ -76,7 +74,6 @@ export default function DashboardPage() {
                 setIsLoadingStats(false);
             });
     } else if (!user && !coursesLoading) {
-      // If there's no user and we are not loading courses, all stats are 0.
       setIsLoadingStats(false);
       setStats({ totalTurmas: 0, totalAlunos: 0, totalAtividades: 0 });
     }

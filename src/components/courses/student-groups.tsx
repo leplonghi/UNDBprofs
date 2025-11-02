@@ -116,7 +116,6 @@ export function StudentGroups({
       const studentDataMap: Record<string, Student> = {};
       const studentIds = classroomStudents.map(cs => cs.studentId);
       
-      // Fetch student documents in batches of 30 (Firestore 'in' query limit)
       const studentPromises = [];
       for (let i = 0; i < studentIds.length; i += 30) {
           const batchIds = studentIds.slice(i, i + 30);
@@ -251,7 +250,9 @@ export function StudentGroups({
     isGroup: boolean
   ) => {
     const activity = gradeStructure.find(a => a.id === activityId);
-    const score = Math.max(0, Math.min(activity?.maxScore ?? 10, newScore));
+    if (!activity) return;
+    
+    const score = Math.max(0, Math.min(activity.maxScore, newScore));
 
     setLocalGrades((prev) => {
       const newGrades = { ...prev };
@@ -324,14 +325,12 @@ export function StudentGroups({
     if (!user || !firestore) return;
     const batch = writeBatch(firestore);
     
-    // Find students in the group to ungroup them
     const studentsInGroup = classroomStudents.filter(cs => cs.groupId === groupId);
     studentsInGroup.forEach((cs) => {
       const studentRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/classroomStudents/${cs.id}`);
       batch.update(studentRef, { groupId: null });
     });
 
-    // Delete the group document
     const groupRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/groups/${groupId}`);
     batch.delete(groupRef);
 
@@ -957,7 +956,7 @@ export function StudentGroups({
                                                           : prev.filter((id) => id !== csId)
                                                       );
                                                   }}
-                                                  onClick={(e) => e.stopPropagation()} // Prevent accordion from toggling
+                                                  onClick={(e) => e.stopPropagation()}
                                               />
                                               <StudentRowDisplay student={student} />
                                           </div>

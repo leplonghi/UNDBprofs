@@ -22,14 +22,15 @@ export function UserNav() {
   const router = useRouter();
 
   const handleSignOut = async () => {
-    // 1. Delete the server-side session cookie
-    await fetch('/api/session', { method: 'DELETE' });
-
-    // 2. Sign out from the client-side Firebase instance
-    await signOut(auth);
-
-    // 3. Redirect to the login page
-    router.replace('/');
+    try {
+      await fetch('/api/session', { method: 'DELETE' });
+      await signOut(auth);
+      router.replace('/');
+    } catch (error) {
+       console.error("Sign out error:", error);
+       // Fallback for redirect even if something fails
+       router.replace('/');
+    }
   };
 
   return (
