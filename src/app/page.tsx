@@ -38,6 +38,7 @@ export default function LoginPage() {
       const response = await fetch('/api/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
         body: JSON.stringify({ idToken }),
       });
 

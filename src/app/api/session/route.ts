@@ -1,10 +1,12 @@
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuth } from 'firebase-admin/auth';
 import { initAdmin } from '@/firebase/admin';
 
 // This ensures the route is not statically rendered and uses the Node.js runtime.
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 
 export async function POST(req: NextRequest) {
   initAdmin(); // Initialize lazily inside the handler
@@ -20,19 +22,27 @@ export async function POST(req: NextRequest) {
     const expiresIn = 60 * 60 * 24 * 5 * 1000;
 
     const sessionCookie = await auth.createSessionCookie(idToken, { expiresIn });
+    
+    const hdrs = headers();
+    const host = hdrs.get('x-forwarded-host') || hdrs.get('host') || '';
+    const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
+
     const options = {
       name: 'session',
       value: sessionCookie,
       maxAge: expiresIn / 1000, // maxAge is in seconds
       httpOnly: true,
-      secure: true, // Use secure cookies in production
+      secure: !isLocal,
       sameSite: 'lax' as const,
       path: '/',
     };
 
     cookies().set(options);
 
-    return NextResponse.json({ status: 'success' });
+    const res = NextResponse.json({ status: 'ok' });
+    res.headers.set('Cache-Control', 'no-store, max-age=0');
+    return res;
+
   } catch (error) {
     console.error('Session login error:', error);
     return NextResponse.json({ error: 'Failed to create session.' }, { status: 401 });

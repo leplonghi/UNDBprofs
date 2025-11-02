@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const PROTECTED_ROUTES = ['/dashboard', '/disciplinas', '/documentos', '/calendario', '/perfil'];
 
-export async function middleware(req: NextRequest) {
+export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Let static files, API routes, and the login page pass through.
@@ -20,9 +20,6 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check for the session cookie existence.
-  // The actual verification will happen on the server when data is requested
-  // or via an API call, but not in the middleware to keep it fast.
   const sessionCookie = req.cookies.get('session');
 
   if (!sessionCookie) {
