@@ -84,3 +84,12 @@ export interface ExtractedStudent {
     registrationId?: string;
     confidence: number;
 }
+
+export interface AcademicEvent {
+    id: string;
+    professorId: string;
+    courseId: string;
+    name: string;
+    dateTime: string; // ISO 8601 format
+    description: string;
+}

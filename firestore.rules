@@ -13,7 +13,7 @@
  * - /students/{studentId}: Stores student profiles, globally accessible for reads, but create/update are limited to admins or the student themselves.
  * - /professors/{professorId}/courses/{courseId}/classrooms/{classroomId}/classroomStudents/{classRoomStudentId} Represents the association between a classroom and a student.
  * - /professors/{professorId}/documents/{documentId}: Stores professor documents.
- * - /professors/{professorId}/courses/{courseId}/academicEvents/{academicEventId}: Stores academic events for courses.
+ * - /professors/{professorId}/academicEvents/{academicEventId}: Stores academic events for all courses of a professor.
  *
  * Key Security Decisions:
  * - Path-based ownership is enforced for all professor-owned data. The professorId in the path MUST match the authenticated user's UID.
@@ -109,11 +109,7 @@ service cloud.firestore {
      * @principle Enforces document ownership for all operations.
      */
     match /professors/{professorId}/courses/{courseId} {
-      allow get: if isOwner(professorId);
-      allow list: if isOwner(professorId);
-      allow create: if isOwner(professorId) && request.resource.data.professorId == professorId;
-      allow update: if isExistingOwner(professorId) && request.resource.data.professorId == resource.data.professorId; //Enforce immutability of professorId
-      allow delete: if isExistingOwner(professorId);
+      allow get, list, create, update, delete: if isOwner(professorId);
 
       // Cascade delete is handled by cloud functions, but rules on subcollections are still needed.
       match /classrooms/{classroomId} {
@@ -126,11 +122,17 @@ service cloud.firestore {
         match /groups/{groupId} {
            allow get, list, create, update, delete: if isOwner(professorId);
         }
-
-        match /academicEvents/{academicEventId} {
-           allow get, list, create, update, delete: if isOwner(professorId);
-        }
       }
+    }
+    
+     /**
+      * @description
+      * Academic Events collection for a professor. The professor can manage events under their ID.
+      * @path /professors/{professorId}/academicEvents/{academicEventId}
+      * @principle Enforces document ownership for all operations. Allows listing for the owner.
+      */
+    match /professors/{professorId}/academicEvents/{academicEventId} {
+        allow get, list, create, update, delete: if isOwner(professorId);
     }
 
     /**
@@ -223,29 +225,6 @@ service cloud.firestore {
      * @principle Enforces document ownership for all operations.
      */
     match /professors/{professorId}/documents/{documentId} {
-      allow get: if isOwner(professorId);
-      allow list: if isOwner(professorId);
-      allow create: if isOwner(professorId) && request.resource.data.professorId == professorId;
-      allow update: if isExistingOwner(professorId) && request.resource.data.professorId == resource.data.professorId; //Enforce immutability of professorId
-      allow delete: if isExistingOwner(professorId);
-    }
-
-    /**
-     * @description
-     * Academic Events subcollection: Academic events owned by a specific professor for a specific course.
-     * The professor can read/write events under their ID and associated course ID.
-     * @path /professors/{professorId}/courses/{courseId}/academicEvents/{academicEventId}
-     * @allow (create) - A professor with UID 'user_abc' can create an event under their course.
-     * @deny (create) - A professor with UID 'user_abc' cannot create an event under another professor's course.
-     * @allow (get) - A professor with UID 'user_abc' can read an event under their course.
-     * @deny (get) - A professor with UID 'user_abc' cannot read an event under another professor's course.
-     * @allow (update) - A professor with UID 'user_abc' can update an event under their course.
-     * @deny (update) - A professor with UID 'user_abc' cannot update an event under another professor's course.
-     * @allow (delete) - A professor with UID 'user_abc' can delete an event under their course.
-     * @deny (delete) - A professor with UID 'user_abc' cannot delete an event under another professor's course.
-     * @principle Enforces document ownership for all operations.
-     */
-    match /professors/{professorId}/courses/{courseId}/academicEvents/{academicEventId} {
       allow get: if isOwner(professorId);
       allow list: if isOwner(professorId);
       allow create: if isOwner(professorId) && request.resource.data.professorId == professorId;

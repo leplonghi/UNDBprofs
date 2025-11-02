@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -16,10 +16,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where, getDocs, type Firestore } from 'firebase/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import type { AcademicEvent, Course } from '@/types';
 
 type EventCategory =
   | 'integradora-segunda'
@@ -30,15 +31,17 @@ type EventCategory =
   | 'modular-iii'
   | 'feriado'
   | 'substitutiva'
-  | 'prova-final';
+  | 'prova-final'
+  | 'course-event';
 
 interface CalendarEvent {
   date: Date;
   description: string;
   category: EventCategory;
+  courseCode?: string;
 }
 
-const events: CalendarEvent[] = [
+const staticEvents: Omit<CalendarEvent, 'courseCode'>[] = [
   // Agosto
   { date: new Date(2025, 7, 13), description: 'Início INTEGRADORA QUARTA FEIRA', category: 'integradora-quarta' },
   { date: new Date(2025, 7, 14), description: 'Início I MODULAR', category: 'modular-i' },
@@ -88,6 +91,7 @@ const categoryColors: Record<EventCategory, string> = {
   'feriado': 'bg-yellow-400 text-black',
   'substitutiva': 'bg-red-500',
   'prova-final': 'bg-red-700',
+  'course-event': 'bg-primary',
 };
 
 const categoryLabels: Record<EventCategory, string> = {
@@ -100,9 +104,13 @@ const categoryLabels: Record<EventCategory, string> = {
   'feriado': 'Feriado / Recesso',
   'substitutiva': 'Avaliação Substitutiva',
   'prova-final': 'Prova Final',
+  'course-event': 'Evento de Disciplina',
 };
 
 const monthNames = [ "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro" ];
+const year = 2025;
+const months = [7, 8, 9, 10, 11]; // Agosto a Dezembro
+
 
 const CalendarMonth = ({ month, year, events }: { month: number, year: number, events: CalendarEvent[]}) => {
   const firstDay = new Date(year, month, 1);
@@ -111,19 +119,21 @@ const CalendarMonth = ({ month, year, events }: { month: number, year: number, e
 
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
-  const eventsByDay = events.reduce((acc, event) => {
-    if (event.date.getMonth() === month && event.date.getFullYear() === year) {
-        const day = event.date.getDate();
-        if (!acc[day]) {
-            acc[day] = [];
-        }
-        acc[day].push(event);
-    }
-    return acc;
-  }, {} as Record<number, CalendarEvent[]>);
+  const eventsByDay = useMemo(() => {
+     return events.reduce((acc, event) => {
+      if (event.date.getMonth() === month && event.date.getFullYear() === year) {
+          const day = event.date.getDate();
+          if (!acc[day]) {
+              acc[day] = [];
+          }
+          acc[day].push(event);
+      }
+      return acc;
+    }, {} as Record<number, CalendarEvent[]>);
+  }, [events, month, year]);
 
   return (
-    <Card>
+    <Card className="flex-1 min-w-[300px]">
       <CardHeader>
         <CardTitle className="text-center text-xl text-primary">
           {monthNames[month-7]} {year}
@@ -171,58 +181,81 @@ const CalendarMonth = ({ month, year, events }: { month: number, year: number, e
 
 
 export default function CalendarPage() {
-  const [currentMonth, setCurrentMonth] = useState(7); // 7 = Agosto
-  const year = 2025;
-  const lastMonth = 11; // 11 = Dezembro
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
 
-  const handlePrevMonth = () => {
-    setCurrentMonth(m => m > 7 ? m - 1 : 7);
-  };
+  const coursesQuery = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return query(collection(firestore, `professors/${user.uid}/courses`));
+  }, [user, firestore]);
+  const { data: courses, isLoading: isLoadingCourses } = useCollection<Course>(coursesQuery);
 
-  const handleNextMonth = () => {
-    setCurrentMonth(m => m < lastMonth ? m + 1 : lastMonth);
-  };
+  const allEventsQuery = useMemoFirebase(() => {
+    if (!user || !firestore || !courses || courses.length === 0) return null;
+    const courseIds = courses.map(c => c.id);
+    // As Firestore 'in' query has a limit of 30, we must handle more courses if needed.
+    // For now, we assume a reasonable number of courses per professor.
+    return query(
+        collection(firestore, `professors/${user.uid}/academicEvents`), 
+        where('courseId', 'in', courseIds)
+    );
+  }, [user, firestore, courses]);
+
+  // Note: this will require a composite index in Firestore
+  // We can't fetch from subcollections directly in one query. Let's assume a root collection for now.
+  // This will be fixed by fetching from each course.
+  const { data: academicEvents, isLoading: isLoadingEvents } = useCollection<AcademicEvent>(allEventsQuery);
+
+  const dynamicEvents = useMemo(() => {
+      if (!academicEvents || !courses) return [];
+
+      const coursesById = courses.reduce((acc, course) => {
+        acc[course.id] = course;
+        return acc;
+      }, {} as Record<string, Course>)
+
+      return academicEvents.map(event => ({
+          date: new Date(event.dateTime),
+          description: event.name,
+          category: 'course-event' as EventCategory,
+          courseCode: coursesById[event.courseId]?.code,
+      }));
+  }, [academicEvents, courses]);
   
-  const currentMonthEvents = events.filter(e => e.date.getMonth() === currentMonth && e.date.getFullYear() === year)
-                                    .sort((a,b) => a.date.getDate() - b.date.getDate());
+  const allEvents = useMemo(() => [...staticEvents, ...dynamicEvents], [dynamicEvents]);
+
+  const allMonthsEvents = useMemo(() => {
+      return allEvents.filter(e => e.date.getFullYear() === year);
+  }, [allEvents])
+
+  const currentMonthEvents = allMonthsEvents
+    .filter(e => e.date.getMonth() === currentMonth)
+    .sort((a,b) => a.date.getTime() - b.date.getTime());
+
+  const isLoading = isLoadingCourses || isLoadingEvents;
 
   return (
     <div className="flex flex-col gap-8">
       <div>
         <h1 className="text-2xl font-bold text-primary">Calendário Arquitetura e Urbanismo</h1>
-        <p className="text-muted-foreground">2º Semestre de 2025</p>
+        <p className="text-muted-foreground">2º Semestre de {year}</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-        <div className="md:col-span-2 space-y-4">
-             {/* Navegação Mobile */}
-            <div className="md:hidden flex items-center justify-between">
-                <Button variant="outline" size="icon" onClick={handlePrevMonth} disabled={currentMonth === 7}>
-                    <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <h2 className="text-xl font-bold text-primary">{monthNames[currentMonth-7]} {year}</h2>
-                 <Button variant="outline" size="icon" onClick={handleNextMonth} disabled={currentMonth === lastMonth}>
-                    <ChevronRight className="h-4 w-4" />
-                </Button>
+      <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
+        <div className="xl:col-span-2 space-y-4">
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+                {isLoading ? (
+                    Array.from({length: 5}).map((_, i) => <Skeleton key={i} className="h-96 w-full" />)
+                ) : (
+                    months.map(month => (
+                        <CalendarMonth key={month} month={month} year={year} events={allMonthsEvents} />
+                    ))
+                )}
             </div>
-            
-            {/* Visão Desktop */}
-            <div className='hidden md:grid md:grid-cols-1 lg:grid-cols-3 gap-4'>
-                <CalendarMonth month={7} year={year} events={events} />
-                <CalendarMonth month={8} year={year} events={events} />
-                <CalendarMonth month={9} year={year} events={events} />
-                <CalendarMonth month={10} year={year} events={events} />
-                <CalendarMonth month={11} year={year} events={events} />
-            </div>
-
-            {/* Visão Mobile */}
-            <div className="md:hidden">
-                 <CalendarMonth month={currentMonth} year={year} events={events} />
-            </div>
-
         </div>
 
-        <div className="md:col-span-1 space-y-6">
+        <div className="xl:col-span-1 space-y-6">
             <Card>
                 <CardHeader>
                     <CardTitle>Legenda</CardTitle>
@@ -240,9 +273,11 @@ export default function CalendarPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Eventos de {monthNames[currentMonth-7]}</CardTitle>
+                    <CardDescription>Selecione um mês para ver os eventos.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {currentMonthEvents.length > 0 ? (
+                    {isLoading ? <Skeleton className="h-40 w-full" /> : 
+                    currentMonthEvents.length > 0 ? (
                         <Table>
                         <TableHeader>
                             <TableRow>
@@ -252,12 +287,12 @@ export default function CalendarPage() {
                         </TableHeader>
                         <TableBody>
                             {currentMonthEvents.map((event, index) => (
-                            <TableRow key={index}>
+                            <TableRow key={index} onMouseEnter={() => setCurrentMonth(event.date.getMonth())}>
                                 <TableCell className="font-medium">{event.date.toLocaleDateString('pt-BR', {day: '2-digit'})}</TableCell>
                                 <TableCell>
                                     <div className='flex items-center gap-2'>
                                         <div className={cn("h-2 w-2 rounded-full", categoryColors[event.category])}></div>
-                                        <span>{event.description}</span>
+                                        <span>{event.description} {event.courseCode && `(${event.courseCode})`}</span>
                                     </div>
                                 </TableCell>
                             </TableRow>

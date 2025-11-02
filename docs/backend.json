@@ -286,6 +286,10 @@
           "type": "string",
           "description": "Unique identifier for the AcademicEvent entity."
         },
+        "professorId": {
+          "type": "string",
+          "description": "Reference to Professor. (Relationship: Professor 1:N AcademicEvent)"
+        },
         "courseId": {
           "type": "string",
           "description": "Reference to Course. (Relationship: Course 1:N AcademicEvent). Can be null if the event is not associated with a specific course."
@@ -306,6 +310,8 @@
       },
       "required": [
         "id",
+        "professorId",
+        "courseId",
         "name",
         "dateTime",
         "description"
@@ -474,21 +480,17 @@
         }
       },
       {
-        "path": "/professors/{professorId}/courses/{courseId}/academicEvents/{academicEventId}",
+        "path": "/professors/{professorId}/academicEvents/{academicEventId}",
         "definition": {
           "entityName": "AcademicEvent",
           "schema": {
             "$ref": "#/backend/entities/AcademicEvent"
           },
-          "description": "Stores academic events associated with a specific course. Includes denormalized 'professorId' and 'courseId' for authorization independence.",
+          "description": "Stores academic events associated with a specific professor. Includes denormalized 'professorId' for authorization independence.",
           "params": [
             {
               "name": "professorId",
               "description": "The unique identifier of the professor."
-            },
-            {
-              "name": "courseId",
-              "description": "The unique identifier of the course."
             },
             {
               "name": "academicEventId",
