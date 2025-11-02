@@ -51,6 +51,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Label } from '../ui/label';
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 
 function StudentRowDisplay({ student }: { student: Student }) {
   if (!student) return null;
@@ -91,6 +92,7 @@ export function StudentGroups({
   const [allStudentsData, setAllStudentsData] = useState<Record<string, Student>>({});
   const [isStudentDataLoading, setIsStudentDataLoading] = useState(true);
   const [filter, setFilter] = useState('');
+  const [sortBy, setSortBy] = useState<'groups' | 'alphabetical'>('groups');
 
   const groupsQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -114,12 +116,14 @@ export function StudentGroups({
       const studentDataMap: Record<string, Student> = {};
       const studentIds = classroomStudents.map(cs => cs.studentId);
       
-      // Fetch student documents in batches of 10 (Firestore 'in' query limit)
+      // Fetch student documents in batches of 30 (Firestore 'in' query limit)
       const studentPromises = [];
-      for (let i = 0; i < studentIds.length; i += 10) {
-          const batchIds = studentIds.slice(i, i + 10);
-          const studentQuery = firestoreQuery(collection(firestore, 'students'), where('id', 'in', batchIds));
-          studentPromises.push(getDocs(studentQuery));
+      for (let i = 0; i < studentIds.length; i += 30) {
+          const batchIds = studentIds.slice(i, i + 30);
+          if (batchIds.length > 0) {
+            const studentQuery = firestoreQuery(collection(firestore, 'students'), where('id', 'in', batchIds));
+            studentPromises.push(getDocs(studentQuery));
+          }
       }
 
       const studentSnapshots = await Promise.all(studentPromises);
@@ -186,6 +190,15 @@ export function StudentGroups({
     return { studentGroups, ungroupedStudents };
 
   }, [groups, classroomStudents, allStudentsData]);
+  
+  const alphabeticallySortedStudents = useMemo(() => {
+    if (!classroomStudents || Object.keys(allStudentsData).length === 0) return [];
+    return [...classroomStudents].sort((a, b) => {
+        const nameA = allStudentsData[a.id]?.name || '';
+        const nameB = allStudentsData[b.id]?.name || '';
+        return nameA.localeCompare(nameB);
+    }).map(cs => cs.id);
+  }, [classroomStudents, allStudentsData]);
 
 
   const debouncedSaveChanges = useCallback(
@@ -237,6 +250,9 @@ export function StudentGroups({
     newScore: number,
     isGroup: boolean
   ) => {
+    const activity = gradeStructure.find(a => a.id === activityId);
+    const score = Math.max(0, Math.min(activity?.maxScore ?? 10, newScore));
+
     setLocalGrades((prev) => {
       const newGrades = { ...prev };
       
@@ -251,9 +267,6 @@ export function StudentGroups({
         const gradeIndex = studentGrades.findIndex(
           (g) => g.activityId === activityId
         );
-        
-        const activity = gradeStructure.find(a => a.id === activityId);
-        const score = Math.max(0, Math.min(activity?.maxScore ?? 10, newScore));
 
         if (gradeIndex > -1) {
           studentGrades[gradeIndex] = {
@@ -463,23 +476,28 @@ export function StudentGroups({
       toast({ title: 'Exportação PDF iniciada.' });
   };
 
-  const filteredGroups = useMemo(() => {
-    if (!filter) return studentGroups;
+  const filteredData = useMemo(() => {
     const lowerCaseFilter = filter.toLowerCase();
-    return studentGroups.filter((group) => {
-      return group.members.some((csId) =>
-        allStudentsData[csId]?.name.toLowerCase().includes(lowerCaseFilter)
-      ) || group.name.toLowerCase().includes(lowerCaseFilter)
-    });
-  }, [filter, studentGroups, allStudentsData]);
-
-  const filteredUngroupedStudents = useMemo(() => {
-    if (!filter) return ungroupedStudents;
-    const lowerCaseFilter = filter.toLowerCase();
-    return ungroupedStudents.filter((csId) =>
-      allStudentsData[csId]?.name.toLowerCase().includes(lowerCaseFilter)
+    
+    if (sortBy === 'alphabetical') {
+        return alphabeticallySortedStudents.filter(csId => 
+            allStudentsData[csId]?.name.toLowerCase().includes(lowerCaseFilter)
+        );
+    }
+    
+    // Sort by groups
+    const filteredGroups = studentGroups.filter(group => 
+        group.name.toLowerCase().includes(lowerCaseFilter) ||
+        group.members.some(csId => allStudentsData[csId]?.name.toLowerCase().includes(lowerCaseFilter))
     );
-  }, [filter, ungroupedStudents, allStudentsData]);
+
+    const filteredUngrouped = ungroupedStudents.filter(csId => 
+        allStudentsData[csId]?.name.toLowerCase().includes(lowerCaseFilter)
+    );
+
+    return { groups: filteredGroups, ungrouped: filteredUngrouped };
+
+  }, [filter, sortBy, studentGroups, ungroupedStudents, alphabeticallySortedStudents, allStudentsData]);
 
     const renderGradeInputs = (studentOrGroupId: string, isGroup: boolean) => {
     const studentIdForGrades = isGroup 
@@ -507,11 +525,14 @@ export function StudentGroups({
               value={getGrade(activity.id)}
               onChange={(e) => {
                 const newScore = parseFloat(e.target.value) || 0;
+                handleGradeChange(studentOrGroupId, activity.id, newScore, isGroup)
+              }}
+              onBlur={(e) => {
+                const newScore = parseFloat(e.target.value) || 0;
                 const score = Math.max(0, Math.min(activity.maxScore, newScore));
-                if (newScore !== score) {
+                 if (newScore !== score) {
                     e.target.value = String(score);
                 }
-                handleGradeChange(studentOrGroupId, activity.id, score, isGroup)
               }}
               className="w-full"
               disabled={isSaving}
@@ -573,7 +594,218 @@ export function StudentGroups({
     );
   }
   
-  const noStudentsAfterFilter = filteredGroups.length === 0 && filteredUngroupedStudents.length === 0;
+  const noStudentsAfterFilter = Array.isArray(filteredData) ? filteredData.length === 0 : (filteredData.groups.length === 0 && filteredData.ungrouped.length === 0);
+
+  const renderGroupView = () => (
+     <>
+        {(filteredData as { groups: Group[], ungrouped: string[] }).groups.map((group) => {
+            const firstStudentId = group.members[0];
+            if (!firstStudentId) return null;
+            const grades = localGrades[firstStudentId] || [];
+            const { n1Total, n2Total, finalGrade } = calculateTotals(grades);
+
+            return (
+            <React.Fragment key={`group-desktop-${group.id}`}>
+                <TableRow className="bg-muted/80 hover:bg-muted/80">
+                    <TableCell className="sticky left-0 bg-inherit z-10 font-semibold">
+                       <div className="flex items-center justify-between">
+                          <Input 
+                            defaultValue={group.name}
+                            onChange={(e) => handleGroupNameChange(group.id, e.target.value)}
+                            className="h-8 border-0 bg-transparent font-semibold p-0"
+                          />
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteGroup(group.id)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                    </TableCell>
+                    {gradeStructure.map((activity) => (
+                        <TableCell key={activity.id}>
+                            <Input
+                              type="number"
+                              step="0.5"
+                              min="0"
+                              max={activity.maxScore}
+                              value={grades.find(g => g.activityId === activity.id)?.score ?? 0}
+                              onChange={(e) => {
+                                const newScore = parseFloat(e.target.value) || 0;
+                                handleGradeChange(group.id, activity.id, newScore, true);
+                              }}
+                              onBlur={(e) => {
+                                const newScore = parseFloat(e.target.value) || 0;
+                                const score = Math.max(0, Math.min(activity.maxScore, newScore));
+                                if (newScore !== score) {
+                                    e.target.value = String(score);
+                                }
+                              }}
+                              className="w-24 mx-auto text-center"
+                              disabled={isSaving}
+                            />
+                        </TableCell>
+                    ))}
+                    <TableCell className="font-semibold text-center">{n1Total.toFixed(1)}</TableCell>
+                    <TableCell className="font-semibold text-center">{n2Total.toFixed(1)}</TableCell>
+                    <TableCell className="font-bold text-primary text-center">{finalGrade.toFixed(1)}</TableCell>
+                </TableRow>
+                {group.members.map(csId => {
+                   const student = allStudentsData[csId];
+                   const studentGrades = localGrades[csId] || [];
+                   const { n1Total, n2Total, finalGrade } = calculateTotals(studentGrades);
+                   return(
+                    <TableRow key={csId} className="border-l-4 border-primary/50 bg-background hover:bg-muted/30">
+                       <TableCell className="sticky left-0 bg-inherit z-10 pl-4">
+                            <div className="flex items-center justify-between">
+                              <StudentRowDisplay student={student} />
+                              <Button variant="ghost" size="icon" className="h-6 w-6 opacity-50 hover:opacity-100" onClick={() => handleRemoveStudentFromGroup(csId)}>
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                       </TableCell>
+                       {gradeStructure.map((activity) => (
+                            <TableCell key={activity.id} className="text-center text-muted-foreground">
+                                {studentGrades.find(g => g.activityId === activity.id)?.score.toFixed(1) ?? '0.0'}
+                            </TableCell>
+                        ))}
+                       <TableCell className="font-semibold text-center text-muted-foreground">{n1Total.toFixed(1)}</TableCell>
+                       <TableCell className="font-semibold text-center text-muted-foreground">{n2Total.toFixed(1)}</TableCell>
+                       <TableCell className="font-bold text-primary/80 text-center">{finalGrade.toFixed(1)}</TableCell>
+                    </TableRow>
+                   )
+                })}
+                <TableRow>
+                  <TableCell className="sticky left-0 bg-inherit z-10 pl-8 py-1">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="sm" className="h-7">
+                          <PlusCircle className="mr-2 h-3 w-3" /> Adicionar Aluno
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="p-0">
+                        <div className="flex flex-col max-h-60 overflow-y-auto">
+                          {ungroupedStudents.length > 0 ? ungroupedStudents.map(csId => (
+                            <button 
+                              key={csId} 
+                              onClick={() => handleAddStudentToGroup(group.id, csId)}
+                              className="text-left text-sm p-2 hover:bg-accent"
+                            >
+                              {allStudentsData[csId]?.name || 'Aluno sem nome'}
+                            </button>
+                          )) : <p className="p-2 text-sm text-muted-foreground">Nenhum aluno disponível.</p>}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </TableCell>
+                  <TableCell colSpan={gradeStructure.length + 3}></TableCell>
+                </TableRow>
+            </React.Fragment>
+            )
+        })}
+        {(filteredData as { groups: Group[], ungrouped: string[] }).ungrouped.map((csId) => {
+             const student = allStudentsData[csId];
+             if (!student) return null;
+             const grades = localGrades[csId] || [];
+             const { n1Total, n2Total, finalGrade } = calculateTotals(grades);
+            return (
+                <TableRow key={csId}>
+                    <TableCell className="sticky left-0 bg-background z-10 w-[250px]">
+                        <div className="flex items-center gap-2">
+                            <Checkbox
+                            checked={selectedStudents.includes(csId)}
+                            onCheckedChange={(checked) => {
+                                setSelectedStudents((prev) =>
+                                checked
+                                    ? [...prev, csId]
+                                    : prev.filter((id) => id !== csId)
+                                );
+                            }}
+                            />
+                            <StudentRowDisplay student={student} />
+                        </div>
+                    </TableCell>
+                     {gradeStructure.map((activity) => (
+                        <TableCell key={activity.id}>
+                            <Input
+                              type="number"
+                              step="0.5"
+                              min="0"
+                              max={activity.maxScore}
+                              value={grades.find(g => g.activityId === activity.id)?.score ?? 0}
+                              onChange={(e) => handleGradeChange(csId, activity.id, parseFloat(e.target.value) || 0, false)}
+                               onBlur={(e) => {
+                                const newScore = parseFloat(e.target.value) || 0;
+                                const score = Math.max(0, Math.min(activity.maxScore, newScore));
+                                if (newScore !== score) {
+                                    e.target.value = String(score);
+                                }
+                              }}
+                              className="w-24 mx-auto text-center"
+                              disabled={isSaving}
+                            />
+                        </TableCell>
+                    ))}
+                    <TableCell className="font-semibold text-center">{n1Total.toFixed(1)}</TableCell>
+                    <TableCell className="font-semibold text-center">{n2Total.toFixed(1)}</TableCell>
+                    <TableCell className="font-bold text-primary text-center">{finalGrade.toFixed(1)}</TableCell>
+                </TableRow>
+            )
+        })}
+    </>
+  );
+
+  const renderAlphabeticalView = () => (
+    <>
+      {(filteredData as string[]).map((csId) => {
+        const student = allStudentsData[csId];
+        if (!student) return null;
+        const grades = localGrades[csId] || [];
+        const { n1Total, n2Total, finalGrade } = calculateTotals(grades);
+        return (
+          <TableRow key={csId}>
+            <TableCell className="sticky left-0 bg-background z-10 w-[250px]">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={selectedStudents.includes(csId)}
+                  onCheckedChange={(checked) => {
+                    setSelectedStudents((prev) =>
+                      checked
+                        ? [...prev, csId]
+                        : prev.filter((id) => id !== csId)
+                    );
+                  }}
+                />
+                <StudentRowDisplay student={student} />
+              </div>
+            </TableCell>
+            {gradeStructure.map((activity) => (
+              <TableCell key={activity.id}>
+                <Input
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  max={activity.maxScore}
+                  value={grades.find(g => g.activityId === activity.id)?.score ?? 0}
+                  onChange={(e) => handleGradeChange(csId, activity.id, parseFloat(e.target.value) || 0, false)}
+                  onBlur={(e) => {
+                    const newScore = parseFloat(e.target.value) || 0;
+                    const score = Math.max(0, Math.min(activity.maxScore, newScore));
+                    if (newScore !== score) {
+                        e.target.value = String(score);
+                    }
+                  }}
+                  className="w-24 mx-auto text-center"
+                  disabled={isSaving}
+                />
+              </TableCell>
+            ))}
+            <TableCell className="font-semibold text-center">{n1Total.toFixed(1)}</TableCell>
+            <TableCell className="font-semibold text-center">{n2Total.toFixed(1)}</TableCell>
+            <TableCell className="font-bold text-primary text-center">{finalGrade.toFixed(1)}</TableCell>
+          </TableRow>
+        );
+      })}
+    </>
+  );
+
 
   const renderDesktopView = () => (
      <div className="w-full overflow-x-auto rounded-md border">
@@ -613,142 +845,7 @@ export function StudentGroups({
                     </TableCell>
                 </TableRow>
             ) : (
-              <>
-                {filteredGroups.map((group) => {
-                    const firstStudentId = group.members[0];
-                    if (!firstStudentId) return null;
-                    const grades = localGrades[firstStudentId] || [];
-                    const { n1Total, n2Total, finalGrade } = calculateTotals(grades);
-
-                    return (
-                    <React.Fragment key={`group-desktop-${group.id}`}>
-                        <TableRow className="bg-muted/80 hover:bg-muted/80">
-                            <TableCell className="sticky left-0 bg-inherit z-10 font-semibold">
-                               <div className="flex items-center justify-between">
-                                  <Input 
-                                    defaultValue={group.name}
-                                    onChange={(e) => handleGroupNameChange(group.id, e.target.value)}
-                                    className="h-8 border-0 bg-transparent font-semibold p-0"
-                                  />
-                                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteGroup(group.id)}>
-                                      <Trash2 className="h-4 w-4 text-destructive" />
-                                  </Button>
-                                </div>
-                            </TableCell>
-                            {gradeStructure.map((activity) => (
-                                <TableCell key={activity.id}>
-                                    <Input
-                                      type="number"
-                                      step="0.5"
-                                      min="0"
-                                      max={activity.maxScore}
-                                      value={grades.find(g => g.activityId === activity.id)?.score ?? 0}
-                                      onChange={(e) => handleGradeChange(group.id, activity.id, parseFloat(e.target.value) || 0, true)}
-                                      className="w-24 mx-auto text-center"
-                                      disabled={isSaving}
-                                    />
-                                </TableCell>
-                            ))}
-                            <TableCell className="font-semibold text-center">{n1Total.toFixed(1)}</TableCell>
-                            <TableCell className="font-semibold text-center">{n2Total.toFixed(1)}</TableCell>
-                            <TableCell className="font-bold text-primary text-center">{finalGrade.toFixed(1)}</TableCell>
-                        </TableRow>
-                        {group.members.map(csId => {
-                           const student = allStudentsData[csId];
-                           const studentGrades = localGrades[csId] || [];
-                           const { n1Total, n2Total, finalGrade } = calculateTotals(studentGrades);
-                           return(
-                            <TableRow key={csId} className="border-l-4 border-primary/50 bg-background hover:bg-muted/30">
-                               <TableCell className="sticky left-0 bg-inherit z-10 pl-4">
-                                    <div className="flex items-center justify-between">
-                                      <StudentRowDisplay student={student} />
-                                      <Button variant="ghost" size="icon" className="h-6 w-6 opacity-50 hover:opacity-100" onClick={() => handleRemoveStudentFromGroup(csId)}>
-                                        <X className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                               </TableCell>
-                               {gradeStructure.map((activity) => (
-                                    <TableCell key={activity.id} className="text-center text-muted-foreground">
-                                        {studentGrades.find(g => g.activityId === activity.id)?.score.toFixed(1) ?? '0.0'}
-                                    </TableCell>
-                                ))}
-                               <TableCell className="font-semibold text-center text-muted-foreground">{n1Total.toFixed(1)}</TableCell>
-                               <TableCell className="font-semibold text-center text-muted-foreground">{n2Total.toFixed(1)}</TableCell>
-                               <TableCell className="font-bold text-primary/80 text-center">{finalGrade.toFixed(1)}</TableCell>
-                            </TableRow>
-                           )
-                        })}
-                        <TableRow>
-                          <TableCell className="sticky left-0 bg-inherit z-10 pl-8 py-1">
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button variant="outline" size="sm" className="h-7">
-                                  <PlusCircle className="mr-2 h-3 w-3" /> Adicionar Aluno
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="p-0">
-                                <div className="flex flex-col max-h-60 overflow-y-auto">
-                                  {ungroupedStudents.length > 0 ? ungroupedStudents.map(csId => (
-                                    <button 
-                                      key={csId} 
-                                      onClick={() => handleAddStudentToGroup(group.id, csId)}
-                                      className="text-left text-sm p-2 hover:bg-accent"
-                                    >
-                                      {allStudentsData[csId]?.name || 'Aluno sem nome'}
-                                    </button>
-                                  )) : <p className="p-2 text-sm text-muted-foreground">Nenhum aluno disponível.</p>}
-                                </div>
-                              </PopoverContent>
-                            </Popover>
-                          </TableCell>
-                          <TableCell colSpan={gradeStructure.length + 3}></TableCell>
-                        </TableRow>
-                    </React.Fragment>
-                    )
-                })}
-                {filteredUngroupedStudents.map((csId) => {
-                     const student = allStudentsData[csId];
-                     if (!student) return null;
-                     const grades = localGrades[csId] || [];
-                     const { n1Total, n2Total, finalGrade } = calculateTotals(grades);
-                    return (
-                        <TableRow key={csId}>
-                            <TableCell className="sticky left-0 bg-background z-10 w-[250px]">
-                                <div className="flex items-center gap-2">
-                                    <Checkbox
-                                    checked={selectedStudents.includes(csId)}
-                                    onCheckedChange={(checked) => {
-                                        setSelectedStudents((prev) =>
-                                        checked
-                                            ? [...prev, csId]
-                                            : prev.filter((id) => id !== csId)
-                                        );
-                                    }}
-                                    />
-                                    <StudentRowDisplay student={student} />
-                                </div>
-                            </TableCell>
-                             {gradeStructure.map((activity) => (
-                                <TableCell key={activity.id}>
-                                    <Input
-                                      type="number"
-                                      step="0.5"
-                                      min="0"
-                                      max={activity.maxScore}
-                                      value={grades.find(g => g.activityId === activity.id)?.score ?? 0}
-                                      onChange={(e) => handleGradeChange(csId, activity.id, parseFloat(e.target.value) || 0, false)}
-                                      className="w-24 mx-auto text-center"
-                                      disabled={isSaving}
-                                    />
-                                </TableCell>
-                            ))}
-                            <TableCell className="font-semibold text-center">{n1Total.toFixed(1)}</TableCell>
-                            <TableCell className="font-semibold text-center">{n2Total.toFixed(1)}</TableCell>
-                            <TableCell className="font-bold text-primary text-center">{finalGrade.toFixed(1)}</TableCell>
-                        </TableRow>
-                    )
-                })}
-              </>
+              sortBy === 'groups' ? renderGroupView() : renderAlphabeticalView()
             )}
           </TableBody>
         </Table>
@@ -767,15 +864,14 @@ export function StudentGroups({
             </div>
         ) : (
             <>
-              {/* Mobile Groups */}
-              {filteredGroups.length > 0 && (
+              {sortBy === 'groups' && (filteredData as { groups: Group[] }).groups.length > 0 && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Grupos</CardTitle>
                   </CardHeader>
                   <CardContent>
                      <Accordion type="multiple" className="w-full">
-                       {filteredGroups.map((group) => {
+                       {(filteredData as { groups: Group[] }).groups.map((group) => {
                          const firstStudentId = group.members[0];
                          if (!firstStudentId) return null;
                          return (
@@ -838,47 +934,44 @@ export function StudentGroups({
                 </Card>
               )}
 
-             {/* Mobile Ungrouped Students */}
-              {filteredUngroupedStudents.length > 0 && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Alunos Individuais</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <Accordion type="multiple" className="w-full">
-                        {filteredUngroupedStudents.map((csId) => {
-                            const student = allStudentsData[csId];
-                            if (!student) return null;
-                            return (
-                                <AccordionItem value={csId} key={csId}>
-                                    <AccordionTrigger>
-                                        <div className="flex items-center gap-2">
-                                            <Checkbox
-                                                className="mr-2"
-                                                checked={selectedStudents.includes(csId)}
-                                                onCheckedChange={(checked) => {
-                                                    setSelectedStudents((prev) =>
-                                                    checked
-                                                        ? [...prev, csId]
-                                                        : prev.filter((id) => id !== csId)
-                                                    );
-                                                }}
-                                                onClick={(e) => e.stopPropagation()} // Prevent accordion from toggling
-                                            />
-                                            <StudentRowDisplay student={student} />
-                                        </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent>
-                                        {renderGradeInputs(csId, false)}
-                                        {renderTotals(csId)}
-                                    </AccordionContent>
-                                </AccordionItem>
-                            )
-                        })}
-                        </Accordion>
-                    </CardContent>
-                </Card>
-              )}
+              <Card>
+                  <CardHeader>
+                      <CardTitle>{sortBy === 'groups' ? 'Alunos Individuais' : 'Todos os Alunos'}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                      <Accordion type="multiple" className="w-full">
+                          {(sortBy === 'groups' ? (filteredData as {ungrouped: string[]}).ungrouped : (filteredData as string[])).map((csId) => {
+                              const student = allStudentsData[csId];
+                              if (!student) return null;
+                              return (
+                                  <AccordionItem value={csId} key={csId}>
+                                      <AccordionTrigger>
+                                          <div className="flex items-center gap-2">
+                                              <Checkbox
+                                                  className="mr-2"
+                                                  checked={selectedStudents.includes(csId)}
+                                                  onCheckedChange={(checked) => {
+                                                      setSelectedStudents((prev) =>
+                                                      checked
+                                                          ? [...prev, csId]
+                                                          : prev.filter((id) => id !== csId)
+                                                      );
+                                                  }}
+                                                  onClick={(e) => e.stopPropagation()} // Prevent accordion from toggling
+                                              />
+                                              <StudentRowDisplay student={student} />
+                                          </div>
+                                      </AccordionTrigger>
+                                      <AccordionContent>
+                                          {renderGradeInputs(csId, false)}
+                                          {renderTotals(csId)}
+                                      </AccordionContent>
+                                  </AccordionItem>
+                              )
+                          })}
+                      </Accordion>
+                  </CardContent>
+              </Card>
             </>
         )}
     </div>
@@ -891,7 +984,7 @@ export function StudentGroups({
             <div className="space-y-1 flex-grow">
               <h3 className="text-lg font-semibold">Lançamento de Notas</h3>
               <p className="text-sm text-muted-foreground">
-                Selecione alunos individuais e clique em "Agrupar" para criar um novo grupo.
+                Selecione alunos e clique em "Agrupar" para criar um novo grupo.
               </p>
             </div>
             <div className="flex items-center gap-2 self-end md:self-center">
@@ -900,7 +993,7 @@ export function StudentGroups({
                 disabled={isSaving || selectedStudents.length === 0}
               >
                 <Users className="mr-2 h-4 w-4" />
-                Agrupar Selecionados
+                Agrupar
               </Button>
                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -919,14 +1012,30 @@ export function StudentGroups({
               )}
             </div>
         </div>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Filtrar por nome do aluno ou grupo..."
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="pl-10"
-          />
+
+        <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-grow">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Filtrar por nome do aluno ou grupo..."
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+                <Label>Organizar por:</Label>
+                <RadioGroup defaultValue="groups" onValueChange={(value) => setSortBy(value as any)} className="flex items-center">
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="groups" id="r-groups" />
+                        <Label htmlFor="r-groups">Grupos</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="alphabetical" id="r-alpha" />
+                        <Label htmlFor="r-alpha">Alfabética</Label>
+                    </div>
+                </RadioGroup>
+            </div>
         </div>
       </div>
       
