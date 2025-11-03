@@ -14,7 +14,6 @@ export function Header() {
           width={160}
           height={48}
           className="h-8 w-auto"
-          unoptimized
           priority
         />
         <h1 className="text-lg font-semibold md:text-xl">UNDBprof</h1>

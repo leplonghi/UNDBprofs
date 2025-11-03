@@ -57,7 +57,6 @@ export default function LoginClient({ initialFrom }: LoginClientProps) {
           width={320}
           height={96}
           className="h-auto w-full max-w-[280px]"
-          unoptimized
           priority
         />
         <div>

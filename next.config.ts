@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'picsum.photos', pathname: '/**' },
       // Host que realmente serve o arquivo do Storage
       { protocol: 'https',"hostname": "firebasestorage.googleapis.com", pathname: '/**' },
-      // (Opcional) Se em algum momento usar link direto regional
+      // Domínio de host específico para o projeto
       { protocol: 'https', hostname: 'studio-3759592126-ec313.firebasestorage.app', pathname: '/**' },
     ],
   },
