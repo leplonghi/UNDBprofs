@@ -16,11 +16,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, type Firestore } from 'firebase/firestore';
+import { collection, query } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import type { AcademicEvent, Course } from '@/types';
+import { isToday, isSameDay } from 'date-fns';
+
 
 type EventCategory =
   | 'integradora-segunda'
@@ -82,15 +85,15 @@ const staticEvents: Omit<CalendarEvent, 'courseCode'>[] = [
 ];
 
 const categoryColors: Record<EventCategory, string> = {
-  'integradora-segunda': 'bg-[#F9A825]', // Orange
-  'integradora-quarta': 'bg-[#26A69A]',  // Teal
-  'integradora-sexta': 'bg-[#9C27B0]',   // Purple
-  'modular-i': 'bg-[#9CCC65]',          // Light Green
-  'modular-ii': 'bg-[#EF5350]',         // Reddish Pink
-  'modular-iii': 'bg-[#F06292]',        // Pink
-  'feriado': 'bg-[#FFEE58]',             // Yellow
-  'substitutiva': 'bg-[#C62828]',       // Dark Red
-  'prova-final': 'bg-[#B71C1C]',        // Darker Red
+  'integradora-segunda': 'bg-orange-400',
+  'integradora-quarta': 'bg-teal-400',
+  'integradora-sexta': 'bg-purple-400',
+  'modular-i': 'bg-lime-400',
+  'modular-ii': 'bg-rose-400',
+  'modular-iii': 'bg-pink-400',
+  'feriado': 'bg-yellow-400',
+  'substitutiva': 'bg-red-500',
+  'prova-final': 'bg-red-700',
   'course-event': 'bg-primary',
 };
 
@@ -150,30 +153,43 @@ const CalendarMonth = ({ month, year, events }: { month: number, year: number, e
           ))}
           {days.map((day) => {
             const dayEvents = eventsByDay[day] || [];
-            const hasEvent = dayEvents.length > 0;
+            const dayDate = new Date(year, month, day);
+            const today = isToday(dayDate);
+
             return (
-              <div
-                key={day}
-                className={cn(
-                  'relative flex h-10 w-full items-center justify-center rounded-sm border text-xs font-medium',
-                  !hasEvent && 'bg-card'
-                )}
-              >
-                {hasEvent ? (
-                    <div className={cn('w-full h-full grid', 
-                        dayEvents.length > 1 ? 'grid-cols-2' : 'grid-cols-1',
-                        dayEvents.length > 2 ? 'grid-rows-2' : 'grid-rows-1'
-                    )}>
-                        {dayEvents.slice(0,4).map((event, index) => (
-                             <div key={event.description + index} className={cn('w-full h-full', categoryColors[event.category])}></div>
-                        ))}
-                    </div>
-                ) : null}
-                 <span className={cn(
-                    'absolute mix-blend-screen invert',
-                    hasEvent ? 'text-white font-bold' : 'text-foreground'
-                 )}>{day}</span>
-              </div>
+              <TooltipProvider key={day}>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <div
+                            className={cn(
+                                'relative flex h-10 w-full flex-col items-center justify-center rounded-sm border p-1 text-xs font-medium',
+                                today ? 'bg-accent border-primary' : 'bg-card'
+                            )}
+                        >
+                            <span className={cn('flex h-6 w-6 items-center justify-center rounded-full', today && 'bg-primary text-primary-foreground')}>{day}</span>
+                            {dayEvents.length > 0 && (
+                                <div className="flex flex-wrap justify-center gap-1 mt-1">
+                                    {dayEvents.slice(0, 4).map((event, index) => (
+                                        <div key={index} className={cn("h-1.5 w-1.5 rounded-full", categoryColors[event.category])}></div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </TooltipTrigger>
+                    {dayEvents.length > 0 && (
+                         <TooltipContent>
+                            <ul className='space-y-1'>
+                                {dayEvents.map((event, index) => (
+                                    <li key={index} className="flex items-center gap-2 text-xs">
+                                        <div className={cn("h-2 w-2 rounded-full", categoryColors[event.category])}></div>
+                                        <span>{event.description} {event.courseCode && `(${event.courseCode})`}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </TooltipContent>
+                    )}
+                </Tooltip>
+              </TooltipProvider>
             );
           })}
         </div>
