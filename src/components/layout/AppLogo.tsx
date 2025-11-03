@@ -16,7 +16,7 @@ export function AppLogo({
 }: AppLogoProps) {
   return (
     <img
-      src="https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.firebasestorage.app/o/Branding%2Fpublic%2Flogoundbprofs.png?alt=media&token=8658ca45-42bc-43c8-a918-56764fa0f60d"
+      src="https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.firebasestorage.app/o/Branding%2FPublic%2Flogoundbprofs.png?alt=media&token=f65c6cd0-b615-40d5-b9ef-01f8a4603c2f"
       alt="UNDB ProfAssist Logo"
       className={className ?? 'h-auto w-full max-w-[280px]'}
       width={width}
