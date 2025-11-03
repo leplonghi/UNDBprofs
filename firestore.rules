@@ -98,18 +98,19 @@ service cloud.firestore {
      * @description
      * Courses subcollection: Courses owned by a specific professor. The professor can read/write courses under their ID.
      * @path /professors/{professorId}/courses/{courseId}
-     * @allow (create) - A professor with UID 'user_abc' can create a course under /professors/user_abc/courses/course_123.
-     * @deny (create) - A professor with UID 'user_abc' cannot create a course under /professors/user_xyz/courses/course_123.
-     * @allow (get) - A professor with UID 'user_abc' can read a course under /professors/user_abc/courses/course_123.
-     * @deny (get) - A professor with UID 'user_abc' cannot read a course under /professors/user_xyz/courses/course_123.
-     * @allow (update) - A professor with UID 'user_abc' can update a course under /professors/user_abc/courses/course_123.
-     * @deny (update) - A professor with UID 'user_abc' cannot update a course under /professors/user_xyz/courses/course_123.
-     * @allow (delete) - A professor with UID 'user_abc' can delete a course under /professors/user_abc/courses/course_123.
-     * @deny (delete) - A professor with UID 'user_abc' cannot delete a course under /professors/user_xyz/courses/course_123.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) - A professor with UID 'user_abc' can create a course under /professors/user_abc/courses/course_123 if the document's professorId matches.
+     * @deny (create) - A professor cannot create a course with a mismatched professorId.
+     * @allow (get, list) - A professor can read their own courses.
+     * @deny (get, list) - A professor cannot read another professor's courses.
+     * @allow (update) - A professor can update their own courses, but cannot change the professorId.
+     * @deny (update) - A professor cannot change the ownership of a course.
+     * @allow (delete) - A professor can delete their own courses.
+     * @principle Enforces document ownership and data consistency for all operations.
      */
     match /professors/{professorId}/courses/{courseId} {
-      allow get, list, create, update, delete: if isOwner(professorId);
+      allow get, list, delete: if isOwner(professorId);
+      allow create: if isOwner(professorId) && request.resource.data.professorId == professorId;
+      allow update: if isOwner(professorId) && request.resource.data.professorId == resource.data.professorId;
 
       // Cascade delete is handled by cloud functions, but rules on subcollections are still needed.
       match /classrooms/{classroomId} {
