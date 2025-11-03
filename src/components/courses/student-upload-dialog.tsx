@@ -12,8 +12,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useUser, useFirestore } from '@/firebase';
+import { doc, setDoc, writeBatch } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import { Loader2, UploadCloud, FileScan, FileText } from 'lucide-react';
 import type { Student, ClassroomStudent, ExtractedStudent } from '@/types';
@@ -201,6 +201,8 @@ const handleAIExtraction = () => {
     toast({ title: 'Iniciando importação...', description: `Adicionando ${studentsToCreate.length} alunos à turma.` });
 
     try {
+        const batch = writeBatch(firestore);
+
         for (const studentData of studentsToCreate) {
             const studentId = uuidv4(); 
             const studentRef = doc(firestore, `students/${studentId}`);
@@ -212,10 +214,8 @@ const handleAIExtraction = () => {
               registrationId: studentData.registrationId || null,
             };
             
-            // Create the student document first.
-            setDocumentNonBlocking(studentRef, studentPayload, { merge: false });
+            batch.set(studentRef, studentPayload);
 
-            // Then create the association 
             const classroomStudentId = uuidv4();
             const classroomStudentRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/classroomStudents/${classroomStudentId}`);
             const classroomStudentPayload: ClassroomStudent = {
@@ -225,8 +225,10 @@ const handleAIExtraction = () => {
               grades: [],
               groupId: null
             };
-            setDocumentNonBlocking(classroomStudentRef, classroomStudentPayload, { merge: false });
+            batch.set(classroomStudentRef, classroomStudentPayload);
       }
+      
+      await batch.commit();
 
       toast({
         title: 'Sucesso!',

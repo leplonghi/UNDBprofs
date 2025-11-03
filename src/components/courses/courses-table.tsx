@@ -29,8 +29,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { useUser, useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, doc, deleteDoc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import type { Course } from '@/types';
@@ -56,8 +56,7 @@ export function CoursesTable() {
     const courseDocRef = doc(firestore, `professors/${user.uid}/courses/${courseToDelete.id}`);
 
     try {
-      // Not awaiting this to make UI faster
-      deleteDocumentNonBlocking(courseDocRef);
+      await deleteDoc(courseDocRef);
       
       toast({
         title: "Disciplina Excluída!",

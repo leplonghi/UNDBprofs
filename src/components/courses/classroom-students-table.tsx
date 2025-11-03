@@ -6,9 +6,8 @@ import {
   useFirestore,
   useUser,
   useMemoFirebase,
-  deleteDocumentNonBlocking,
 } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { doc, deleteDoc } from 'firebase/firestore';
 import type { ClassroomStudent, Student } from '@/types';
 import {
   Table,
@@ -69,7 +68,7 @@ function StudentRow({
     );
 
     try {
-      deleteDocumentNonBlocking(classroomStudentRef);
+      await deleteDoc(classroomStudentRef);
       toast({
         title: "Aluno Removido",
         description: `${student.name} foi removido da turma.`,

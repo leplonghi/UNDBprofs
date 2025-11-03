@@ -38,9 +38,8 @@ import {
   useUser,
   useCollection,
   useMemoFirebase,
-  updateDocumentNonBlocking,
 } from '@/firebase';
-import { doc, writeBatch, getDoc, collection, addDoc, deleteDoc, getDocs, query as firestoreQuery, where } from 'firebase/firestore';
+import { doc, writeBatch, getDoc, collection, addDoc, deleteDoc, getDocs, query as firestoreQuery, where, updateDoc } from 'firebase/firestore';
 import type { ClassroomStudent, Student, Grade, Activity, Group } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 import { Skeleton } from '../ui/skeleton';
@@ -346,19 +345,19 @@ export function StudentGroups({
   const handleRemoveStudentFromGroup = async (csId: string) => {
     if (!user || !firestore) return;
     const studentRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/classroomStudents/${csId}`);
-    updateDocumentNonBlocking(studentRef, { groupId: null });
+    await updateDoc(studentRef, { groupId: null });
   };
   
-  const handleAddStudentToGroup = (groupId: string, csId: string) => {
+  const handleAddStudentToGroup = async (groupId: string, csId: string) => {
      if (!user || !firestore) return;
     const studentRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/classroomStudents/${csId}`);
-    updateDocumentNonBlocking(studentRef, { groupId: groupId });
+    await updateDoc(studentRef, { groupId: groupId });
   }
 
-  const handleGroupNameChange = debounce((groupId: string, newName: string) => {
+  const handleGroupNameChange = debounce(async (groupId: string, newName: string) => {
     if (!user || !firestore) return;
     const groupRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/groups/${groupId}`);
-    updateDocumentNonBlocking(groupRef, { name: newName });
+    await updateDoc(groupRef, { name: newName });
   }, 500);
 
   const n1Activities = gradeStructure.filter((g) => g.group === 'N1');

@@ -4,8 +4,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
-import { useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useFirestore, useUser } from '@/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from '@/components/ui/button';
@@ -79,7 +79,7 @@ export default function NewCoursePage() {
       },
     };
     
-    setDocumentNonBlocking(courseRef, courseData, { merge: false });
+    await setDoc(courseRef, courseData, { merge: false });
 
     toast({
       title: 'Disciplina Criada com Sucesso!',

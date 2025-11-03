@@ -21,8 +21,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import type { Activity, ClassType } from '@/types';
 import { Loader2 } from 'lucide-react';
-import { useFirestore, useUser, updateDocumentNonBlocking } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useFirestore, useUser } from '@/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 import {
   Table,
   TableBody,
@@ -57,7 +57,7 @@ export function ActivitySettings({
   const applyPreset = (presetType: ClassType) => {
     if (!user || !firestore) return;
 
-    startTransition(() => {
+    startTransition(async () => {
       const newActivities = createActivitiesFromPreset(presetType);
 
       const classroomRef = doc(
@@ -65,7 +65,7 @@ export function ActivitySettings({
         `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}`
       );
 
-      updateDocumentNonBlocking(classroomRef, { activities: newActivities });
+      await updateDoc(classroomRef, { activities: newActivities });
 
       toast({
         title: 'Preset Aplicado!',
@@ -84,7 +84,7 @@ export function ActivitySettings({
   };
 
 
-  const handleToggleActivity = (activityId: string, isActive: boolean) => {
+  const handleToggleActivity = async (activityId: string, isActive: boolean) => {
      if (!user || !firestore) return;
 
      const updatedActivities = activities.map(act => 
@@ -96,7 +96,7 @@ export function ActivitySettings({
         `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}`
       );
       
-      updateDocumentNonBlocking(classroomRef, { activities: updatedActivities });
+      await updateDoc(classroomRef, { activities: updatedActivities });
   }
 
   const renderPresetSummary = (presetType: ClassType) => {

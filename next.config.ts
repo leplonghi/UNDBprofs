@@ -4,9 +4,6 @@ const nextConfig: NextConfig = {
   typescript: { ignoreBuildErrors: true },
   eslint: { ignoreDuringBuilds: true },
   images: {
-    // Desliga o otimizador do Next (essencial no Firebase Studio/App Hosting)
-    unoptimized: true,
-
     remotePatterns: [
       { protocol: 'https', hostname: 'placehold.co', pathname: '/**' },
       { protocol: 'https', hostname: 'images.unsplash.com', pathname: '/**' },
