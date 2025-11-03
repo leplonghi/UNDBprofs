@@ -85,6 +85,18 @@ export interface ExtractedStudent {
     confidence: number;
 }
 
+export interface Document {
+    id: string;
+    professorId: string;
+    courseId?: string | null; // Can be unassociated
+    name: string;
+    fileUrl: string;
+    documentType: 'file' | 'link';
+    fileType?: string; // e.g., 'application/pdf'
+    fileName?: string; // e.g., 'aula-1.pdf'
+    createdAt: string; // ISO 8601 string
+}
+
 export interface AcademicEvent {
     id: string;
     professorId: string;

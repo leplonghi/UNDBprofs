@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { Query, DocumentReference, setDoc, deleteDoc } from 'firebase/firestore';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore } from 'firebase/firestore';
+import { getFirestore, Firestore, getStorage, FirebaseStorage } from 'firebase/firestore';
 import { firebaseConfig } from './config';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -17,6 +17,7 @@ export * from './firestore/use-doc';
 let firebaseApp: FirebaseApp;
 let auth: Auth;
 let firestore: Firestore;
+let storage: FirebaseStorage;
 
 export const initializeFirebase = () => {
   if (!firebaseApp) {
@@ -27,8 +28,10 @@ export const initializeFirebase = () => {
     }
     auth = getAuth(firebaseApp);
     firestore = getFirestore(firebaseApp);
+    // @ts-ignore
+    storage = getStorage(firebaseApp);
   }
-  return { firebaseApp, auth, firestore };
+  return { firebaseApp, auth, firestore, storage };
 };
 
 

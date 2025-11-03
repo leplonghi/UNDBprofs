@@ -11,10 +11,10 @@ export const FirebaseClientProvider: React.FC<{
 }> = ({ children }) => {
   // Initialize Firebase and get the instances.
   // This function is idempotent, so it's safe to call on every render.
-  const { firebaseApp, auth, firestore } = initializeFirebase();
+  const { firebaseApp, auth, firestore, storage } = initializeFirebase();
 
   return (
-    <FirebaseProvider app={firebaseApp} auth={auth} firestore={firestore}>
+    <FirebaseProvider app={firebaseApp} auth={auth} firestore={firestore} storage={storage}>
       {children}
     </FirebaseProvider>
   );

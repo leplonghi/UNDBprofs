@@ -247,12 +247,8 @@
           "description": "Reference to Professor. (Relationship: Professor 1:N Document)"
         },
         "courseId": {
-          "type": "string",
-          "description": "Reference to Course. (Relationship: Course 1:N Document).  Can be null if the document is not associated with a specific course."
-        },
-        "classroomId": {
-          "type": "string",
-          "description": "Reference to Classroom. (Relationship: Classroom 1:N Document). Can be null if the document is not associated with a specific classroom."
+          "type": ["string", "null"],
+          "description": "Reference to Course. Can be null if the document is not associated with a specific course."
         },
         "name": {
           "type": "string",
@@ -265,7 +261,21 @@
         },
         "documentType": {
           "type": "string",
-          "description": "The type of the document (e.g., Report, Syllabus)."
+          "enum": ["file", "link"],
+          "description": "The type of the document (e.g., uploaded file or external link)."
+        },
+        "fileType": {
+            "type": "string",
+            "description": "The MIME type of the uploaded file (e.g., 'application/pdf')."
+        },
+        "fileName": {
+            "type": "string",
+            "description": "The original name of the uploaded file."
+        },
+        "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp when the document was created."
         }
       },
       "required": [
@@ -273,7 +283,8 @@
         "professorId",
         "name",
         "fileUrl",
-        "documentType"
+        "documentType",
+        "createdAt"
       ]
     },
     "AcademicEvent": {
