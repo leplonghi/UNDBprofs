@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 
 const PROTECTED_ROUTES = ['/dashboard', '/disciplinas', '/documentos', '/calendario', '/perfil'];
@@ -20,6 +21,8 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Check for the presence of the session cookie. The token within will be
+  // validated by Firestore security rules on the client side.
   const sessionCookie = req.cookies.get('session');
 
   if (!sessionCookie) {
@@ -28,8 +31,6 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Allow the request to proceed. The server-side components/API routes
-  // will be responsible for validating the cookie if they need to fetch protected data.
   return NextResponse.next();
 }
 

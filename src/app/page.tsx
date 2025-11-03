@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -28,7 +29,10 @@ export default function LoginPage() {
         body: JSON.stringify({ idToken }),
       });
 
-      if (!res.ok) throw new Error('session failed');
+      if (!res.ok) {
+          const errorBody = await res.json();
+          throw new Error(errorBody.error || 'session failed');
+      }
 
       const from = params.get('from') || '/dashboard';
       router.replace(from);
@@ -40,21 +44,21 @@ export default function LoginPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-background p-6">
-      <div className="flex flex-col items-center gap-6">
+      <div className="flex w-full max-w-sm flex-col items-center gap-8 text-center">
         <Image
           src="https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/Branding%2Fpublic%2Flogoundbprofs.png?alt=media&v=1"
           alt="UNDBprof Logo"
           width={320}
           height={96}
-          className="h-auto w-64"
+          className="h-auto w-full max-w-[280px]"
           unoptimized
           priority
         />
-        <div className="text-center">
+        <div>
           <h1 className="text-2xl font-bold text-primary">Bem-vindo ao ProfAssist</h1>
-          <p className="text-muted-foreground">Seu assistente digital para o dia a dia acadêmico.</p>
+          <p className="mt-2 text-muted-foreground">Seu assistente digital para o dia a dia acadêmico.</p>
         </div>
-        <Button onClick={doLogin} disabled={busy} size="lg">
+        <Button onClick={doLogin} disabled={busy} size="lg" className="w-full">
           {busy ? (
             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
           ) : null}
