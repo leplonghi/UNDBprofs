@@ -10,7 +10,7 @@ export default function Header() {
   return (
     <header className="flex items-center justify-between border-b bg-background px-4 py-2">
       <Link href="/dashboard" className="flex items-center gap-2">
-        <AppLogo className="h-8 w-auto" />
+        <AppLogo className="h-10 w-auto" />
       </Link>
 
       <UserNav />
