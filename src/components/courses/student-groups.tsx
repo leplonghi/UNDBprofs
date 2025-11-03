@@ -58,9 +58,6 @@ function StudentRowDisplay({ student }: { student: Student }) {
 
   return (
     <div className="flex items-center gap-3">
-      <Avatar className="h-8 w-8">
-        <AvatarFallback>{student.name.charAt(0)}</AvatarFallback>
-      </Avatar>
       <span className="font-medium max-w-[150px] truncate">
         {student.name}
       </span>
