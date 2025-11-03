@@ -33,7 +33,7 @@ export function TutorialTab() {
                 <AccordionItem value="item-1">
                     <AccordionTrigger>O que é o UNDBProf?</AccordionTrigger>
                     <AccordionContent>
-                    O UNDBProf é um assistente digital projetado para simplificar e automatizar tarefas acadêmicas repetitivas. O objetivo é liberar seu tempo para que você possa se concentrar no que mais importa: o ensino e a interação com os alunos.
+                    O UNDBProf é uma ferramenta de auxílio pessoal, criada por um professor para professores, com o objetivo de otimizar e automatizar tarefas acadêmicas. Importante: este aplicativo não possui nenhum vínculo oficial com a instituição UNDB e não substitui os sistemas oficiais da faculdade.
                     </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="item-2">

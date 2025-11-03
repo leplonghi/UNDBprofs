@@ -66,7 +66,7 @@ export default function LoginClient({ initialFrom }: LoginClientProps) {
             Bem-vindo ao UNDBProf
           </h1>
           <p className="mt-2 text-muted-foreground">
-            Seu assistente digital para o dia a dia acadêmico.
+            Uma ferramenta de apoio criada por um professor, para professores. Não possui vínculo oficial com a UNDB.
           </p>
         </div>
 

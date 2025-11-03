@@ -28,7 +28,7 @@ export default function AjudaPage() {
             <AccordionItem value="item-1">
               <AccordionTrigger>O que é o UNDBProf e qual seu objetivo?</AccordionTrigger>
               <AccordionContent>
-                O UNDBProf é um sistema de apoio ao docente, projetado para otimizar e automatizar tarefas acadêmicas. Nosso objetivo é reduzir o tempo gasto com trabalhos manuais e repetitivos, permitindo que você, professor, dedique mais energia ao planejamento de aulas, à interação com os alunos e à pesquisa. Usamos Inteligência Artificial para acelerar processos como a importação de planos de ensino e a gestão de listas de alunos.
+                O UNDBProf é uma ferramenta de auxílio pessoal, criada por um professor para professores, com o objetivo de otimizar e automatizar tarefas acadêmicas. É importante ressaltar que este aplicativo não possui nenhum vínculo oficial com a instituição UNDB e não substitui os sistemas oficiais da faculdade. O objetivo é ser um assistente para reduzir o tempo gasto com trabalhos manuais e repetitivos, permitindo que você dedique mais energia ao planejamento de aulas e à interação com os alunos.
               </AccordionContent>
             </AccordionItem>
 
