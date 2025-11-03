@@ -33,7 +33,6 @@ import { Users, Edit, ArrowLeft } from 'lucide-react';
 import { StudentUploadDialog } from '@/components/courses/student-upload-dialog';
 import { ClassroomStudentsTable } from '@/components/courses/classroom-students-table';
 import { StudentGroups } from '@/components/courses/student-groups';
-import { ActivitySettings } from '@/components/courses/activity-settings';
 import { cn } from '@/lib/utils';
 
 function CourseDetailsSkeleton() {
@@ -298,9 +297,8 @@ function ClassroomManager({
         </div>
 
         <Tabs defaultValue="students" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="students">Alunos</TabsTrigger>
-            <TabsTrigger value="activities">Atividades</TabsTrigger>
             <TabsTrigger value="grades">Lançamento de Notas</TabsTrigger>
           </TabsList>
 
@@ -316,15 +314,6 @@ function ClassroomManager({
               classroomId={classroom.id}
               classroomStudents={classroomStudents ?? []}
               isLoading={isLoadingStudents}
-            />
-          </TabsContent>
-
-          <TabsContent value="activities" className="mt-6">
-            <ActivitySettings
-              courseId={courseId}
-              classroomId={classroom.id}
-              activities={activities}
-              classType={classroom.classType}
             />
           </TabsContent>
 

@@ -4,8 +4,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
-import { useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useFirestore, useUser } from '@/firebase';
+import { doc, writeBatch } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import type { Course } from '@/types';
+import type { Course, Classroom } from '@/types';
+import { createActivitiesFromPreset } from '@/lib/presets';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Nome da disciplina é obrigatório.'),
@@ -60,7 +61,10 @@ export default function NewCourseForm() {
     }
 
     const courseId = uuidv4();
+    const classroomId = uuidv4();
     const courseRef = doc(firestore, `professors/${user.uid}/courses/${courseId}`);
+    const classroomRef = doc(firestore, `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}`);
+
 
     const courseData: Course = {
       id: courseId,
@@ -78,14 +82,41 @@ export default function NewCourseForm() {
       },
     };
     
-    setDocumentNonBlocking(courseRef, courseData, { merge: false });
+    // Create default classroom with default activities
+    const defaultActivities = createActivitiesFromPreset('Modular');
+    const defaultSemester = '2025.2';
 
-    toast({
-      title: 'Disciplina Criada com Sucesso!',
-      description: `A disciplina "${values.name}" foi adicionada.`,
-    });
-    
-    router.push('/disciplinas');
+    const classroomData: Classroom = {
+        id: classroomId,
+        courseId: courseId,
+        name: `Turma de ${defaultSemester}`,
+        semester: defaultSemester,
+        workload: 'N/D',
+        classType: 'Modular',
+        classSchedule: [],
+        activities: defaultActivities,
+    };
+
+    const batch = writeBatch(firestore);
+    batch.set(courseRef, courseData);
+    batch.set(classroomRef, classroomData);
+
+    try {
+        await batch.commit();
+        toast({
+          title: 'Disciplina Criada com Sucesso!',
+          description: `A disciplina "${values.name}" e uma turma padrão foram adicionadas.`,
+        });
+        router.push('/disciplinas');
+    } catch (error) {
+        console.error('Error creating course and classroom:', error);
+        toast({
+            variant: 'destructive',
+            title: 'Erro ao Criar',
+            description: 'Não foi possível salvar a disciplina. Tente novamente.'
+        });
+    }
+
   }
 
   return (
