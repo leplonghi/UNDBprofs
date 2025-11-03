@@ -1,23 +1,37 @@
 'use client';
 
+import { useState, useTransition, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useRouter } from 'next/navigation';
-import { useFirestore, useUser } from '@/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
+import { doc } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, PlusCircle, UploadCloud } from 'lucide-react';
 import type { Course } from '@/types';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
+import { importCourseFromLessonPlan } from '@/ai/flows/import-course-from-lesson-plan';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Nome da disciplina é obrigatório.'),
@@ -37,6 +51,8 @@ export default function NewCoursePage() {
   const { toast } = useToast();
   const firestore = useFirestore();
   const { user } = useUser();
+  const [isPending, startTransition] = useTransition();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -51,6 +67,80 @@ export default function NewCoursePage() {
       bibliography_recommended: '',
     },
   });
+
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (!user) {
+      toast({
+        variant: 'destructive',
+        title: 'Acesso Negado',
+        description: 'Você precisa estar logado para importar um arquivo.',
+      });
+      return;
+    }
+
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+
+    startTransition(() => {
+      toast({
+        title: 'Processando Arquivo...',
+        description:
+          'Aguarde enquanto a IA extrai as informações do plano de ensino.',
+      });
+
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+
+      reader.onload = async () => {
+        try {
+          const lessonPlanDataUri = reader.result as string;
+          const result = await importCourseFromLessonPlan({ lessonPlanDataUri });
+
+          sessionStorage.setItem('importedData', JSON.stringify(result));
+
+          toast({
+            title: 'Extração Concluída!',
+            description: 'Revise os dados extraídos do plano de ensino.',
+          });
+
+          router.push('/disciplinas/importar');
+        } catch (error) {
+          console.error(error);
+          toast({
+            variant: 'destructive',
+            title: 'Erro na Extração',
+            description: 'Não foi possível processar o arquivo. Tente novamente.',
+          });
+        }
+      };
+
+      reader.onerror = () => {
+        toast({
+          variant: 'destructive',
+          title: 'Erro de Leitura',
+          description: 'Não foi possível ler o arquivo selecionado.',
+        });
+      };
+    });
+  };
+
+  const handleImportClick = () => {
+    if (!user) {
+      toast({
+        variant: 'destructive',
+        title: 'Acesso Negado',
+        description: 'Você precisa estar logado.',
+      });
+      return;
+    }
+    fileInputRef.current?.click();
+  };
 
   async function onSubmit(values: FormData) {
     if (!user || !firestore) {
@@ -77,159 +167,190 @@ export default function NewCoursePage() {
       bibliography: {
         basic: values.bibliography_basic || '',
         complementary: values.bibliography_complementary || '',
-        recommended: values.bibliography_recommended || ''
+        recommended: values.bibliography_recommended || '',
       },
     };
-    
-    setDoc(courseRef, courseData, { merge: false })
-      .then(() => {
-        toast({
-          title: 'Disciplina Criada com Sucesso!',
-          description: `A disciplina "${values.name}" foi adicionada.`,
-        });
-        router.push('/disciplinas');
-      })
-      .catch((serverError) => {
-          const permissionError = new FirestorePermissionError({
-              path: courseRef.path,
-              operation: 'create',
-              requestResourceData: courseData,
-          });
-          errorEmitter.emit('permission-error', permissionError);
-      });
+
+    setDocumentNonBlocking(courseRef, courseData, { merge: false });
+
+    toast({
+      title: 'Disciplina Criada com Sucesso!',
+      description: `A disciplina "${values.name}" foi adicionada.`,
+    });
+
+    router.push('/disciplinas');
   }
 
   return (
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
-        <CardTitle>Nova Disciplina</CardTitle>
+        <CardTitle>Adicionar Nova Disciplina</CardTitle>
         <CardDescription>
-          Preencha as informações abaixo para criar uma nova disciplina. As turmas poderão ser adicionadas a seguir.
+          Use a IA para importar de um plano de ensino (PDF) ou preencha o
+          formulário manualmente.
         </CardDescription>
       </CardHeader>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <CardContent className="space-y-4">
-             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Nome da Disciplina</FormLabel>
-                        <FormControl>
-                        <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="code"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Código</FormLabel>
-                        <FormControl>
-                        <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                </div>
-                <FormField
-                  control={form.control}
-                  name="syllabus"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Ementa</FormLabel>
-                      <FormControl>
-                        <Textarea rows={5} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="objectives"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Objetivos</FormLabel>
-                      <FormControl>
-                        <Textarea rows={5} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                 <FormField
-                  control={form.control}
-                  name="competencies"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Competências</FormLabel>
-                       <FormControl>
-                        <Textarea rows={5} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className='space-y-2'>
-                    <h3 className='font-medium text-sm'>Bibliografia</h3>
-                    <FormField
-                    control={form.control}
-                    name="bibliography_basic"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Básica</FormLabel>
-                        <FormControl>
-                            <Textarea rows={5} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                    <FormField
-                    control={form.control}
-                    name="bibliography_complementary"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Complementar</FormLabel>
-                        <FormControl>
-                            <Textarea rows={5} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                    <FormField
-                    control={form.control}
-                    name="bibliography_recommended"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Recomendada</FormLabel>
-                        <FormControl>
-                            <Textarea rows={3} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                </div>
-          </CardContent>
-          <CardFooter>
-              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? (
+      <CardContent>
+        <Tabs defaultValue="importar" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="importar">Importar com IA</TabsTrigger>
+            <TabsTrigger value="manual">Cadastro Manual</TabsTrigger>
+          </TabsList>
+          <TabsContent value="importar">
+            <div className="text-center p-8 space-y-4">
+              <p className="text-muted-foreground">
+                Recomendado! Economize tempo deixando a IA preencher tudo para
+                você a partir do plano de ensino oficial.
+              </p>
+              <Input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                onChange={handleFileChange}
+                accept=".pdf"
+                disabled={isPending}
+              />
+              <Button onClick={handleImportClick} disabled={isPending} size="lg">
+                {isPending ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : null}
-                Criar Disciplina
+                ) : (
+                  <UploadCloud className="mr-2 h-4 w-4" />
+                )}
+                Carregar PDF do Plano de Ensino
               </Button>
-          </CardFooter>
-        </form>
-      </Form>
+            </div>
+          </TabsContent>
+          <TabsContent value="manual">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)}>
+                <div className="space-y-4 pt-6">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nome da Disciplina</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="code"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Código</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="syllabus"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Ementa</FormLabel>
+                        <FormControl>
+                          <Textarea rows={5} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="objectives"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Objetivos</FormLabel>
+                        <FormControl>
+                          <Textarea rows={5} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="competencies"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Competências</FormLabel>
+                        <FormControl>
+                          <Textarea rows={5} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="space-y-2">
+                    <h3 className="font-medium text-sm">Bibliografia</h3>
+                    <FormField
+                      control={form.control}
+                      name="bibliography_basic"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Básica</FormLabel>
+                          <FormControl>
+                            <Textarea rows={5} {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="bibliography_complementary"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Complementar</FormLabel>
+                          <FormControl>
+                            <Textarea rows={5} {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="bibliography_recommended"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Recomendada</FormLabel>
+                          <FormControl>
+                            <Textarea rows={3} {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+                <div className="pt-6">
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={form.formState.isSubmitting}
+                  >
+                    {form.formState.isSubmitting ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : null}
+                    Criar Disciplina
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
     </Card>
   );
 }
