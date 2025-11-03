@@ -2,11 +2,20 @@
 
 import React from 'react';
 import { FirebaseProvider } from './provider';
+import { initializeFirebase } from './index';
 
-// This component ensures that the Firebase provider and its context
-// are only used on the client-side, preventing errors during server-side rendering.
+// This component ensures that Firebase is initialized once on the client
+// and provides the initialized instances to the FirebaseProvider.
 export const FirebaseClientProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
-  return <FirebaseProvider>{children}</FirebaseProvider>;
+  // Initialize Firebase and get the instances.
+  // This function is idempotent, so it's safe to call on every render.
+  const { firebaseApp, auth, firestore } = initializeFirebase();
+
+  return (
+    <FirebaseProvider app={firebaseApp} auth={auth} firestore={firestore}>
+      {children}
+    </FirebaseProvider>
+  );
 };

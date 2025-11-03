@@ -24,7 +24,9 @@ export function UserNav() {
   const handleSignOut = async () => {
     try {
       await fetch('/api/session', { method: 'DELETE' });
-      await signOut(auth);
+      if (auth) {
+        await signOut(auth);
+      }
       router.replace('/');
     } catch (error) {
        console.error("Sign out error:", error);

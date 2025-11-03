@@ -1,22 +1,33 @@
 'use client';
 
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
-import { User, onAuthStateChanged } from 'firebase/auth';
+import { User, onAuthStateChanged, Auth } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
-import { auth, firestore } from './client'; 
 import type { Firestore } from 'firebase/firestore';
+import type { FirebaseApp } from 'firebase/app';
 
 interface FirebaseContextState {
   user: User | null;
   isUserLoading: boolean;
-  auth: typeof auth;
+  auth: Auth;
   firestore: Firestore;
+  app: FirebaseApp;
 }
 
 export const FirebaseContext = createContext<FirebaseContextState | undefined>(undefined);
 
-export const FirebaseProvider: React.FC<{ children: ReactNode }> = ({
+interface FirebaseProviderProps {
+    children: ReactNode;
+    auth: Auth;
+    firestore: Firestore;
+    app: FirebaseApp;
+}
+
+export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   children,
+  auth,
+  firestore,
+  app
 }) => {
   const [userAuthState, setUserAuthState] = useState<{
     user: User | null;
@@ -38,10 +49,10 @@ export const FirebaseProvider: React.FC<{ children: ReactNode }> = ({
       }
     );
     return () => unsubscribe();
-  }, []);
+  }, [auth]);
 
   return (
-    <FirebaseContext.Provider value={{ ...userAuthState, auth, firestore }}>
+    <FirebaseContext.Provider value={{ ...userAuthState, auth, firestore, app }}>
       <FirebaseErrorListener />
       {children}
     </FirebaseContext.Provider>

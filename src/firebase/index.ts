@@ -1,10 +1,34 @@
 'use client';
 import { useMemo } from 'react';
 import type { Query, DocumentReference } from 'firebase/firestore';
+import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
+import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
+import { firebaseConfig } from './config';
 
+// Export hooks from the provider
 export * from './provider';
 export * from './firestore/use-collection';
 export * from './firestore/use-doc';
+
+// A memoized, idempotent function to initialize Firebase services
+let firebaseApp: FirebaseApp;
+let auth: Auth;
+let firestore: Firestore;
+
+export const initializeFirebase = () => {
+  if (!firebaseApp) {
+    if (getApps().length === 0) {
+      firebaseApp = initializeApp(firebaseConfig);
+    } else {
+      firebaseApp = getApp();
+    }
+    auth = getAuth(firebaseApp);
+    firestore = getFirestore(firebaseApp);
+  }
+  return { firebaseApp, auth, firestore };
+};
+
 
 /**
  * A wrapper around useMemo that provides a stable reference to a Firestore query or document.

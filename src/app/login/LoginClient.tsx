@@ -24,6 +24,11 @@ export default function LoginClient({ initialFrom }: LoginClientProps) {
   const [busy, setBusy] = useState(false);
 
   const doLogin = async () => {
+    if (!auth) {
+        console.error("Firebase Auth not initialized yet.");
+        setBusy(false);
+        return;
+    }
     setBusy(true);
     try {
       const cred = await signInWithPopup(auth, provider);
@@ -67,7 +72,7 @@ export default function LoginClient({ initialFrom }: LoginClientProps) {
 
         <Button
           onClick={doLogin}
-          disabled={busy}
+          disabled={busy || !auth}
           size="lg"
           className="w-full"
         >
