@@ -3,7 +3,7 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import React, { useState } from 'react';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, AuthError } from 'firebase/auth';
 import { auth } from '@/firebase/client';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
@@ -37,7 +37,10 @@ export default function LoginPage() {
       const from = params.get('from') || '/dashboard';
       router.replace(from);
     } catch (e) {
-      console.error(e);
+      // Handle popup closed by user gracefully
+      if ((e as AuthError).code !== 'auth/popup-closed-by-user') {
+        console.error(e);
+      }
       setBusy(false);
     }
   };
