@@ -4,7 +4,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
-  title: 'UNDB ProfAssist',
+  title: 'UNDBProf',
   description: 'Sistema digital de apoio aos professores da UNDB.',
 };
 

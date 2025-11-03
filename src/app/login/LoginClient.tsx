@@ -63,7 +63,7 @@ export default function LoginClient({ initialFrom }: LoginClientProps) {
 
         <div>
           <h1 className="text-2xl font-bold text-primary">
-            Bem-vindo ao ProfAssist
+            Bem-vindo ao UNDBProf
           </h1>
           <p className="mt-2 text-muted-foreground">
             Seu assistente digital para o dia a dia acadêmico.

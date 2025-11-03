@@ -15,7 +15,7 @@ export function TutorialTab() {
         <CardHeader>
             <div className="flex items-start justify-between">
                 <div>
-                    <CardTitle>Guia Rápido do ProfAssist</CardTitle>
+                    <CardTitle>Guia Rápido do UNDBProf</CardTitle>
                     <CardDescription>
                     Um resumo das principais funcionalidades para você começar.
                     </CardDescription>
@@ -31,9 +31,9 @@ export function TutorialTab() {
         <CardContent>
              <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="item-1">
-                    <AccordionTrigger>O que é o ProfAssist?</AccordionTrigger>
+                    <AccordionTrigger>O que é o UNDBProf?</AccordionTrigger>
                     <AccordionContent>
-                    O ProfAssist é um assistente digital projetado para simplificar e automatizar tarefas acadêmicas repetitivas. O objetivo é liberar seu tempo para que você possa se concentrar no que mais importa: o ensino e a interação com os alunos.
+                    O UNDBProf é um assistente digital projetado para simplificar e automatizar tarefas acadêmicas repetitivas. O objetivo é liberar seu tempo para que você possa se concentrar no que mais importa: o ensino e a interação com os alunos.
                     </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="item-2">

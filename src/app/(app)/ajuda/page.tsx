@@ -15,7 +15,7 @@ export default function AjudaPage() {
       <div className="space-y-1">
         <h1 className="text-2xl font-bold text-primary">Página de Ajuda e Tutorial</h1>
         <p className="text-muted-foreground">
-          Tire suas dúvidas sobre os recursos e o funcionamento do ProfAssist.
+          Tire suas dúvidas sobre os recursos e o funcionamento do UNDBProf.
         </p>
       </div>
 
@@ -26,9 +26,9 @@ export default function AjudaPage() {
         <CardContent>
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="item-1">
-              <AccordionTrigger>O que é o ProfAssist e qual seu objetivo?</AccordionTrigger>
+              <AccordionTrigger>O que é o UNDBProf e qual seu objetivo?</AccordionTrigger>
               <AccordionContent>
-                O ProfAssist é um sistema de apoio ao docente, projetado para otimizar e automatizar tarefas acadêmicas. Nosso objetivo é reduzir o tempo gasto com trabalhos manuais e repetitivos, permitindo que você, professor, dedique mais energia ao planejamento de aulas, à interação com os alunos e à pesquisa. Usamos Inteligência Artificial para acelerar processos como a importação de planos de ensino e a gestão de listas de alunos.
+                O UNDBProf é um sistema de apoio ao docente, projetado para otimizar e automatizar tarefas acadêmicas. Nosso objetivo é reduzir o tempo gasto com trabalhos manuais e repetitivos, permitindo que você, professor, dedique mais energia ao planejamento de aulas, à interação com os alunos e à pesquisa. Usamos Inteligência Artificial para acelerar processos como a importação de planos de ensino e a gestão de listas de alunos.
               </AccordionContent>
             </AccordionItem>
 
@@ -36,7 +36,7 @@ export default function AjudaPage() {
               <AccordionTrigger>Como funciona a importação de disciplinas com IA?</AccordionTrigger>
               <AccordionContent>
                 <div className="space-y-2">
-                    <p>Este é um dos recursos mais poderosos do ProfAssist. O processo é simples:</p>
+                    <p>Este é um dos recursos mais poderosos do UNDBProf. O processo é simples:</p>
                     <ol className="list-decimal pl-6 space-y-1">
                         <li>Vá para a página <strong>Disciplinas</strong> e clique em <strong>Adicionar/Importar Disciplina</strong>.</li>
                         <li>Na aba <strong>Importar com IA</strong>, arraste ou selecione o arquivo PDF do seu Plano de Ensino.</li>
