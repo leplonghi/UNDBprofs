@@ -10,7 +10,7 @@ export function middleware(req: NextRequest) {
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
-    pathname === '/' // This is the login page
+    pathname === '/login' // Allow access to the new login page
   ) {
     return NextResponse.next();
   }
@@ -26,7 +26,7 @@ export function middleware(req: NextRequest) {
   const sessionCookie = req.cookies.get('session');
 
   if (!sessionCookie) {
-    const loginUrl = new URL('/', req.url);
+    const loginUrl = new URL('/login', req.url);
     loginUrl.searchParams.set('from', pathname);
     return NextResponse.redirect(loginUrl);
   }
