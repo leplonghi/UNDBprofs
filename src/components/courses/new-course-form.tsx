@@ -21,8 +21,6 @@ const formSchema = z.object({
   name: z.string().min(1, 'Nome da disciplina é obrigatório.'),
   code: z.string().min(1, 'Código é obrigatório.'),
   syllabus: z.string().min(1, 'Ementa é obrigatória.'),
-  objectives: z.string().min(1, 'Objetivos são obrigatórios.'),
-  competencies: z.string().optional(),
   bibliography_basic: z.string().optional(),
   bibliography_complementary: z.string().optional(),
   bibliography_recommended: z.string().optional(),
@@ -42,8 +40,6 @@ export default function NewCourseForm() {
       name: '',
       code: '',
       syllabus: '',
-      objectives: '',
-      competencies: '',
       bibliography_basic: '',
       bibliography_complementary: '',
       bibliography_recommended: '',
@@ -72,8 +68,8 @@ export default function NewCourseForm() {
       name: values.name,
       code: values.code,
       syllabus: values.syllabus,
-      objectives: values.objectives,
-      competencies: values.competencies || '',
+      learningUnits: [],
+      competencyMatrix: [],
       thematicTree: [], // Default empty value
       bibliography: {
         basic: values.bibliography_basic || '',
@@ -158,32 +154,6 @@ export default function NewCourseForm() {
                     <FormItem>
                       <FormLabel>Ementa</FormLabel>
                       <FormControl>
-                        <Textarea rows={5} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="objectives"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Objetivos</FormLabel>
-                      <FormControl>
-                        <Textarea rows={5} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                 <FormField
-                  control={form.control}
-                  name="competencies"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Competências</FormLabel>
-                       <FormControl>
                         <Textarea rows={5} {...field} />
                       </FormControl>
                       <FormMessage />

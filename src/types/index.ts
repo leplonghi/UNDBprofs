@@ -23,17 +23,32 @@ export interface Bibliography {
     recommended: string;
 }
 
+export interface Competency {
+    competency: string;
+    skills: {
+        skill: string;
+        descriptors: string;
+    }[];
+}
+
+export interface LearningUnit {
+    name: string;
+    content: string;
+}
+
 export interface Course {
   id: string;
   professorId: string;
   name: string;
   code: string;
   syllabus: string;
-  objectives: string;
-  competencies: string;
+  learningUnits?: LearningUnit[];
+  competencyMatrix?: Competency[];
   thematicTree: { name: string; description: string }[];
   bibliography: Bibliography;
   semester?: string;
+  objectives?: string; // Kept for compatibility, but no longer primary
+  competencies?: string; // Kept for compatibility, but no longer primary
 }
 
 export interface ClassScheduleItem {

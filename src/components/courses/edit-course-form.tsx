@@ -36,18 +36,32 @@ import { ThematicTreeEditor } from '@/components/import/ThematicTreeEditor';
 import { ClassScheduleEditor } from '@/components/import/ClassScheduleEditor';
 import { Badge } from '../ui/badge';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../ui/card';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+
+const competencySchema = z.object({
+    competency: z.string(),
+    skills: z.array(z.object({
+        skill: z.string(),
+        descriptors: z.string(),
+    })),
+});
+
+const learningUnitSchema = z.object({
+    name: z.string(),
+    content: z.string(),
+});
 
 const formSchema = z.object({
   courseName: z.string().min(1, 'Nome do curso é obrigatório.'),
   courseCode: z.string().min(1, 'Código do curso é obrigatório.'),
   syllabus: z.string().min(1, 'Ementa é obrigatória.'),
-  objectives: z.string().min(1, 'Objetivos são obrigatórios.'),
   workload: z.string().min(1, 'Carga horária é obrigatória.'),
   semester: z.string().min(1, 'Semestre é obrigatório.'),
   classType: z.enum(['Integradora', 'Modular'], {
     required_error: 'O tipo da turma é obrigatório.',
   }),
-  competencies: z.string().min(1, 'Competências são obrigatórias.'),
+  competencyMatrix: z.array(competencySchema).optional(),
+  learningUnits: z.array(learningUnitSchema).optional(),
   thematicTree: z
     .array(
       z.object({
@@ -112,11 +126,11 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
       courseName: '',
       courseCode: '',
       syllabus: '',
-      objectives: '',
       workload: '',
       semester: '',
       classType: 'Integradora',
-      competencies: '',
+      competencyMatrix: [],
+      learningUnits: [],
       thematicTree: [],
       bibliography: { basic: '', complementary: '', recommended: '' },
       classSchedule: [],
@@ -129,8 +143,8 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
         courseName: course.name,
         courseCode: course.code,
         syllabus: course.syllabus,
-        objectives: course.objectives,
-        competencies: course.competencies,
+        competencyMatrix: course.competencyMatrix || [],
+        learningUnits: course.learningUnits || [],
         thematicTree: course.thematicTree || [],
         bibliography: course.bibliography || {
           basic: '',
@@ -168,8 +182,8 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
       name: values.courseName,
       code: values.courseCode,
       syllabus: values.syllabus,
-      objectives: values.objectives,
-      competencies: values.competencies || '',
+      competencyMatrix: values.competencyMatrix || [],
+      learningUnits: values.learningUnits || [],
       thematicTree: values.thematicTree || [],
       bibliography: {
         basic: values.bibliography.basic || '',
@@ -210,6 +224,8 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
   }
 
   const detectedClassType = form.watch('classType');
+  const competencyMatrix = form.watch('competencyMatrix');
+  const learningUnits = form.watch('learningUnits');
 
   if (isCourseLoading || areClassroomsLoading) {
     return (
@@ -293,32 +309,45 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
                         </FormItem>
                         )}
                     />
-                    <FormField
-                        control={form.control}
-                        name="objectives"
-                        render={({ field }) => (
+                    {learningUnits && learningUnits.length > 0 && (
                         <FormItem>
-                            <FormLabel>Objetivos</FormLabel>
-                            <FormControl>
-                            <Textarea rows={5} {...field} />
-                            </FormControl>
-                            <FormMessage />
+                            <FormLabel>Unidades de Aprendizagem</FormLabel>
+                            <Accordion type="multiple" className="w-full">
+                                {learningUnits.map((unit, index) => (
+                                    <AccordionItem value={`unit-${index}`} key={index}>
+                                        <AccordionTrigger>{unit.name}</AccordionTrigger>
+                                        <AccordionContent>
+                                            <p className="text-muted-foreground whitespace-pre-wrap">{unit.content}</p>
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                ))}
+                            </Accordion>
                         </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="competencies"
-                        render={({ field }) => (
+                    )}
+                    {competencyMatrix && competencyMatrix.length > 0 && (
                         <FormItem>
-                            <FormLabel>Competências</FormLabel>
-                            <FormControl>
-                            <Textarea rows={5} {...field} />
-                            </FormControl>
-                            <FormMessage />
+                            <FormLabel>Matriz de Competências</FormLabel>
+                            <Accordion type="multiple" className="w-full border rounded-md px-4">
+                                {competencyMatrix.map((comp, compIndex) => (
+                                    <AccordionItem value={`comp-${compIndex}`} key={compIndex} className="border-b-0">
+                                        <AccordionTrigger className="text-base font-semibold">{comp.competency}</AccordionTrigger>
+                                        <AccordionContent>
+                                            <div className="space-y-4 pl-4">
+                                                {comp.skills.map((skill, skillIndex) => (
+                                                    <div key={skillIndex}>
+                                                        <h4 className="font-medium">{skill.skill}</h4>
+                                                        <p className="text-sm text-muted-foreground">
+                                                            <strong>Descritores:</strong> {skill.descriptors}
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                ))}
+                            </Accordion>
                         </FormItem>
-                        )}
-                    />
+                    )}
                     <ThematicTreeEditor control={form.control} />
                     <div className="space-y-4">
                         <h4 className="font-medium">Bibliografia</h4>

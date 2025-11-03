@@ -17,21 +17,35 @@ import { Loader2 } from 'lucide-react';
 import { useFirestore, useUser } from '@/firebase';
 import { doc, writeBatch } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
-import type { Course, Classroom, ClassScheduleItem, Bibliography } from '@/types';
+import type { Course, Classroom, ClassScheduleItem, Competency, LearningUnit } from '@/types';
 import { ThematicTreeEditor } from './ThematicTreeEditor';
 import { ClassScheduleEditor } from './ClassScheduleEditor';
 import { createActivitiesFromPreset } from '@/lib/presets';
 import { Badge } from '../ui/badge';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+
+const competencySchema = z.object({
+    competency: z.string(),
+    skills: z.array(z.object({
+        skill: z.string(),
+        descriptors: z.string(),
+    })),
+});
+
+const learningUnitSchema = z.object({
+    name: z.string(),
+    content: z.string(),
+});
 
 const formSchema = z.object({
   courseName: z.string().min(1, 'Nome do curso é obrigatório.'),
   courseCode: z.string().min(1, 'Código do curso é obrigatório.'),
   syllabus: z.string().min(1, 'Ementa é obrigatória.'),
-  objectives: z.string().min(1, 'Objetivos são obrigatórios.'),
   workload: z.string().min(1, 'Carga horária é obrigatória.'),
   semester: z.string().min(1, 'Semestre é obrigatório.'),
   classType: z.enum(['Integradora', 'Modular'], { required_error: 'O tipo da turma é obrigatório.' }),
-  competencies: z.string().min(1, 'Competências são obrigatórias.'),
+  competencyMatrix: z.array(competencySchema).optional(),
+  learningUnits: z.array(learningUnitSchema).optional(),
   thematicTree: z.array(z.object({ name: z.string().min(1, 'O nome é obrigatório.'), description: z.string().min(1, 'A descrição é obrigatória.') })).optional(),
   bibliography: z.object({
     basic: z.string().optional(),
@@ -64,11 +78,11 @@ export function ImportForm() {
       courseName: '',
       courseCode: '',
       syllabus: '',
-      objectives: '',
       workload: '',
       semester: '',
       classType: 'Integradora',
-      competencies: '',
+      competencyMatrix: [],
+      learningUnits: [],
       thematicTree: [],
       bibliography: {
         basic: '',
@@ -106,10 +120,10 @@ export function ImportForm() {
         courseName: extractedData.courseName,
         courseCode: extractedData.courseCode,
         syllabus: extractedData.syllabus,
-        objectives: extractedData.objectives,
         workload: extractedData.workload,
         semester: extractedData.semester,
-        competencies: extractedData.competencies,
+        competencyMatrix: extractedData.competencyMatrix || [],
+        learningUnits: extractedData.learningUnits || [],
         thematicTree: extractedData.thematicTree || [],
         bibliography: extractedData.bibliography || { basic: '', complementary: '', recommended: '' },
         classSchedule: extractedData.classSchedule || [],
@@ -143,8 +157,8 @@ export function ImportForm() {
         name: values.courseName,
         code: values.courseCode,
         syllabus: values.syllabus,
-        objectives: values.objectives,
-        competencies: values.competencies || '',
+        competencyMatrix: values.competencyMatrix || [],
+        learningUnits: values.learningUnits || [],
         thematicTree: values.thematicTree || [],
         bibliography: {
             basic: values.bibliography.basic || '',
@@ -194,6 +208,9 @@ export function ImportForm() {
   }
 
   const detectedClassType = form.watch('classType');
+  const competencyMatrix = form.watch('competencyMatrix');
+  const learningUnits = form.watch('learningUnits');
+
 
   if (!extractedData) {
     return (
@@ -251,32 +268,46 @@ export function ImportForm() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="objectives"
-                  render={({ field }) => (
+                 {learningUnits && learningUnits.length > 0 && (
                     <FormItem>
-                      <FormLabel>Objetivos</FormLabel>
-                      <FormControl>
-                        <Textarea rows={5} {...field} />
-                      </FormControl>
-                      <FormMessage />
+                        <FormLabel>Unidades de Aprendizagem</FormLabel>
+                        <Accordion type="multiple" className="w-full">
+                            {learningUnits.map((unit, index) => (
+                                <AccordionItem value={`unit-${index}`} key={index}>
+                                    <AccordionTrigger>{unit.name}</AccordionTrigger>
+                                    <AccordionContent>
+                                        <p className="text-muted-foreground whitespace-pre-wrap">{unit.content}</p>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            ))}
+                        </Accordion>
                     </FormItem>
-                  )}
-                />
-                 <FormField
-                  control={form.control}
-                  name="competencies"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Competências</FormLabel>
-                      <FormControl>
-                        <Textarea rows={5} {...field} />
-                      </FormControl>
-                      <FormMessage />
+                 )}
+                 {competencyMatrix && competencyMatrix.length > 0 && (
+                     <FormItem>
+                        <FormLabel>Matriz de Competências</FormLabel>
+                        <Accordion type="multiple" className="w-full border rounded-md px-4">
+                            {competencyMatrix.map((comp, compIndex) => (
+                                <AccordionItem value={`comp-${compIndex}`} key={compIndex} className="border-b-0">
+                                    <AccordionTrigger className="text-base font-semibold">{comp.competency}</AccordionTrigger>
+                                    <AccordionContent>
+                                        <div className="space-y-4 pl-4">
+                                            {comp.skills.map((skill, skillIndex) => (
+                                                <div key={skillIndex}>
+                                                    <h4 className="font-medium">{skill.skill}</h4>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        <strong>Descritores:</strong> {skill.descriptors}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            ))}
+                        </Accordion>
                     </FormItem>
-                  )}
-                />
+                 )}
+
                  <ThematicTreeEditor control={form.control} />
                  <div className='space-y-4'>
                     <h4 className='font-medium'>Bibliografia</h4>

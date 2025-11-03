@@ -16,7 +16,7 @@ import {
   useMemoFirebase,
   useCollection,
 } from '@/firebase';
-import type { Course, Classroom, ClassroomStudent, Activity } from '@/types';
+import type { Course, Classroom, ClassScheduleItem, Activity } from '@/types';
 import { doc, collection, query } from 'firebase/firestore';
 import {
   Table,
@@ -32,6 +32,7 @@ import { Button } from '@/components/ui/button';
 import { Edit, ArrowLeft } from 'lucide-react';
 import { ClassroomTabs } from '@/components/courses/classroom-tabs';
 import { cn } from '@/lib/utils';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 
 function CourseDetailsSkeleton() {
   return (
@@ -85,16 +86,48 @@ function CourseInformation({
           <h3 className="font-semibold">Ementa</h3>
           <p className="text-muted-foreground">{course.syllabus}</p>
         </div>
-        <div>
-          <h3 className="font-semibold">Objetivos</h3>
-          <p className="text-muted-foreground">{course.objectives}</p>
-        </div>
-        {course.competencies && (
-          <div>
-            <h3 className="font-semibold">Competências</h3>
-            <p className="text-muted-foreground">{course.competencies}</p>
-          </div>
+
+        {course.learningUnits && course.learningUnits.length > 0 && (
+           <div>
+            <h3 className="font-semibold mb-2">Unidades de Aprendizagem</h3>
+            <Accordion type="multiple" className="w-full">
+                {course.learningUnits.map((unit, index) => (
+                    <AccordionItem value={`unit-${index}`} key={index}>
+                        <AccordionTrigger>{unit.name}</AccordionTrigger>
+                        <AccordionContent>
+                            <p className="text-muted-foreground whitespace-pre-wrap">{unit.content}</p>
+                        </AccordionContent>
+                    </AccordionItem>
+                ))}
+            </Accordion>
+           </div>
         )}
+
+        {course.competencyMatrix && course.competencyMatrix.length > 0 && (
+             <div>
+                <h3 className="font-semibold mb-2">Matriz de Competências</h3>
+                <Accordion type="multiple" className="w-full border rounded-md px-4">
+                    {course.competencyMatrix.map((comp, compIndex) => (
+                        <AccordionItem value={`comp-${compIndex}`} key={compIndex} className="border-b-0 last:border-b-0">
+                            <AccordionTrigger className="text-base font-semibold">{comp.competency}</AccordionTrigger>
+                            <AccordionContent>
+                                <div className="space-y-4 pl-4">
+                                    {comp.skills.map((skill, skillIndex) => (
+                                        <div key={skillIndex}>
+                                            <h4 className="font-medium">{skill.skill}</h4>
+                                            <p className="text-sm text-muted-foreground">
+                                                <strong>Descritores:</strong> {skill.descriptors}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </AccordionContent>
+                        </AccordionItem>
+                    ))}
+                </Accordion>
+            </div>
+        )}
+        
         {course.thematicTree && course.thematicTree.length > 0 && (
           <div>
             <h3 className="font-semibold">Árvore Temática</h3>

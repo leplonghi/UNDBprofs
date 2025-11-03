@@ -21,15 +21,28 @@ export type ImportCourseFromLessonPlanInput = z.infer<
   typeof ImportCourseFromLessonPlanInputSchema
 >;
 
+const CompetencySchema = z.object({
+    competency: z.string().describe("The name/title of the competency."),
+    skills: z.array(z.object({
+        skill: z.string().describe("The name/title of the skill."),
+        descriptors: z.string().describe("A comma-separated list of descriptors for the skill.")
+    })).describe("The list of skills associated with the competency.")
+});
+
+const LearningUnitSchema = z.object({
+    name: z.string().describe("The name of the learning unit (e.g., 'UA 1')."),
+    content: z.string().describe("The content/description of the learning unit."),
+});
+
 const ImportCourseFromLessonPlanOutputSchema = z.object({
   courseName: z.string().describe('The name of the course.'),
   courseCode: z.string().describe('The code of the course.'),
-  syllabus: z.string().describe('The syllabus of the course.'),
-  objectives: z.string().describe('The objectives of the course.'),
-  workload: z.string().describe('The workload of the course'),
+  syllabus: z.string().describe('The syllabus of the course (Ementa).'),
+  workload: z.string().describe('The workload of the course (Carga Horária).'),
   semester: z.string().describe('The semester of the course'),
   classType: z.enum(['Integradora', 'Modular']).describe('The type of the class, determined by analyzing the course content. Should be "Integradora" for project-based studio disciplines or "Modular" for others.'),
-  competencies: z.string().describe('The competencies of the course.'),
+  competencyMatrix: z.array(CompetencySchema).describe("The competency matrix, including skills and descriptors."),
+  learningUnits: z.array(LearningUnitSchema).describe("The list of learning units (Unidades de Aprendizagem)."),
   thematicTree: z
     .array(
       z.object({
@@ -75,7 +88,7 @@ const prompt = ai.definePrompt({
   prompt: `
   You are a highly meticulous data extraction expert for academic documents from UNDB.
   Your task is to extract all key information from the provided lesson plan PDF and structure it into a JSON format.
-  You MUST be as fast and accurate as possible. Transcribe content word-for-word. Do NOT summarize or interpret.
+  You MUST be as fast and accurate as possible. Transcribe content word-for-word. Do NOT summarize or interpret. DO NOT look for a field named 'Objetivos'.
 
   **Analysis and Extraction Steps (Follow Precisely):**
 
@@ -83,23 +96,33 @@ const prompt = ai.definePrompt({
       - courseName: The name of the discipline.
       - courseCode: The code of the discipline.
       - syllabus: The "Ementa". Transcribe it exactly as it appears.
-      - objectives: The "Objetivos". This is a critical field. Find the section labeled "Objetivos" and transcribe its content word-for-word. Do not summarize.
       - workload: The "Carga Horária".
       - semester: The "Semestre".
-      - competencies: The "Competências". Transcribe it word-for-word.
 
-  2.  **Extract Thematic Tree (Árvore Temática)**:
+  2.  **Extract Competency Matrix (Matriz de Competências)**:
+      - This is a CRITICAL section. Find the table or section labeled "Matriz de Competências e Habilidades".
+      - For each "Competência" in the matrix, extract its name.
+      - For each "Habilidade" associated with that competency, extract its name.
+      - For each "Habilidade", extract the "Descritores" associated with it. This is often a list. Combine them into a single comma-separated string.
+      - Structure this into the 'competencyMatrix' array.
+
+  3.  **Extract Learning Units (Unidades de Aprendizagem - UA)**:
+      - Find the section detailing the "Unidades de Aprendizagem".
+      - For each unit (e.g., "UA 1", "UA 2"), extract its 'name' and its 'content' (the description of the unit).
+      - Structure this into the 'learningUnits' array.
+
+  4.  **Extract Thematic Tree (Árvore Temática)**:
       - This section describes the project stages or thematic units.
       - For each item in the tree, extract its 'name' (the title of the stage) and 'description'.
       - If this section is not present, return an empty array.
 
-  3.  **Extract Bibliography (Bibliografia)**:
+  5.  **Extract Bibliography (Bibliografia)**:
       - This is a CRITICAL step. You MUST identify three distinct sections: "Básica", "Complementar", and "Recomendada".
       - For each section, extract the full text content, including all numbering, author names, titles, and formatting.
       - **CRITICAL**: You MUST preserve the original line breaks (\n) within each bibliography section. Do not merge lines. The output for each bibliography field must be a single string containing the full, formatted text of that section.
       - If a section (e.g., "Recomendada") is not found, its corresponding JSON field must be an empty string.
 
-  4.  **Extract Class Schedule (Cronograma de Aulas)**:
+  6.  **Extract Class Schedule (Cronograma de Aulas)**:
       - Go through the class schedule table meticulously, day by day.
       - For each class entry, you MUST extract:
         - 'date': The date of the class. Standardize to YYYY-MM-DD format.
@@ -111,10 +134,10 @@ const prompt = ai.definePrompt({
       - If a day is marked as a holiday ('Feriado'), set the content to 'Feriado' and the type to 'FERIADO'.
       - If this section is not present, return an empty array.
 
-  5.  **Determine classType (Critical Classification)**:
+  7.  **Determine classType (Critical Classification)**:
       - This is a mandatory field. You must analyze the document to classify the discipline.
       - **Rule 1 (Highest Priority):** If the course name (courseName) contains the word "Estúdio", you MUST classify it as **"Integradora"**.
-      - **Rule 2:** If Rule 1 does not apply, analyze the document's content (syllabus, objectives, activities). If the discipline is heavily project-based, described as a "Studio", or shows a clear project development cycle (e.g., analysis, preliminary solution, final delivery), you MUST set classType to **"Integradora"**.
+      - **Rule 2:** If Rule 1 does not apply, analyze the document's content (syllabus, activities). If the discipline is heavily project-based, described as a "Studio", or shows a clear project development cycle (e.g., analysis, preliminary solution, final delivery), you MUST set classType to **"Integradora"**.
       - **Rule 3:** For all other traditional or theoretical disciplines, set classType to **"Modular"**.
       - You MUST provide a value for classType. Default to "Modular" ONLY if you are absolutely uncertain after applying all rules.
 
