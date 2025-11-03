@@ -46,9 +46,10 @@ export interface Course {
   competencyMatrix?: Competency[];
   thematicTree: { name: string; description: string }[];
   bibliography: Bibliography;
-  semester?: string;
-  objectives?: string; // Kept for compatibility, but no longer primary
-  competencies?: string; // Kept for compatibility, but no longer primary
+  // Deprecated fields, kept for compatibility if needed, but not primary.
+  semester?: string; 
+  objectives?: string; 
+  competencies?: string; 
 }
 
 export interface ClassScheduleItem {

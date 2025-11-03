@@ -108,7 +108,7 @@ function CourseInformation({
                 <h3 className="font-semibold mb-2">Matriz de Competências</h3>
                 <Accordion type="multiple" className="w-full border rounded-md px-4">
                     {course.competencyMatrix.map((comp, compIndex) => (
-                        <AccordionItem value={`comp-${compIndex}`} key={compIndex} className="border-b-0 last:border-b-0">
+                        <AccordionItem value={`comp-${compIndex}`} key={compIndex} className={cn("border-b", compIndex === course.competencyMatrix!.length - 1 && "border-b-0")}>
                             <AccordionTrigger className="text-base font-semibold">{comp.competency}</AccordionTrigger>
                             <AccordionContent>
                                 <div className="space-y-4 pl-4">
@@ -131,14 +131,18 @@ function CourseInformation({
         {course.thematicTree && course.thematicTree.length > 0 && (
           <div>
             <h3 className="font-semibold">Árvore Temática</h3>
-            <div className="mt-2 space-y-2">
+            <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {course.thematicTree.map((item, index) => (
-                <div key={index} className="p-3 border rounded-md">
-                  <p className="font-medium">{item.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {item.description}
-                  </p>
-                </div>
+                <Card key={index}>
+                  <CardHeader>
+                    <CardTitle className='text-lg'>{item.name}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      {item.description}
+                    </p>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           </div>
