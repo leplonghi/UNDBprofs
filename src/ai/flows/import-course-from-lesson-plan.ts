@@ -35,14 +35,14 @@ const LearningUnitSchema = z.object({
 });
 
 const ImportCourseFromLessonPlanOutputSchema = z.object({
-  courseName: z.string().describe('The name of the course, extracted from the "UNIDADE CURRICULAR" field.'),
-  courseCode: z.string().describe('The code of the course.'),
-  syllabus: z.string().describe('The syllabus of the course (Ementa).'),
-  workload: z.string().describe('The workload of the course (Carga Horária).'),
-  semester: z.string().describe('The semester of the course'),
-  classType: z.enum(['Integradora', 'Modular']).describe('The type of the class, determined by analyzing the course content. Should be "Integradora" for project-based studio disciplines or "Modular" for others.'),
-  competencyMatrix: z.array(CompetencySchema).describe("The competency matrix, including skills and descriptors."),
-  learningUnits: z.array(LearningUnitSchema).describe("The list of learning units (Unidades de Aprendizagem)."),
+  courseName: z.string().describe('The name of the course, extracted from the "UNIDADE CURRICULAR" field.').optional(),
+  courseCode: z.string().describe('The code of the course.').optional(),
+  syllabus: z.string().describe('The syllabus of the course (Ementa).').optional(),
+  workload: z.string().describe('The workload of the course (Carga Horária).').optional(),
+  semester: z.string().describe('The semester of the course').optional(),
+  classType: z.enum(['Integradora', 'Modular']).describe('The type of the class, determined by analyzing the course content. Should be "Integradora" for project-based studio disciplines or "Modular" for others.').optional(),
+  competencyMatrix: z.array(CompetencySchema).describe("The competency matrix, including skills and descriptors.").optional(),
+  learningUnits: z.array(LearningUnitSchema).describe("The list of learning units (Unidades de Aprendizagem).").optional(),
   thematicTree: z
     .array(
       z.object({
@@ -52,12 +52,12 @@ const ImportCourseFromLessonPlanOutputSchema = z.object({
           .describe('A brief description of the stage.'),
       })
     )
-    .describe('The thematic tree or project process steps of the course.'),
+    .describe('The thematic tree or project process steps of the course.').optional(),
   bibliography: z.object({
-    basic: z.string().describe('The basic bibliography items.'),
-    complementary: z.string().describe('The complementary bibliography items.'),
-    recommended: z.string().describe('The recommended bibliography items.'),
-  }).describe('The bibliography of the course, separated into basic, complementary, and recommended sections. Preserve formatting with line breaks.'),
+    basic: z.string().describe('The basic bibliography items.').optional(),
+    complementary: z.string().describe('The complementary bibliography items.').optional(),
+    recommended: z.string().describe('The recommended bibliography items.').optional(),
+  }).describe('The bibliography of the course, separated into basic, complementary, and recommended sections. Preserve formatting with line breaks.').optional(),
   classSchedule: z
     .array(
       z.object({
@@ -69,7 +69,7 @@ const ImportCourseFromLessonPlanOutputSchema = z.object({
         location: z.string().describe('The location of the class (e.g., Sala de Aula, Laboratório). If not present, this should be an empty string.'),
       })
     )
-    .describe('A structured list of class schedule events, extracted from the main table of the document.'),
+    .describe('A structured list of class schedule events, extracted from the main table of the document.').optional(),
 });
 export type ImportCourseFromLessonPlanOutput = z.infer<
   typeof ImportCourseFromLessonPlanOutputSchema
