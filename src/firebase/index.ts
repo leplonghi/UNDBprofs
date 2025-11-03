@@ -5,7 +5,6 @@ import type { Query, DocumentReference } from 'firebase/firestore';
 export * from './provider';
 export * from './firestore/use-collection';
 export * from './firestore/use-doc';
-export * from './non-blocking-updates';
 
 /**
  * A wrapper around useMemo that provides a stable reference to a Firestore query or document.
