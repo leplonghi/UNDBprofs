@@ -51,6 +51,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Label } from '../ui/label';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
+import { cn } from '@/lib/utils';
 
 function StudentRowDisplay({ student }: { student: Student }) {
   if (!student) return null;
@@ -66,6 +67,14 @@ function StudentRowDisplay({ student }: { student: Student }) {
     </div>
   );
 }
+
+const groupColors = [
+    'bg-sky-50 dark:bg-sky-900/20',
+    'bg-emerald-50 dark:bg-emerald-900/20',
+    'bg-amber-50 dark:bg-amber-900/20',
+    'bg-rose-50 dark:bg-rose-900/20',
+    'bg-violet-50 dark:bg-violet-900/20',
+];
 
 export function StudentGroups({
   courseId,
@@ -601,8 +610,7 @@ export function StudentGroups({
   if (gradeStructure.length === 0) {
     return (
       <div className="py-10 text-center text-muted-foreground">
-        Nenhuma atividade avaliativa foi definida para esta turma. Vá para a aba
-        "Atividades" para configurar um preset.
+        Nenhuma atividade avaliativa foi definida para esta turma.
       </div>
     );
   }
@@ -611,16 +619,17 @@ export function StudentGroups({
 
   const renderGroupView = () => (
      <>
-        {(filteredData as { groups: (Group & {members: string[]})[], ungrouped: string[] }).groups.map((group) => {
+        {(filteredData as { groups: (Group & {members: string[]})[], ungrouped: string[] }).groups.map((group, groupIndex) => {
             const firstStudentId = group.members[0];
             if (!firstStudentId) return null;
             const grades = localGrades[firstStudentId] || [];
             const { n1Total, n2Total, finalGrade } = calculateTotals(grades);
+            const colorClass = groupColors[groupIndex % groupColors.length];
 
             return (
             <React.Fragment key={`group-desktop-${group.id}`}>
-                <TableRow className="bg-muted/80 hover:bg-muted/80">
-                    <TableCell className="sticky left-0 bg-inherit z-10 font-semibold">
+                <TableRow className={cn(colorClass, 'font-semibold')}>
+                    <TableCell className={cn("sticky left-0 z-10 font-semibold", colorClass)}>
                        <div className="flex items-center justify-between">
                           <Input 
                             defaultValue={group.name}
@@ -665,8 +674,8 @@ export function StudentGroups({
                    const studentGrades = localGrades[csId] || [];
                    const { n1Total, n2Total, finalGrade } = calculateTotals(studentGrades);
                    return(
-                    <TableRow key={csId} className="border-l-4 border-primary/50 bg-background hover:bg-muted/30">
-                       <TableCell className="sticky left-0 bg-inherit z-10 pl-4">
+                    <TableRow key={csId} className={cn(colorClass, "bg-opacity-50")}>
+                       <TableCell className={cn("sticky left-0 z-10 pl-8", colorClass)}>
                             <div className="flex items-center justify-between">
                               <StudentRowDisplay student={student} />
                               <Button variant="ghost" size="icon" className="h-6 w-6 opacity-50 hover:opacity-100" onClick={() => handleRemoveStudentFromGroup(csId)}>
@@ -685,11 +694,11 @@ export function StudentGroups({
                     </TableRow>
                    )
                 })}
-                <TableRow>
-                  <TableCell className="sticky left-0 bg-inherit z-10 pl-8 py-1">
+                <TableRow className={cn(colorClass)}>
+                  <TableCell className={cn("sticky left-0 z-10 pl-8 py-1", colorClass)}>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" size="sm" className="h-7">
+                        <Button variant="outline" size="sm" className="h-7 bg-background">
                           <PlusCircle className="mr-2 h-3 w-3" /> Adicionar Aluno
                         </Button>
                       </PopoverTrigger>
