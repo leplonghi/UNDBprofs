@@ -45,7 +45,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Skeleton } from '../ui/skeleton';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import debounce from 'lodash.debounce';
-import { Loader2, Users, Trash2, Search, X, PlusCircle, Download } from 'lucide-react';
+import { Loader2, Users, Trash2, Search, X, PlusCircle, Download, Save } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
@@ -92,6 +92,7 @@ export function StudentGroups({
   const { user } = useUser();
   const [isSaving, setIsSaving] = useState(false);
   const [localGrades, setLocalGrades] = useState<Record<string, Grade[]>>({});
+  const [hasChanges, setHasChanges] = useState(false);
   
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [allStudentsData, setAllStudentsData] = useState<Record<string, Student>>({});
@@ -168,6 +169,7 @@ export function StudentGroups({
       initialGrades[cs.id] = studentGrades;
     }
     setLocalGrades(initialGrades);
+    setHasChanges(false); // Reset changes when data reloads
   }, [classroomStudents, isLoading, isStudentDataLoading, gradeStructure]);
 
   const { studentGroups, ungroupedStudents } = useMemo(() => {
@@ -215,48 +217,40 @@ export function StudentGroups({
   }, [classroomStudents, allStudentsData]);
 
 
-  const debouncedSaveChanges = useCallback(
-    debounce(async (gradesToSave: Record<string, Grade[]>) => {
-      if (!user || !firestore || Object.keys(gradesToSave).length === 0) return;
-
-      setIsSaving(true);
-      const batch = writeBatch(firestore);
-
-      try {
-        for (const [csId, grades] of Object.entries(gradesToSave)) {
-          const studentRef = doc(
-            firestore,
-            `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/classroomStudents/${csId}`
-          );
-          batch.update(studentRef, { grades });
-        }
-        
-        await batch.commit();
-
-        toast({
-          title: 'Notas Salvas!',
-          description: 'As alterações foram salvas com sucesso.',
-        });
-      } catch (error) {
-        console.error('Error saving grades:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Erro ao Salvar',
-          description: 'Não foi possível salvar as notas.',
-        });
-      } finally {
-        setIsSaving(false);
+  const handleSaveAllGrades = useCallback(async () => {
+    if (!user || !firestore || Object.keys(localGrades).length === 0 || !hasChanges) return;
+  
+    setIsSaving(true);
+    const batch = writeBatch(firestore);
+  
+    try {
+      for (const [csId, grades] of Object.entries(localGrades)) {
+        const studentRef = doc(
+          firestore,
+          `professors/${user.uid}/courses/${courseId}/classrooms/${classroomId}/classroomStudents/${csId}`
+        );
+        batch.update(studentRef, { grades });
       }
-    }, 1500),
-    [user, firestore, courseId, classroomId, toast]
-  );
-
-  useEffect(() => {
-    if (Object.keys(localGrades).length > 0 && classroomStudents.length > 0) {
-      debouncedSaveChanges(localGrades);
+      
+      await batch.commit();
+  
+      toast({
+        title: 'Notas Salvas!',
+        description: 'Todas as alterações foram salvas com sucesso.',
+      });
+      setHasChanges(false);
+    } catch (error) {
+      console.error('Error saving grades:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao Salvar',
+        description: 'Não foi possível salvar as notas.',
+      });
+    } finally {
+      setIsSaving(false);
     }
-    return () => debouncedSaveChanges.cancel();
-  }, [localGrades, classroomStudents, debouncedSaveChanges]);
+  }, [user, firestore, localGrades, courseId, classroomId, toast, hasChanges]);
+
 
   const handleGradeChange = (
     studentOrGroupId: string,
@@ -297,6 +291,7 @@ export function StudentGroups({
 
       return newGrades;
     });
+    setHasChanges(true);
   };
 
   const handleCreateGroup = async () => {
@@ -563,7 +558,6 @@ export function StudentGroups({
                 }
               }}
               className="w-full"
-              disabled={isSaving}
             />
           </div>
         ))}
@@ -667,7 +661,6 @@ export function StudentGroups({
                                 }
                               }}
                               className="w-20 mx-auto text-center"
-                              disabled={isSaving}
                             />
                         </TableCell>
                     ))}
@@ -767,7 +760,6 @@ export function StudentGroups({
                                 }
                               }}
                               className="w-20 mx-auto text-center"
-                              disabled={isSaving}
                             />
                         </TableCell>
                     ))}
@@ -825,7 +817,6 @@ export function StudentGroups({
                     }
                   }}
                   className="w-20 mx-auto text-center"
-                  disabled={isSaving}
                 />
               </TableCell>
             ))}
@@ -1018,16 +1009,20 @@ export function StudentGroups({
             <div className="space-y-1 flex-grow">
               <h3 className="text-lg font-semibold">Lançamento de Notas</h3>
               <p className="text-sm text-muted-foreground">
-                Selecione alunos e clique em "Agrupar" para criar um novo grupo.
+                Selecione alunos e clique em "Agrupar" para criar um novo grupo. Clique em "Salvar Notas" para persistir as alterações.
               </p>
             </div>
             <div className="flex items-center gap-2 self-end md:self-center">
               <Button
                 onClick={handleCreateGroup}
-                disabled={isSaving || selectedStudents.length === 0}
+                disabled={selectedStudents.length === 0}
               >
                 <Users className="mr-2 h-4 w-4" />
                 Agrupar
+              </Button>
+              <Button onClick={handleSaveAllGrades} disabled={!hasChanges || isSaving}>
+                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                 Salvar Notas
               </Button>
                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -1041,9 +1036,6 @@ export function StudentGroups({
                     <DropdownMenuItem onSelect={exportToPDF}>Exportar para PDF</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-              {isSaving && (
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-              )}
             </div>
         </div>
 
@@ -1084,7 +1076,3 @@ export function StudentGroups({
     </div>
   );
 }
-
-    
-
-    

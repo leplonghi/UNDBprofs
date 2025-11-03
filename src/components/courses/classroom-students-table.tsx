@@ -106,24 +106,11 @@ function StudentRow({
     );
   }
 
-  const average =
-    classroomStudent.grades && classroomStudent.grades.length > 0
-      ? (
-          classroomStudent.grades.reduce((acc, grade) => acc + grade.score, 0) /
-          classroomStudent.grades.length
-        ).toFixed(1)
-      : 'N/A';
-
   return (
     <>
       <TableRow>
         <TableCell>
           <div className="flex items-center gap-3">
-            <Avatar className="h-8 w-8">
-              <AvatarFallback>
-                {student.name ? student.name.charAt(0) : '?'}
-              </AvatarFallback>
-            </Avatar>
             <span className="font-medium">{student.name}</span>
           </div>
         </TableCell>
@@ -131,7 +118,6 @@ function StudentRow({
         <TableCell className="text-muted-foreground">
           {student.registrationId || 'N/A'}
         </TableCell>
-        <TableCell className="font-medium">{average}</TableCell>
         <TableCell className="text-right">
           <Button
             variant="ghost"
@@ -194,7 +180,6 @@ export function ClassroomStudentsTable({
                 <TableHead>Nome</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Matrícula</TableHead>
-                <TableHead>Média</TableHead>
                 <TableHead className="w-[100px] text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -202,14 +187,14 @@ export function ClassroomStudentsTable({
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell colSpan={5}>
+                    <TableCell colSpan={4}>
                       <Skeleton className="h-8 w-full" />
                     </TableCell>
                   </TableRow>
                 ))
               ) : !classroomStudents || classroomStudents.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
+                  <TableCell colSpan={4} className="h-24 text-center">
                     Nenhum aluno encontrado nesta turma.
                   </TableCell>
                 </TableRow>
