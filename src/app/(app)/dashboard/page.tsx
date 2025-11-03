@@ -18,6 +18,7 @@ import { PlusCircle } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TutorialTab } from '@/components/dashboard/tutorial-tab';
 
+// Force change detection
 export default function DashboardPage() {
   const router = useRouter();
   const { user } = useUser();
