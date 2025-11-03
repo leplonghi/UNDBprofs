@@ -105,3 +105,12 @@ export interface AcademicEvent {
     dateTime: string; // ISO 8601 format
     description: string;
 }
+
+export type StudentSituation = 'Aprovado' | 'Prova Final' | 'Reprovado';
+
+export interface StudentAnalytics {
+    studentId: string;
+    name: string;
+    finalGrade: number;
+    situation: StudentSituation;
+}
