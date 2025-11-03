@@ -52,7 +52,9 @@ export async function POST(req: NextRequest) {
  */
 export async function DELETE() {
   try {
-    cookies().set('session', '', { path: '/', maxAge: 0 });
+    // Get the cookies object and then call .set() on it.
+    const cookieStore = cookies();
+    cookieStore.set('session', '', { path: '/', maxAge: 0 });
     return NextResponse.json({ status: 'signed-out' });
   } catch (error) {
     console.error('Session logout error:', error);
