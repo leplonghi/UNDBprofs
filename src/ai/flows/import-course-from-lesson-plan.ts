@@ -35,7 +35,7 @@ const LearningUnitSchema = z.object({
 });
 
 const ImportCourseFromLessonPlanOutputSchema = z.object({
-  courseName: z.string().describe('The name of the course.'),
+  courseName: z.string().describe('The name of the course, extracted from the "UNIDADE CURRICULAR" field.'),
   courseCode: z.string().describe('The code of the course.'),
   syllabus: z.string().describe('The syllabus of the course (Ementa).'),
   workload: z.string().describe('The workload of the course (Carga Horária).'),
@@ -61,15 +61,15 @@ const ImportCourseFromLessonPlanOutputSchema = z.object({
   classSchedule: z
     .array(
       z.object({
-        date: z.string().describe('The date of the class (format: YYYY-MM-DD).'),
-        type: z.string().describe('The type of class (e.g., TEÓRICA, PRÁTICA, FERIADO).'),
-        topic: z.string().describe('The main topic or unit (e.g., UA I, UA II).'),
-        content: z.string().describe('The content or topic of the class.'),
-        activity: z.string().describe('The activity planned for the class.'),
-        location: z.string().describe('The location of the class (e.g., Sala de Aula, Laboratório).'),
+        date: z.string().describe('The date of the class (format: YYYY-MM-DD). If not present, this should be an empty string.'),
+        type: z.string().describe('The type of class (e.g., TEÓRICA, PRÁTICA, FERIADO). This corresponds to the HABILIDADES column in the document.'),
+        topic: z.string().describe('The main topic or unit (e.g., I - Teoria e Método). This corresponds to the UNIDADE DE APRENDIZAGEM column.'),
+        content: z.string().describe('The content or topic of the class. This corresponds to the DESCRITORES column.'),
+        activity: z.string().describe('The activity planned for the class. This corresponds to the column after DESCRITORES.'),
+        location: z.string().describe('The location of the class (e.g., Sala de Aula, Laboratório). If not present, this should be an empty string.'),
       })
     )
-    .describe('A structured list of class schedule events.'),
+    .describe('A structured list of class schedule events, extracted from the main table of the document.'),
 });
 export type ImportCourseFromLessonPlanOutput = z.infer<
   typeof ImportCourseFromLessonPlanOutputSchema
@@ -93,46 +93,45 @@ const prompt = ai.definePrompt({
   **Analysis and Extraction Steps (Follow Precisely):**
 
   1.  **Extract Key Fields**: Identify and extract the following fields from the document.
-      - courseName: The name of the discipline.
-      - courseCode: The code of the discipline.
+      - courseName: The name of the discipline, which is located in the "UNIDADE CURRICULAR" field.
+      - courseCode: The code of the discipline. If not present, leave it empty.
       - syllabus: The "Ementa". Transcribe it exactly as it appears.
       - workload: The "Carga Horária".
       - semester: The "Semestre".
 
   2.  **Extract Competency Matrix (Matriz de Competências)**:
-      - This is a CRITICAL section. Find the table or section labeled "Matriz de Competências e Habilidades".
+      - This is a CRITICAL section. Find the table or section labeled "Matriz de Competências".
       - For each "Competência" in the matrix, extract its name.
       - For each "Habilidade" associated with that competency, extract its name.
       - For each "Habilidade", extract the "Descritores" associated with it. This is often a list. Combine them into a single comma-separated string.
-      - Structure this into the 'competencyMatrix' array.
-
-  3.  **Extract Learning Units (Unidades de Aprendizagem - UA)**:
-      - Find the section detailing the "Unidades de Aprendizagem".
+      - Structure this into the 'competencyMatrix' array. If this section is not present, return an empty array.
+  
+  3.  **Extract Learning Units (Unidades de Aprendizagem - This is the main table)**:
+      - This is a separate task from extracting the class schedule. Find the section detailing the "Unidades de Aprendizagem" and their content descriptions.
       - For each unit (e.g., "UA 1", "UA 2"), extract its 'name' and its 'content' (the description of the unit).
-      - Structure this into the 'learningUnits' array.
+      - Structure this into the 'learningUnits' array. If this section is not present, return an empty array.
 
-  4.  **Extract Thematic Tree (Árvore Temática)**:
+  4.  **Extract Class Schedule (Main Content Table)**:
+      - This is the most detailed part of the document. Go through the table that has columns like "UNIDADE DE APRENDIZAGEM", "HABILidades", "DESCRITORES", and a column with activities and times.
+      - For each row in this table, you MUST extract:
+        - 'topic': The content from the "UNIDADE DE APRENDIZAGEM" column (e.g., "I - Teoria e Método").
+        - 'type': The content from the "HABILIDADES" column (e.g., "- Interpretação crítica da legislação...").
+        - 'content': The content from the "DESCRITORES" column.
+        - 'activity': The content from the column to the right of "DESCRITORES", which contains the list of activities (e.g., "Leitura orientada & debate...").
+        - 'date': The date of the class. If there is no date column, leave this as an empty string.
+        - 'location': The location of the class. If there is no location column, leave this as an empty string.
+      - You MUST extract every single row from this detailed schedule table.
+
+  5.  **Extract Thematic Tree (Árvore Temática)**:
       - This section describes the project stages or thematic units.
       - For each item in the tree, extract its 'name' (the title of the stage) and 'description'.
       - If this section is not present, return an empty array.
 
-  5.  **Extract Bibliography (Bibliografia)**:
+  6.  **Extract Bibliography (Bibliografia)**:
       - This is a CRITICAL step. You MUST identify three distinct sections: "Básica", "Complementar", and "Recomendada".
       - For each section, extract the full text content, including all numbering, author names, titles, and formatting.
       - **CRITICAL**: You MUST preserve the original line breaks (\n) within each bibliography section. Do not merge lines. The output for each bibliography field must be a single string containing the full, formatted text of that section.
       - If a section (e.g., "Recomendada") is not found, its corresponding JSON field must be an empty string.
-
-  6.  **Extract Class Schedule (Cronograma de Aulas)**:
-      - Go through the class schedule table meticulously, day by day.
-      - For each class entry, you MUST extract:
-        - 'date': The date of the class. Standardize to YYYY-MM-DD format.
-        - 'type': The type of class (e.g., TEÓRICA, PRÁTICA, FERIADO).
-        - 'topic': The main topic or unit (e.g., UA I, UA II).
-        - 'content': The detailed subject or content of the class. Transcribe it completely.
-        - 'activity': The activity planned for that class. Transcribe it completely.
-        - 'location': The location of the class (e.g., Sala de Aula, Laboratório).
-      - If a day is marked as a holiday ('Feriado'), set the content to 'Feriado' and the type to 'FERIADO'.
-      - If this section is not present, return an empty array.
 
   7.  **Determine classType (Critical Classification)**:
       - This is a mandatory field. You must analyze the document to classify the discipline.
