@@ -83,7 +83,7 @@ const prompt = ai.definePrompt({
       - courseName: The name of the discipline.
       - courseCode: The code of the discipline.
       - syllabus: The "Ementa". Transcribe it exactly as it appears.
-      - objectives: The "Objetivos". Transcribe it word-for-word.
+      - objectives: The "Objetivos". This is a critical field. Find the section labeled "Objetivos" and transcribe its content word-for-word. Do not summarize.
       - workload: The "Carga Horária".
       - semester: The "Semestre".
       - competencies: The "Competências". Transcribe it word-for-word.
