@@ -16,6 +16,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import type { Course } from '@/types';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Nome da disciplina é obrigatório.'),
@@ -79,14 +81,22 @@ export default function NewCoursePage() {
       },
     };
     
-    await setDoc(courseRef, courseData, { merge: false });
-
-    toast({
-      title: 'Disciplina Criada com Sucesso!',
-      description: `A disciplina "${values.name}" foi adicionada.`,
-    });
-    
-    router.push('/disciplinas');
+    setDoc(courseRef, courseData, { merge: false })
+      .then(() => {
+        toast({
+          title: 'Disciplina Criada com Sucesso!',
+          description: `A disciplina "${values.name}" foi adicionada.`,
+        });
+        router.push('/disciplinas');
+      })
+      .catch((serverError) => {
+          const permissionError = new FirestorePermissionError({
+              path: courseRef.path,
+              operation: 'create',
+              requestResourceData: courseData,
+          });
+          errorEmitter.emit('permission-error', permissionError);
+      });
   }
 
   return (
