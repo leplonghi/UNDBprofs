@@ -34,6 +34,8 @@ import { collection, doc, deleteDoc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import type { Course } from '@/types';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export function CoursesTable() {
   const { user } = useUser();
@@ -55,24 +57,24 @@ export function CoursesTable() {
     setIsDeleting(true);
     const courseDocRef = doc(firestore, `professors/${user.uid}/courses/${courseToDelete.id}`);
 
-    try {
-      await deleteDoc(courseDocRef);
-      
-      toast({
-        title: "Disciplina Excluída!",
-        description: `A disciplina "${courseToDelete.name}" foi removida.`,
+    deleteDoc(courseDocRef)
+      .then(() => {
+        toast({
+          title: "Disciplina Excluída!",
+          description: `A disciplina "${courseToDelete.name}" foi removida.`,
+        });
+      })
+      .catch((serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: courseDocRef.path,
+            operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      })
+      .finally(() => {
+        setIsDeleting(false);
+        setCourseToDelete(null);
       });
-    } catch (error) {
-      console.error("Error deleting course: ", error);
-      toast({
-        variant: "destructive",
-        title: "Erro ao Excluir",
-        description: "Não foi possível remover a disciplina. Tente novamente.",
-      });
-    } finally {
-      setIsDeleting(false);
-      setCourseToDelete(null);
-    }
   };
 
   return (
