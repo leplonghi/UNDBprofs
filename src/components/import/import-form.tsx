@@ -18,11 +18,11 @@ import { useFirestore, useUser } from '@/firebase';
 import { doc, writeBatch } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import type { Course, Classroom, ClassScheduleItem, Competency, LearningUnit } from '@/types';
-import { ThematicTreeEditor } from './ThematicTreeEditor';
 import { ClassScheduleEditor } from './ClassScheduleEditor';
 import { createActivitiesFromPreset } from '@/lib/presets';
 import { Badge } from '../ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 
 const competencySchema = z.object({
     competency: z.string(),
@@ -211,6 +211,7 @@ export function ImportForm() {
   const detectedClassType = form.watch('classType');
   const competencyMatrix = form.watch('competencyMatrix');
   const learningUnits = form.watch('learningUnits');
+  const thematicTree = form.watch('thematicTree');
 
 
   if (!extractedData) {
@@ -309,7 +310,26 @@ export function ImportForm() {
                     </FormItem>
                  )}
 
-                 <ThematicTreeEditor control={form.control} />
+                {thematicTree && thematicTree.length > 0 && (
+                    <div>
+                        <h3 className="text-sm font-medium mb-2">Árvore Temática</h3>
+                        <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {thematicTree.map((item, index) => (
+                            <Card key={index}>
+                            <CardHeader>
+                                <CardTitle className='text-lg'>{item.name}</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-sm text-muted-foreground">
+                                {item.description}
+                                </p>
+                            </CardContent>
+                            </Card>
+                        ))}
+                        </div>
+                    </div>
+                )}
+                 
                  <div className='space-y-4'>
                     <h4 className='font-medium'>Bibliografia</h4>
                     <FormField

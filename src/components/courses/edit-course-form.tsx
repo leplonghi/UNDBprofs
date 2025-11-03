@@ -32,7 +32,6 @@ import type {
   ClassScheduleItem,
   Bibliography,
 } from '@/types';
-import { ThematicTreeEditor } from '@/components/import/ThematicTreeEditor';
 import { ClassScheduleEditor } from '@/components/import/ClassScheduleEditor';
 import { Badge } from '../ui/badge';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../ui/card';
@@ -226,6 +225,7 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
   const detectedClassType = form.watch('classType');
   const competencyMatrix = form.watch('competencyMatrix');
   const learningUnits = form.watch('learningUnits');
+  const thematicTree = form.watch('thematicTree');
 
   if (isCourseLoading || areClassroomsLoading) {
     return (
@@ -348,7 +348,27 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
                             </Accordion>
                         </FormItem>
                     )}
-                    <ThematicTreeEditor control={form.control} />
+                    
+                    {thematicTree && thematicTree.length > 0 && (
+                        <div>
+                            <h3 className="text-sm font-medium mb-2">Árvore Temática</h3>
+                            <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {thematicTree.map((item, index) => (
+                                <Card key={index}>
+                                <CardHeader>
+                                    <CardTitle className='text-lg'>{item.name}</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-sm text-muted-foreground">
+                                    {item.description}
+                                    </p>
+                                </CardContent>
+                                </Card>
+                            ))}
+                            </div>
+                        </div>
+                    )}
+
                     <div className="space-y-4">
                         <h4 className="font-medium">Bibliografia</h4>
                         <FormField
