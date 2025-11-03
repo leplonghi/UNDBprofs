@@ -29,7 +29,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Users, Edit } from 'lucide-react';
+import { Users, Edit, ArrowLeft } from 'lucide-react';
 import { StudentUploadDialog } from '@/components/courses/student-upload-dialog';
 import { ClassroomStudentsTable } from '@/components/courses/classroom-students-table';
 import { StudentGroups } from '@/components/courses/student-groups';
@@ -346,6 +346,7 @@ function ClassroomManager({
 export function CourseDetailClient({ courseId }: { courseId: string }) {
   const { user } = useUser();
   const firestore = useFirestore();
+  const router = useRouter();
 
   const courseDocRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -376,10 +377,15 @@ export function CourseDetailClient({ courseId }: { courseId: string }) {
 
   if (!course) {
     return (
-      <div>
-        <h1 className="text-2xl font-bold text-destructive">
-          Disciplina não encontrada
-        </h1>
+      <div className="flex flex-col gap-6">
+         <div className="flex items-center gap-4">
+            <Button variant="outline" size="icon" onClick={() => router.back()}>
+                <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <h1 className="text-2xl font-bold text-destructive">
+            Disciplina não encontrada
+            </h1>
+        </div>
         <p className="text-muted-foreground">
           A disciplina que você está procurando não existe ou você não tem
           permissão para vê-la.
@@ -390,9 +396,14 @@ export function CourseDetailClient({ courseId }: { courseId: string }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-primary">{course.name}</h1>
-        <Badge variant="outline">{course.code}</Badge>
+      <div className="flex items-center gap-4">
+        <Button variant="outline" size="icon" onClick={() => router.back()}>
+            <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div className='flex-grow flex items-center justify-between'>
+            <h1 className="text-2xl font-bold text-primary">{course.name}</h1>
+            <Badge variant="outline">{course.code}</Badge>
+        </div>
       </div>
 
       <Tabs defaultValue="classroom" className="w-full">

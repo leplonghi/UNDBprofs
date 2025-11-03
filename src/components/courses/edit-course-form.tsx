@@ -17,7 +17,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 import {
   useFirestore,
   useUser,
@@ -235,180 +235,186 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Editar Plano de Ensino</CardTitle>
-        <CardDescription>
-          Modifique as informações da disciplina e da turma abaixo.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+    <div className='flex flex-col gap-6'>
+         <div className="flex items-center gap-4">
+            <Button variant="outline" size="icon" onClick={() => router.back()}>
+                <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+                <h1 className="text-2xl font-bold text-primary">Editar Plano de Ensino</h1>
+                <p className="text-muted-foreground">Modifique as informações da disciplina e da turma abaixo.</p>
+            </div>
+        </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="space-y-4 rounded-lg border p-4">
-              <h3 className="font-semibold text-lg text-primary">
-                Dados da Disciplina
-              </h3>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="courseName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nome da Disciplina</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="courseCode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Código</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <FormField
-                control={form.control}
-                name="syllabus"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Ementa</FormLabel>
-                    <FormControl>
-                      <Textarea rows={5} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="objectives"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Objetivos</FormLabel>
-                    <FormControl>
-                      <Textarea rows={5} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="competencies"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Competências</FormLabel>
-                    <FormControl>
-                      <Textarea rows={5} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <ThematicTreeEditor control={form.control} />
-              <div className="space-y-4">
-                <h4 className="font-medium">Bibliografia</h4>
-                <FormField
-                  control={form.control}
-                  name="bibliography.basic"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Básica</FormLabel>
-                      <FormControl>
-                        <Textarea rows={5} {...field} className="font-sans" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="bibliography.complementary"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Complementar</FormLabel>
-                      <FormControl>
-                        <Textarea rows={5} {...field} className="font-sans" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="bibliography.recommended"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Recomendada</FormLabel>
-                      <FormControl>
-                        <Textarea rows={3} {...field} className="font-sans" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Dados da Disciplina</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <FormField
+                        control={form.control}
+                        name="courseName"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Nome da Disciplina</FormLabel>
+                            <FormControl>
+                                <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name="courseCode"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Código</FormLabel>
+                            <FormControl>
+                                <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                    </div>
+                    <FormField
+                        control={form.control}
+                        name="syllabus"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Ementa</FormLabel>
+                            <FormControl>
+                            <Textarea rows={5} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="objectives"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Objetivos</FormLabel>
+                            <FormControl>
+                            <Textarea rows={5} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="competencies"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Competências</FormLabel>
+                            <FormControl>
+                            <Textarea rows={5} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <ThematicTreeEditor control={form.control} />
+                    <div className="space-y-4">
+                        <h4 className="font-medium">Bibliografia</h4>
+                        <FormField
+                        control={form.control}
+                        name="bibliography.basic"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Básica</FormLabel>
+                            <FormControl>
+                                <Textarea rows={5} {...field} className="font-sans" />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name="bibliography.complementary"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Complementar</FormLabel>
+                            <FormControl>
+                                <Textarea rows={5} {...field} className="font-sans" />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name="bibliography.recommended"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Recomendada</FormLabel>
+                            <FormControl>
+                                <Textarea rows={3} {...field} className="font-sans" />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                    </div>
+                </CardContent>
+            </Card>
 
-            <div className="space-y-4 rounded-lg border p-4">
-              <h3 className="font-semibold text-lg text-primary">
-                Dados da Turma
-              </h3>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <FormField
-                  control={form.control}
-                  name="semester"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Semestre</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="workload"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Carga Horária</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="space-y-2">
-                  <FormLabel>Tipo da Turma</FormLabel>
-                  <div className="flex items-center h-10">
-                    <Badge
-                      variant={
-                        detectedClassType === 'Integradora'
-                          ? 'default'
-                          : 'secondary'
-                      }
-                    >
-                      {detectedClassType}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-              <ClassScheduleEditor control={form.control} />
-            </div>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Dados da Turma</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                        <FormField
+                        control={form.control}
+                        name="semester"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Semestre</FormLabel>
+                            <FormControl>
+                                <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name="workload"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Carga Horária</FormLabel>
+                            <FormControl>
+                                <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <div className="space-y-2">
+                        <FormLabel>Tipo da Turma</FormLabel>
+                        <div className="flex items-center h-10">
+                            <Badge
+                            variant={
+                                detectedClassType === 'Integradora'
+                                ? 'default'
+                                : 'secondary'
+                            }
+                            >
+                            {detectedClassType}
+                            </Badge>
+                        </div>
+                        </div>
+                    </div>
+                    <ClassScheduleEditor control={form.control} />
+                </CardContent>
+            </Card>
 
             <Button type="submit" className="w-full" disabled={isSaving}>
               {isSaving ? (
@@ -418,7 +424,6 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
             </Button>
           </form>
         </Form>
-      </CardContent>
-    </Card>
+    </div>
   );
 }
