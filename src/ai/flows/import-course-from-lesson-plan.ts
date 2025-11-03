@@ -73,34 +73,57 @@ const prompt = ai.definePrompt({
   input: {schema: ImportCourseFromLessonPlanInputSchema},
   output: {schema: ImportCourseFromLessonPlanOutputSchema},
   prompt: `
-  You are an expert in academic document analysis for UNDB.
-  Your task is to extract key information from the provided lesson plan PDF and structure it into a JSON format.
+  You are a highly meticulous data extraction expert for academic documents from UNDB.
+  Your task is to extract all key information from the provided lesson plan PDF and structure it into a JSON format.
+  You MUST be as fast and accurate as possible. Transcribe content word-for-word. Do NOT summarize or interpret.
 
-  **Analysis and Extraction Steps:**
-  1.  **Extract Key Fields**: Identify and extract the following fields from the document:
-      - courseName
-      - courseCode
-      - syllabus
-      - objectives
-      - workload
-      - semester
-      - competencies
-      - thematicTree: This is a list of project stages or thematic units. Each item should have a 'name' (the title of the stage) and a 'description'.
-      - bibliography: Extract the bibliography, carefully separating the items into three categories: 'basic', 'complementary', and 'recommended' based on the section titles in the document (Básica, Complementar, Recomendada). Preserve the original formatting, including numbering and line breaks, for each category.
-      - classSchedule: A list of all classes. For each class, extract: 'date', 'type' (e.g., TEÓRICA), 'topic' (e.g., UA I), 'content' (the detailed subject), 'activity' planned, and 'location'. If a day is a holiday, set the content to 'Feriado' and type to 'FERIADO'.
+  **Analysis and Extraction Steps (Follow Precisely):**
 
-  2.  **Determine classType**: This is a critical step. Analyze the document's content to classify the discipline.
-      - **Rule 1 (Highest Priority):** If the course name contains the word "Estúdio", you MUST classify it as **"Integradora"**.
-      - **Rule 2:** If Rule 1 does not apply, analyze the content. If the discipline is project-based, a "Studio", or has a clear project development cycle (e.g., analysis, preliminary solution, final delivery), set classType to **"Integradora"**.
-      - **Rule 3:** Otherwise, for all other traditional or theoretical disciplines, set classType to **"Modular"**.
-      - You MUST provide a value for classType. Default to "Modular" if uncertain after applying the rules.
+  1.  **Extract Key Fields**: Identify and extract the following fields from the document.
+      - courseName: The name of the discipline.
+      - courseCode: The code of the discipline.
+      - syllabus: The "Ementa". Transcribe it exactly as it appears.
+      - objectives: The "Objetivos". Transcribe it word-for-word.
+      - workload: The "Carga Horária".
+      - semester: The "Semestre".
+      - competencies: The "Competências". Transcribe it word-for-word.
 
-  **Output Instructions**:
-  - Be as faithful as possible to the original text. Do not summarize or alter technical content.
-  - If a field is not present, leave the corresponding JSON field as an empty string or an empty array for lists. For bibliography, if a section is empty, leave its corresponding string empty.
-  - The final output must be a clean and complete JSON, ready for automatic integration.
+  2.  **Extract Thematic Tree (Árvore Temática)**:
+      - This section describes the project stages or thematic units.
+      - For each item in the tree, extract its 'name' (the title of the stage) and 'description'.
+      - If this section is not present, return an empty array.
 
-  Lesson Plan: {{media url=lessonPlanDataUri}}`,
+  3.  **Extract Bibliography (Bibliografia)**:
+      - This is a CRITICAL step. You MUST identify three distinct sections: "Básica", "Complementar", and "Recomendada".
+      - For each section, extract the full text content, including all numbering, author names, titles, and formatting.
+      - **CRITICAL**: You MUST preserve the original line breaks (\n) within each bibliography section. Do not merge lines. The output for each bibliography field must be a single string containing the full, formatted text of that section.
+      - If a section (e.g., "Recomendada") is not found, its corresponding JSON field must be an empty string.
+
+  4.  **Extract Class Schedule (Cronograma de Aulas)**:
+      - Go through the class schedule table meticulously, day by day.
+      - For each class entry, you MUST extract:
+        - 'date': The date of the class. Standardize to YYYY-MM-DD format.
+        - 'type': The type of class (e.g., TEÓRICA, PRÁTICA, FERIADO).
+        - 'topic': The main topic or unit (e.g., UA I, UA II).
+        - 'content': The detailed subject or content of the class. Transcribe it completely.
+        - 'activity': The activity planned for that class. Transcribe it completely.
+        - 'location': The location of the class (e.g., Sala de Aula, Laboratório).
+      - If a day is marked as a holiday ('Feriado'), set the content to 'Feriado' and the type to 'FERIADO'.
+      - If this section is not present, return an empty array.
+
+  5.  **Determine classType (Critical Classification)**:
+      - This is a mandatory field. You must analyze the document to classify the discipline.
+      - **Rule 1 (Highest Priority):** If the course name (courseName) contains the word "Estúdio", you MUST classify it as **"Integradora"**.
+      - **Rule 2:** If Rule 1 does not apply, analyze the document's content (syllabus, objectives, activities). If the discipline is heavily project-based, described as a "Studio", or shows a clear project development cycle (e.g., analysis, preliminary solution, final delivery), you MUST set classType to **"Integradora"**.
+      - **Rule 3:** For all other traditional or theoretical disciplines, set classType to **"Modular"**.
+      - You MUST provide a value for classType. Default to "Modular" ONLY if you are absolutely uncertain after applying all rules.
+
+  **Final Output Instructions**:
+  - Be extremely faithful to the original text. Do not invent, summarize, or alter any content.
+  - If any field or section is not present in the document, leave the corresponding JSON field as an empty string or an empty array for lists.
+  - The final output must be a clean, complete, and perfectly structured JSON, ready for automatic system integration.
+
+  Lesson Plan Document: {{media url=lessonPlanDataUri}}`,
 });
 
 const importCourseFromLessonPlanFlow = ai.defineFlow(
