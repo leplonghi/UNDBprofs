@@ -669,7 +669,7 @@ export function StudentGroups({
                                     e.target.value = String(score);
                                 }
                               }}
-                              className="w-24 mx-auto text-center"
+                              className="w-20 mx-auto text-center"
                               disabled={isSaving}
                             />
                         </TableCell>
@@ -769,7 +769,7 @@ export function StudentGroups({
                                     e.target.value = String(score);
                                 }
                               }}
-                              className="w-24 mx-auto text-center"
+                              className="w-20 mx-auto text-center"
                               disabled={isSaving}
                             />
                         </TableCell>
@@ -827,7 +827,7 @@ export function StudentGroups({
                         e.target.value = String(score);
                     }
                   }}
-                  className="w-24 mx-auto text-center"
+                  className="w-20 mx-auto text-center"
                   disabled={isSaving}
                 />
               </TableCell>
@@ -851,7 +851,7 @@ export function StudentGroups({
                 Aluno / Grupo
               </TableHead>
               {gradeStructure.map((activity) => (
-                <TableHead key={activity.id} className="min-w-[150px] text-center">
+                <TableHead key={activity.id} className="min-w-[120px] text-center">
                   {activity.name} ({activity.maxScore?.toFixed(1)})
                 </TableHead>
               ))}
