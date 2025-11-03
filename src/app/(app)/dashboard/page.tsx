@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   useUser,
@@ -9,7 +9,7 @@ import {
   useMemoFirebase,
 } from '@/firebase';
 import { collection, query, getDocs } from 'firebase/firestore';
-import type { Course, AcademicEvent } from '@/types';
+import type { Course, AcademicEvent, Classroom } from '@/types';
 import { StatsCards } from '@/components/dashboard/stats-cards';
 import { RecentCourses } from '@/components/dashboard/recent-courses';
 import { OverviewChart } from '@/components/dashboard/overview-chart';
@@ -26,6 +26,7 @@ export default function DashboardPage() {
   const [classroomsCount, setClassroomsCount] = useState<number | null>(null);
   const [studentsCount, setStudentsCount] = useState<number | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const [studentsPerCourse, setStudentsPerCourse] = useState<{ name: string; students: number }[]>([]);
 
   const coursesQuery = useMemoFirebase(
     () => (user ? query(collection(firestore, `professors/${user.uid}/courses`)) : null),
@@ -43,6 +44,24 @@ export default function DashboardPage() {
   );
   const { data: academicEvents, isLoading: isLoadingEvents } =
     useCollection<AcademicEvent>(academicEventsQuery);
+    
+  const allClassroomsQuery = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return collection(firestore, `professors/${user.uid}/classrooms`);
+  }, [user, firestore]);
+  
+  const { data: allClassroomsData } = useCollection<Classroom>(allClassroomsQuery);
+
+  const classroomsByCourse = useMemo(() => {
+      if (!allClassroomsData) return {};
+      return allClassroomsData.reduce((acc, classroom) => {
+          if (!acc[classroom.courseId]) {
+              acc[classroom.courseId] = [];
+          }
+          acc[classroom.courseId].push(classroom);
+          return acc;
+      }, {} as Record<string, Classroom[]>);
+  }, [allClassroomsData]);
 
   useEffect(() => {
     async function getBackendStats() {
@@ -54,6 +73,7 @@ export default function DashboardPage() {
       
       let totalClassrooms = 0;
       let totalStudents = 0;
+      const studentsPerCourseData: { name: string; students: number }[] = [];
 
       for (const course of courses) {
         const classroomsRef = collection(
@@ -61,20 +81,25 @@ export default function DashboardPage() {
           `professors/${user.uid}/courses/${course.id}/classrooms`
         );
         const classroomSnapshot = await getDocs(classroomsRef);
-        totalClassrooms += classroomSnapshot.size;
+        const courseClassrooms = classroomSnapshot.docs;
+        totalClassrooms += courseClassrooms.length;
 
-        for (const classroomDoc of classroomSnapshot.docs) {
+        let courseStudentCount = 0;
+        for (const classroomDoc of courseClassrooms) {
           const studentsRef = collection(
             firestore,
             `professors/${user.uid}/courses/${course.id}/classrooms/${classroomDoc.id}/classroomStudents`
           );
           const studentsSnapshot = await getDocs(studentsRef);
-          totalStudents += studentsSnapshot.size;
+          courseStudentCount += studentsSnapshot.size;
         }
+        totalStudents += courseStudentCount;
+        studentsPerCourseData.push({ name: course.code, students: courseStudentCount });
       }
 
       setClassroomsCount(totalClassrooms);
       setStudentsCount(totalStudents);
+      setStudentsPerCourse(studentsPerCourseData);
       setIsLoadingStats(false);
     }
 
@@ -114,10 +139,10 @@ export default function DashboardPage() {
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
             <div className="lg:col-span-3">
-              <RecentCourses courses={courses || []} isLoading={isLoadingCourses} />
+              <RecentCourses courses={courses || []} classroomsByCourse={classroomsByCourse} isLoading={isLoadingCourses} />
             </div>
             <div className="lg:col-span-2">
-              <OverviewChart />
+              <OverviewChart data={studentsPerCourse} isLoading={isLoadingStats} />
             </div>
           </div>
         </TabsContent>

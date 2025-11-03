@@ -17,17 +17,16 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import type { Course } from '@/types';
+import type { Course, Classroom } from '@/types';
 import { Skeleton } from '../ui/skeleton';
 
 interface RecentCoursesProps {
     courses: Course[];
+    classroomsByCourse: Record<string, Classroom[]>;
     isLoading: boolean;
 }
 
-export function RecentCourses({ courses, isLoading }: RecentCoursesProps) {
-  // Sort courses by a potential 'lastAccessed' or 'createdAt' field if available.
-  // For now, we'll just take the first 5.
+export function RecentCourses({ courses, classroomsByCourse, isLoading }: RecentCoursesProps) {
   const recentCourses = (courses || []).slice(0, 5);
 
   return (
@@ -63,19 +62,24 @@ export function RecentCourses({ courses, isLoading }: RecentCoursesProps) {
                 </TableCell>
               </TableRow>
             ) : (
-              recentCourses.map((course) => (
-                <TableRow key={course.id}>
-                  <TableCell>
-                    <Link href={`/disciplinas/${course.id}`} className="font-medium hover:underline">
-                        {course.name}
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{course.code}</Badge>
-                  </TableCell>
-                  <TableCell className="text-right">{course.semester}</TableCell>
-                </TableRow>
-              ))
+              recentCourses.map((course) => {
+                const classroom = classroomsByCourse[course.id]?.[0];
+                return (
+                  <TableRow key={course.id}>
+                    <TableCell>
+                      <Link href={`/disciplinas/${course.id}`} className="font-medium hover:underline">
+                          {course.name}
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{course.code}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                        {classroom?.semester ?? <span className="text-muted-foreground">N/A</span>}
+                    </TableCell>
+                  </TableRow>
+                )
+              })
             )}
           </TableBody>
         </Table>
