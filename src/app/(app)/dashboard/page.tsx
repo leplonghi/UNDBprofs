@@ -27,6 +27,7 @@ export default function DashboardPage() {
   const [studentsCount, setStudentsCount] = useState<number | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [studentsPerCourse, setStudentsPerCourse] = useState<{ name: string; students: number }[]>([]);
+  const [classroomsByCourse, setClassroomsByCourse] = useState<Record<string, Classroom[]>>({});
 
   const coursesQuery = useMemoFirebase(
     () => (user ? query(collection(firestore, `professors/${user.uid}/courses`)) : null),
@@ -45,23 +46,6 @@ export default function DashboardPage() {
   const { data: academicEvents, isLoading: isLoadingEvents } =
     useCollection<AcademicEvent>(academicEventsQuery);
     
-  const allClassroomsQuery = useMemoFirebase(() => {
-    if (!user || !firestore) return null;
-    return collection(firestore, `professors/${user.uid}/classrooms`);
-  }, [user, firestore]);
-  
-  const { data: allClassroomsData } = useCollection<Classroom>(allClassroomsQuery);
-
-  const classroomsByCourse = useMemo(() => {
-      if (!allClassroomsData) return {};
-      return allClassroomsData.reduce((acc, classroom) => {
-          if (!acc[classroom.courseId]) {
-              acc[classroom.courseId] = [];
-          }
-          acc[classroom.courseId].push(classroom);
-          return acc;
-      }, {} as Record<string, Classroom[]>);
-  }, [allClassroomsData]);
 
   useEffect(() => {
     async function getBackendStats() {
@@ -74,6 +58,7 @@ export default function DashboardPage() {
       let totalClassrooms = 0;
       let totalStudents = 0;
       const studentsPerCourseData: { name: string; students: number }[] = [];
+      const classroomsByCourseData: Record<string, Classroom[]> = {};
 
       for (const course of courses) {
         const classroomsRef = collection(
@@ -81,7 +66,8 @@ export default function DashboardPage() {
           `professors/${user.uid}/courses/${course.id}/classrooms`
         );
         const classroomSnapshot = await getDocs(classroomsRef);
-        const courseClassrooms = classroomSnapshot.docs;
+        const courseClassrooms = classroomSnapshot.docs.map(doc => doc.data() as Classroom);
+        classroomsByCourseData[course.id] = courseClassrooms;
         totalClassrooms += courseClassrooms.length;
 
         let courseStudentCount = 0;
@@ -96,7 +82,8 @@ export default function DashboardPage() {
         totalStudents += courseStudentCount;
         studentsPerCourseData.push({ name: course.code, students: courseStudentCount });
       }
-
+      
+      setClassroomsByCourse(classroomsByCourseData);
       setClassroomsCount(totalClassrooms);
       setStudentsCount(totalStudents);
       setStudentsPerCourse(studentsPerCourseData);
@@ -139,7 +126,7 @@ export default function DashboardPage() {
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
             <div className="lg:col-span-3">
-              <RecentCourses courses={courses || []} classroomsByCourse={classroomsByCourse} isLoading={isLoadingCourses} />
+              <RecentCourses courses={courses || []} classroomsByCourse={classroomsByCourse} isLoading={isLoadingCourses || isLoadingStats} />
             </div>
             <div className="lg:col-span-2">
               <OverviewChart data={studentsPerCourse} isLoading={isLoadingStats} />
