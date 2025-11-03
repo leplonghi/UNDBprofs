@@ -1,4 +1,3 @@
-// src/app/login/LoginClient.tsx
 'use client';
 
 import React, { useState } from 'react';
@@ -8,10 +7,10 @@ import {
   signInWithPopup,
   AuthError,
 } from 'firebase/auth';
-import { auth } from '@/firebase/client';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { AppLogo } from '@/components/layout/AppLogo';
+import { useAuth } from '@/firebase';
 
 const provider = new GoogleAuthProvider();
 
@@ -21,6 +20,7 @@ type LoginClientProps = {
 
 export default function LoginClient({ initialFrom }: LoginClientProps) {
   const router = useRouter();
+  const auth = useAuth();
   const [busy, setBusy] = useState(false);
 
   const doLogin = async () => {
