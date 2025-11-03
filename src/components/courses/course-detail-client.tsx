@@ -62,6 +62,28 @@ function CourseInformation({
   classroom: Classroom | undefined;
 }) {
   const router = useRouter();
+
+  const getTypeColor = (type: string) => {
+    const lowerType = type.toLowerCase();
+    if (lowerType.includes('feriado') || lowerType.includes('recesso')) {
+        return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200';
+    }
+    if (lowerType.includes('avaliação') || lowerType.includes('entrega') || lowerType.includes('n1') || lowerType.includes('n2')) {
+        return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200';
+    }
+    if (lowerType.includes('apresentação')) {
+        return 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200';
+    }
+    if (lowerType.includes('prática')) {
+        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200';
+    }
+    if (lowerType.includes('teórica')) {
+        return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200';
+    }
+    return '';
+  }
+
+
   return (
     <Card>
       <CardHeader>
@@ -217,22 +239,16 @@ function CourseInformation({
                       (a, b) =>
                         new Date(a.date).getTime() - new Date(b.date).getTime()
                     )
-                    .map((scheduleItem, index) => {
-                      const isHoliday = scheduleItem.content
-                        .toLowerCase()
-                        .includes('feriado');
-                      return (
+                    .map((scheduleItem, index) => (
                         <TableRow
                           key={index}
-                          className={cn(
-                            isHoliday && 'bg-muted/50 text-muted-foreground'
-                          )}
+                          className={cn(getTypeColor(scheduleItem.type))}
                         >
                           <TableCell className="font-medium">
                             {scheduleItem.date}
                           </TableCell>
                           <TableCell>
-                            <Badge variant={isHoliday ? 'secondary' : 'outline'}>
+                            <Badge variant={'outline'}>
                               {scheduleItem.type}
                             </Badge>
                           </TableCell>
@@ -243,8 +259,8 @@ function CourseInformation({
                           <TableCell>{scheduleItem.activity}</TableCell>
                           <TableCell>{scheduleItem.location}</TableCell>
                         </TableRow>
-                      );
-                    })}
+                      )
+                    )}
                 </TableBody>
               </Table>
             </div>
