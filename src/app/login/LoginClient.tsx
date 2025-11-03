@@ -1,13 +1,17 @@
 // src/app/login/LoginClient.tsx
 'use client';
 
-import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
-import { GoogleAuthProvider, signInWithPopup, AuthError } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
+import {
+  GoogleAuthProvider,
+  signInWithPopup,
+  AuthError,
+} from 'firebase/auth';
 import { auth } from '@/firebase/client';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
-import Image from 'next/image';
+import { AppLogo } from '@/components/layout/AppLogo';
 
 const provider = new GoogleAuthProvider();
 
@@ -40,7 +44,6 @@ export default function LoginClient({ initialFrom }: LoginClientProps) {
       const from = initialFrom || '/dashboard';
       router.replace(from);
     } catch (e) {
-      // trata popup fechado sem erro feio no console
       if ((e as AuthError).code !== 'auth/popup-closed-by-user') {
         console.error(e);
       }
@@ -51,14 +54,8 @@ export default function LoginClient({ initialFrom }: LoginClientProps) {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-background p-6">
       <div className="flex w-full max-w-sm flex-col items-center gap-8 text-center">
-        <Image
-          src="https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/Branding%2Fpublic%2Flogoundbprofs.png?alt=media&v=1"
-          alt="UNDBprof Logo"
-          width={320}
-          height={96}
-          className="h-auto w-full max-w-[280px]"
-          priority
-        />
+        <AppLogo />
+
         <div>
           <h1 className="text-2xl font-bold text-primary">
             Bem-vindo ao ProfAssist
@@ -67,8 +64,16 @@ export default function LoginClient({ initialFrom }: LoginClientProps) {
             Seu assistente digital para o dia a dia acadêmico.
           </p>
         </div>
-        <Button onClick={doLogin} disabled={busy} size="lg" className="w-full">
-          {busy ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
+
+        <Button
+          onClick={doLogin}
+          disabled={busy}
+          size="lg"
+          className="w-full"
+        >
+          {busy ? (
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+          ) : null}
           {busy ? 'Entrando…' : 'Entrar com Google'}
         </Button>
       </div>

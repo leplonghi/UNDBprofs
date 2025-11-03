@@ -1,7 +1,7 @@
 'use client';
 import { ThemeProvider } from '@/components/theme-provider';
 import { BottomNav } from '@/components/layout/bottom-nav';
-import { Header } from '@/components/layout/header';
+import Header from '@/components/layout/header';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export default function AppLayout({

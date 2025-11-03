@@ -17,7 +17,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, getDocs, type Firestore } from 'firebase/firestore';
+import { collection, query, where, type Firestore } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import type { AcademicEvent, Course } from '@/types';
@@ -82,17 +82,18 @@ const staticEvents: Omit<CalendarEvent, 'courseCode'>[] = [
 ];
 
 const categoryColors: Record<EventCategory, string> = {
-  'integradora-segunda': 'bg-orange-500',
-  'integradora-quarta': 'bg-blue-500',
-  'integradora-sexta': 'bg-purple-500',
-  'modular-i': 'bg-green-500',
-  'modular-ii': 'bg-teal-500',
-  'modular-iii': 'bg-pink-500',
-  'feriado': 'bg-yellow-400 text-black',
-  'substitutiva': 'bg-red-500',
-  'prova-final': 'bg-red-700',
+  'integradora-segunda': 'bg-[#F9A825]', // Orange
+  'integradora-quarta': 'bg-[#26A69A]',  // Teal
+  'integradora-sexta': 'bg-[#9C27B0]',   // Purple
+  'modular-i': 'bg-[#9CCC65]',          // Light Green
+  'modular-ii': 'bg-[#EF5350]',         // Reddish Pink
+  'modular-iii': 'bg-[#F06292]',        // Pink
+  'feriado': 'bg-[#FFEE58]',             // Yellow
+  'substitutiva': 'bg-[#C62828]',       // Dark Red
+  'prova-final': 'bg-[#B71C1C]',        // Darker Red
   'course-event': 'bg-primary',
 };
+
 
 const categoryLabels: Record<EventCategory, string> = {
   'integradora-segunda': 'Integradora Segunda-Feira',
@@ -107,7 +108,7 @@ const categoryLabels: Record<EventCategory, string> = {
   'course-event': 'Evento de Disciplina',
 };
 
-const monthNames = [ "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro" ];
+const monthNames = [ "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro" ];
 const year = 2025;
 const months = [7, 8, 9, 10, 11]; // Agosto a Dezembro
 
@@ -133,14 +134,14 @@ const CalendarMonth = ({ month, year, events }: { month: number, year: number, e
   }, [events, month, year]);
 
   return (
-    <Card className="flex-1 min-w-[300px]">
-      <CardHeader>
-        <CardTitle className="text-center text-xl text-primary">
-          {monthNames[month-7]} {year}
+    <Card className="flex-1 min-w-[280px]">
+      <CardHeader className="p-4">
+        <CardTitle className="text-center text-lg font-bold text-primary">
+          {monthNames[month]} {year}
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-7 gap-1 text-center text-sm font-semibold text-muted-foreground">
+      <CardContent className="p-2">
+        <div className="grid grid-cols-7 gap-1 text-center text-xs font-bold text-muted-foreground">
             {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(day => <div key={day}>{day}</div>)}
         </div>
         <div className="grid grid-cols-7 gap-1 mt-2">
@@ -149,26 +150,28 @@ const CalendarMonth = ({ month, year, events }: { month: number, year: number, e
           ))}
           {days.map((day) => {
             const dayEvents = eventsByDay[day] || [];
+            const hasEvent = dayEvents.length > 0;
             return (
               <div
                 key={day}
                 className={cn(
-                  'relative flex h-12 w-full items-center justify-center rounded-md border text-sm font-medium',
-                  dayEvents.length > 0 && 'text-white',
-                  dayEvents.length === 1 && categoryColors[dayEvents[0].category],
-                  dayEvents.length === 0 && 'bg-card'
+                  'relative flex h-10 w-full items-center justify-center rounded-sm border text-xs font-medium',
+                  !hasEvent && 'bg-card'
                 )}
               >
-                {dayEvents.length > 1 ? (
-                    <div className='w-full h-full grid grid-cols-2'>
-                        {dayEvents.slice(0,4).map(event => (
-                             <div key={event.description} className={cn('w-full h-full', categoryColors[event.category])}></div>
+                {hasEvent ? (
+                    <div className={cn('w-full h-full grid', 
+                        dayEvents.length > 1 ? 'grid-cols-2' : 'grid-cols-1',
+                        dayEvents.length > 2 ? 'grid-rows-2' : 'grid-rows-1'
+                    )}>
+                        {dayEvents.slice(0,4).map((event, index) => (
+                             <div key={event.description + index} className={cn('w-full h-full', categoryColors[event.category])}></div>
                         ))}
                     </div>
                 ) : null}
                  <span className={cn(
-                    'absolute',
-                    dayEvents.length > 0 ? 'text-white' : 'text-foreground'
+                    'absolute mix-blend-screen invert',
+                    hasEvent ? 'text-white font-bold' : 'text-foreground'
                  )}>{day}</span>
               </div>
             );
@@ -192,19 +195,10 @@ export default function CalendarPage() {
   const { data: courses, isLoading: isLoadingCourses } = useCollection<Course>(coursesQuery);
 
   const allEventsQuery = useMemoFirebase(() => {
-    if (!user || !firestore || !courses || courses.length === 0) return null;
-    const courseIds = courses.map(c => c.id);
-    // As Firestore 'in' query has a limit of 30, we must handle more courses if needed.
-    // For now, we assume a reasonable number of courses per professor.
-    return query(
-        collection(firestore, `professors/${user.uid}/academicEvents`), 
-        where('courseId', 'in', courseIds)
-    );
-  }, [user, firestore, courses]);
+    if (!user || !firestore) return null;
+    return query(collection(firestore, `professors/${user.uid}/academicEvents`));
+  }, [user, firestore]);
 
-  // Note: this will require a composite index in Firestore
-  // We can't fetch from subcollections directly in one query. Let's assume a root collection for now.
-  // This will be fixed by fetching from each course.
   const { data: academicEvents, isLoading: isLoadingEvents } = useCollection<AcademicEvent>(allEventsQuery);
 
   const dynamicEvents = useMemo(() => {
@@ -244,9 +238,9 @@ export default function CalendarPage() {
 
       <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
         <div className="xl:col-span-2 space-y-4">
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
                 {isLoading ? (
-                    Array.from({length: 5}).map((_, i) => <Skeleton key={i} className="h-96 w-full" />)
+                    Array.from({length: 5}).map((_, i) => <Skeleton key={i} className="h-72 w-full" />)
                 ) : (
                     months.map(month => (
                         <CalendarMonth key={month} month={month} year={year} events={allMonthsEvents} />
@@ -260,10 +254,10 @@ export default function CalendarPage() {
                 <CardHeader>
                     <CardTitle>Legenda</CardTitle>
                 </CardHeader>
-                 <CardContent className="space-y-2">
+                 <CardContent className="grid grid-cols-2 gap-x-4 gap-y-2">
                     {Object.entries(categoryLabels).map(([key, label]) => (
                         <div key={key} className="flex items-center gap-2">
-                           <div className={cn("h-4 w-4 rounded-full", categoryColors[key as EventCategory])}></div>
+                           <div className={cn("h-4 w-4 rounded-full border", categoryColors[key as EventCategory])}></div>
                            <span className="text-sm">{label}</span>
                         </div>
                     ))}
@@ -272,12 +266,13 @@ export default function CalendarPage() {
             
             <Card>
                 <CardHeader>
-                    <CardTitle>Eventos de {monthNames[currentMonth-7]}</CardTitle>
-                    <CardDescription>Selecione um mês para ver os eventos.</CardDescription>
+                    <CardTitle>Eventos de {monthNames[currentMonth]}</CardTitle>
+                    <CardDescription>Passe o mouse sobre um evento para destacar o mês.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {isLoading ? <Skeleton className="h-40 w-full" /> : 
                     currentMonthEvents.length > 0 ? (
+                        <div className="max-h-96 overflow-y-auto">
                         <Table>
                         <TableHeader>
                             <TableRow>
@@ -291,7 +286,7 @@ export default function CalendarPage() {
                                 <TableCell className="font-medium">{event.date.toLocaleDateString('pt-BR', {day: '2-digit'})}</TableCell>
                                 <TableCell>
                                     <div className='flex items-center gap-2'>
-                                        <div className={cn("h-2 w-2 rounded-full", categoryColors[event.category])}></div>
+                                        <div className={cn("h-2 w-2 flex-shrink-0 rounded-full", categoryColors[event.category])}></div>
                                         <span>{event.description} {event.courseCode && `(${event.courseCode})`}</span>
                                     </div>
                                 </TableCell>
@@ -299,6 +294,7 @@ export default function CalendarPage() {
                             ))}
                         </TableBody>
                         </Table>
+                        </div>
                     ) : (
                         <p className="text-sm text-muted-foreground text-center py-4">Nenhum evento para este mês.</p>
                     )}
