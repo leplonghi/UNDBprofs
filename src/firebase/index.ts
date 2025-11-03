@@ -1,10 +1,12 @@
 'use client';
 import { useMemo } from 'react';
-import type { Query, DocumentReference } from 'firebase/firestore';
+import { Query, DocumentReference, setDoc, deleteDoc } from 'firebase/firestore';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { firebaseConfig } from './config';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 // Export hooks from the provider
 export * from './provider';
@@ -48,3 +50,41 @@ export function useMemoFirebase<T extends Query | DocumentReference>(
   }
   return memoizedRef as T | null;
 }
+
+/**
+ * Non-blocking fire-and-forget Firestore setDoc operation with error handling.
+ * @param docRef - The DocumentReference for the document to set.
+ * @param data - The data to write to the document.
+ * @param options - SetOptions to control the write behavior.
+ */
+export function setDocumentNonBlocking(
+    docRef: DocumentReference,
+    data: any,
+    options?: { merge?: boolean }
+) {
+    setDoc(docRef, data, options || {})
+        .catch((serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: docRef.path,
+                operation: options?.merge ? 'update' : 'create',
+                requestResourceData: data,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        });
+}
+
+/**
+ * Non-blocking fire-and-forget Firestore deleteDoc operation with error handling.
+ * @param docRef - The DocumentReference for the document to delete.
+ */
+export function deleteDocumentNonBlocking(docRef: DocumentReference) {
+    deleteDoc(docRef)
+        .catch((serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: docRef.path,
+                operation: 'delete',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        });
+}
+
