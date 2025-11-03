@@ -1,10 +1,15 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query } from 'firebase/firestore';
-import type { Course, Classroom, ClassroomStudent, AcademicEvent } from '@/types';
+import {
+  useUser,
+  useFirestore,
+  useCollection,
+  useMemoFirebase,
+} from '@/firebase';
+import { collection, query, getDocs } from 'firebase/firestore';
+import type { Course, AcademicEvent } from '@/types';
 import { StatsCards } from '@/components/dashboard/stats-cards';
 import { RecentCourses } from '@/components/dashboard/recent-courses';
 import { OverviewChart } from '@/components/dashboard/overview-chart';
@@ -16,24 +21,67 @@ export default function DashboardPage() {
   const { user } = useUser();
   const firestore = useFirestore();
 
+  const [classroomsCount, setClassroomsCount] = useState<number | null>(null);
+  const [studentsCount, setStudentsCount] = useState<number | null>(null);
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
+
   const coursesQuery = useMemoFirebase(
-    () => (user ? collection(firestore, `professors/${user.uid}/courses`) : null),
+    () => (user ? query(collection(firestore, `professors/${user.uid}/courses`)) : null),
     [user, firestore]
   );
-  const { data: courses, isLoading: isLoadingCourses } = useCollection<Course>(coursesQuery);
+  const { data: courses, isLoading: isLoadingCourses } =
+    useCollection<Course>(coursesQuery);
 
   const academicEventsQuery = useMemoFirebase(
-    () => (user ? collection(firestore, `professors/${user.uid}/academicEvents`) : null),
+    () =>
+      user
+        ? query(collection(firestore, `professors/${user.uid}/academicEvents`))
+        : null,
     [user, firestore]
   );
-  const { data: academicEvents, isLoading: isLoadingEvents } = useCollection<AcademicEvent>(academicEventsQuery);
+  const { data: academicEvents, isLoading: isLoadingEvents } =
+    useCollection<AcademicEvent>(academicEventsQuery);
 
-  // Note: Calculating total students and classrooms across all courses can be intensive.
-  // For this dashboard, we are simplifying to keep it performant.
-  // A more scalable solution might involve using Firebase Functions to aggregate this data.
+  useEffect(() => {
+    async function getBackendStats() {
+      if (!user || !firestore || !courses) {
+        setIsLoadingStats(!isLoadingCourses);
+        return;
+      }
+      setIsLoadingStats(true);
+      
+      let totalClassrooms = 0;
+      let totalStudents = 0;
+
+      for (const course of courses) {
+        const classroomsRef = collection(
+          firestore,
+          `professors/${user.uid}/courses/${course.id}/classrooms`
+        );
+        const classroomSnapshot = await getDocs(classroomsRef);
+        totalClassrooms += classroomSnapshot.size;
+
+        for (const classroomDoc of classroomSnapshot.docs) {
+          const studentsRef = collection(
+            firestore,
+            `professors/${user.uid}/courses/${course.id}/classrooms/${classroomDoc.id}/classroomStudents`
+          );
+          const studentsSnapshot = await getDocs(studentsRef);
+          totalStudents += studentsSnapshot.size;
+        }
+      }
+
+      setClassroomsCount(totalClassrooms);
+      setStudentsCount(totalStudents);
+      setIsLoadingStats(false);
+    }
+
+    getBackendStats();
+  }, [user, firestore, courses, isLoadingCourses]);
+
   const totalDisciplinas = courses?.length ?? 0;
   const totalAtividades = academicEvents?.length ?? 0;
-  
+
   const isLoading = isLoadingCourses || isLoadingEvents;
 
   return (
@@ -47,21 +95,21 @@ export default function DashboardPage() {
           </Button>
         </div>
       </div>
-      
+
       <StatsCards
         totalDisciplinas={totalDisciplinas}
-        totalTurmas={totalDisciplinas} // Simplified: 1 classroom per course assumed for now
-        totalAlunos={0} // Simplified: requires intensive queries
+        totalTurmas={classroomsCount}
+        totalAlunos={studentsCount}
         totalAtividades={totalAtividades}
-        isLoading={isLoading}
+        isLoading={isLoading || isLoadingStats}
       />
-      
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         <div className="lg:col-span-3">
-            <RecentCourses courses={courses || []} isLoading={isLoadingCourses} />
+          <RecentCourses courses={courses || []} isLoading={isLoadingCourses} />
         </div>
         <div className="lg:col-span-2">
-           <OverviewChart />
+          <OverviewChart />
         </div>
       </div>
     </div>

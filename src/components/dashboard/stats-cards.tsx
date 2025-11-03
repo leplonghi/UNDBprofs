@@ -11,19 +11,19 @@ const iconMap = {
 
 interface StatsCardsProps {
     totalDisciplinas: number;
-    totalTurmas: number;
-    totalAlunos: number;
+    totalTurmas: number | null;
+    totalAlunos: number | null;
     totalAtividades: number;
     isLoading: boolean;
 }
 
 export function StatsCards({ totalDisciplinas, totalTurmas, totalAlunos, totalAtividades, isLoading }: StatsCardsProps) {
-
+  
   const stats = [
-    { title: "Total de Disciplinas", value: totalDisciplinas, change: "" },
-    { title: "Total de Turmas", value: totalTurmas, change: "" },
-    { title: "Total de Alunos", value: totalAlunos, change: "" },
-    { title: "Atividades Agendadas", value: totalAtividades, change: "" },
+    { title: "Total de Disciplinas", value: totalDisciplinas },
+    { title: "Total de Turmas", value: totalTurmas },
+    { title: "Total de Alunos", value: totalAlunos },
+    { title: "Atividades Agendadas", value: totalAtividades },
   ];
 
   if (isLoading) {
@@ -56,8 +56,13 @@ export function StatsCards({ totalDisciplinas, totalTurmas, totalAlunos, totalAt
               <Icon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              {stat.change && <p className="text-xs text-muted-foreground">{stat.change}</p>}
+              <div className="text-2xl font-bold">
+                {stat.value === null ? (
+                    <span className="text-muted-foreground animate-pulse">...</span>
+                ) : (
+                    stat.value
+                )}
+              </div>
             </CardContent>
           </Card>
         );
