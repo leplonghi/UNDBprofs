@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { CreditCard, LogOut, Settings, User } from 'lucide-react';
+import { CreditCard, LogOut, Settings, User, MessageSquareHeart, LifeBuoy } from 'lucide-react';
 import { useAuth, useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
 
@@ -67,7 +67,22 @@ export function UserNav() {
               <span>Perfil</span>
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem asChild>
+             <Link href="/ajuda">
+              <LifeBuoy className="mr-2 h-4 w-4" />
+              <span>Ajuda</span>
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/feedback">
+              <MessageSquareHeart className="mr-2 h-4 w-4" />
+              <span>Feedback</span>
+            </Link>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+         <DropdownMenuGroup>
+           <DropdownMenuItem>
             <CreditCard className="mr-2 h-4 w-4" />
             <span>Assinatura</span>
           </DropdownMenuItem>

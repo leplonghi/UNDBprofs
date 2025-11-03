@@ -15,6 +15,8 @@ import { RecentCourses } from '@/components/dashboard/recent-courses';
 import { OverviewChart } from '@/components/dashboard/overview-chart';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TutorialTab } from '@/components/dashboard/tutorial-tab';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -96,22 +98,33 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <StatsCards
-        totalDisciplinas={totalDisciplinas}
-        totalTurmas={classroomsCount}
-        totalAlunos={studentsCount}
-        totalAtividades={totalAtividades}
-        isLoading={isLoading || isLoadingStats}
-      />
+       <Tabs defaultValue="overview">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+          <TabsTrigger value="tutorial">Tutorial Rápido</TabsTrigger>
+        </TabsList>
+        <TabsContent value="overview" className="mt-6 space-y-6">
+          <StatsCards
+            totalDisciplinas={totalDisciplinas}
+            totalTurmas={classroomsCount}
+            totalAlunos={studentsCount}
+            totalAtividades={totalAtividades}
+            isLoading={isLoading || isLoadingStats}
+          />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        <div className="lg:col-span-3">
-          <RecentCourses courses={courses || []} isLoading={isLoadingCourses} />
-        </div>
-        <div className="lg:col-span-2">
-          <OverviewChart />
-        </div>
-      </div>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+            <div className="lg:col-span-3">
+              <RecentCourses courses={courses || []} isLoading={isLoadingCourses} />
+            </div>
+            <div className="lg:col-span-2">
+              <OverviewChart />
+            </div>
+          </div>
+        </TabsContent>
+        <TabsContent value="tutorial" className="mt-6">
+            <TutorialTab />
+        </TabsContent>
+       </Tabs>
     </div>
   );
 }
