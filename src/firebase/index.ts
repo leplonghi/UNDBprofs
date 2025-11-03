@@ -3,7 +3,8 @@ import { useMemo } from 'react';
 import { Query, DocumentReference, setDoc, deleteDoc } from 'firebase/firestore';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore, getStorage, FirebaseStorage } from 'firebase/firestore';
+import { getFirestore, Firestore } from 'firebase/firestore';
+import { getStorage, FirebaseStorage } from 'firebase/storage';
 import { firebaseConfig } from './config';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -28,7 +29,6 @@ export const initializeFirebase = () => {
     }
     auth = getAuth(firebaseApp);
     firestore = getFirestore(firebaseApp);
-    // @ts-ignore
     storage = getStorage(firebaseApp);
   }
   return { firebaseApp, auth, firestore, storage };
@@ -90,4 +90,3 @@ export function deleteDocumentNonBlocking(docRef: DocumentReference) {
             errorEmitter.emit('permission-error', permissionError);
         });
 }
-
