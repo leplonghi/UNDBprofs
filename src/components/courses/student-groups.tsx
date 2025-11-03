@@ -39,7 +39,7 @@ import {
   useCollection,
   useMemoFirebase,
 } from '@/firebase';
-import { doc, writeBatch, getDoc, collection, addDoc, deleteDoc, getDocs, query as firestoreQuery, where, updateDoc } from 'firebase/firestore';
+import { doc, writeBatch, getDocs, collection, addDoc, deleteDoc, query as firestoreQuery, where, updateDoc } from 'firebase/firestore';
 import type { ClassroomStudent, Student, Grade, Activity, Group } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 import { Skeleton } from '../ui/skeleton';
@@ -116,6 +116,7 @@ export function StudentGroups({
       const studentIds = classroomStudents.map(cs => cs.studentId);
       
       const studentPromises = [];
+      // Firestore 'in' query limit is 30
       for (let i = 0; i < studentIds.length; i += 30) {
           const batchIds = studentIds.slice(i, i + 30);
           if (batchIds.length > 0) {
@@ -367,6 +368,8 @@ export function StudentGroups({
   );
 
   const calculateTotals = (grades: Grade[]) => {
+    if (!grades) return { n1Total: 0, n2Total: 0, finalGrade: 0, modularTotals: []};
+
     const n1Total = Math.min(
       10,
       n1Activities.reduce((acc, activity) => {
@@ -444,7 +447,7 @@ export function StudentGroups({
           ...body.map(row => row.join(','))
       ].join('\n');
 
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob([`\uFEFF${csvContent}`], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
       link.setAttribute('download', 'notas.csv');
@@ -484,10 +487,22 @@ export function StudentGroups({
     }
     
     // Sort by groups
-    const filteredGroups = studentGroups.filter(group => 
-        group.name.toLowerCase().includes(lowerCaseFilter) ||
-        group.members.some(csId => allStudentsData[csId]?.name.toLowerCase().includes(lowerCaseFilter))
-    );
+    const filteredGroups = studentGroups
+      .map(group => {
+        const filteredMembers = group.members.filter(csId => allStudentsData[csId]?.name.toLowerCase().includes(lowerCaseFilter));
+        // Show group if name matches OR if any member matches
+        if (group.name.toLowerCase().includes(lowerCaseFilter) || filteredMembers.length > 0) {
+          // If group name doesn't match, only show filtered members
+          if (!group.name.toLowerCase().includes(lowerCaseFilter)) {
+            return { ...group, members: filteredMembers };
+          }
+          // If group name matches, show all members
+          return group;
+        }
+        return null;
+      })
+      .filter((g): g is Group & { members: string[] } => g !== null);
+
 
     const filteredUngrouped = ungroupedStudents.filter(csId => 
         allStudentsData[csId]?.name.toLowerCase().includes(lowerCaseFilter)
@@ -596,7 +611,7 @@ export function StudentGroups({
 
   const renderGroupView = () => (
      <>
-        {(filteredData as { groups: Group[], ungrouped: string[] }).groups.map((group) => {
+        {(filteredData as { groups: (Group & {members: string[]})[], ungrouped: string[] }).groups.map((group) => {
             const firstStudentId = group.members[0];
             if (!firstStudentId) return null;
             const grades = localGrades[firstStudentId] || [];
@@ -862,14 +877,14 @@ export function StudentGroups({
             </div>
         ) : (
             <>
-              {sortBy === 'groups' && (filteredData as { groups: Group[] }).groups.length > 0 && (
+              {sortBy === 'groups' && (filteredData as { groups: (Group & {members: string[]})[] }).groups.length > 0 && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Grupos</CardTitle>
                   </CardHeader>
                   <CardContent>
                      <Accordion type="multiple" className="w-full">
-                       {(filteredData as { groups: Group[] }).groups.map((group) => {
+                       {(filteredData as { groups: (Group & {members: string[]})[] }).groups.map((group) => {
                          const firstStudentId = group.members[0];
                          if (!firstStudentId) return null;
                          return (
