@@ -38,6 +38,7 @@ const ImportCourseFromLessonPlanOutputSchema = z.object({
   courseName: z.string().describe('The name of the course, extracted from the "UNIDADE CURRICULAR" field.').optional(),
   courseCode: z.string().describe('The code of the course.').optional(),
   syllabus: z.string().describe('The syllabus of the course (Ementa).').optional(),
+  competencies: z.string().describe('The general competencies of the course (Competências).').optional(),
   workload: z.string().describe('The workload of the course (Carga Horária).').optional(),
   semester: z.string().describe('The semester of the course').optional(),
   classType: z.enum(['Integradora', 'Modular']).describe('The type of the class, determined by analyzing the course content. Should be "Integradora" for project-based studio disciplines or "Modular" for others.').optional(),
@@ -96,12 +97,13 @@ const prompt = ai.definePrompt({
       - courseName: The name of the discipline, which is located in the "UNIDADE CURRICULAR" field.
       - courseCode: The code of the discipline. If not present, leave it empty.
       - syllabus: The "Ementa". Transcribe it exactly as it appears.
+      - competencies: The general text block under the title "COMPETÊNCIAS". Transcribe it exactly as it appears.
       - workload: The "Carga Horária".
       - semester: The "Semestre".
 
   2.  **Extract Competency Matrix (Matriz de Competências)**:
-      - This is a CRITICAL section. Find the table or section labeled "Matriz de Competências".
-      - For each "Competência" in the matrix, extract its name.
+      - This is a CRITICAL section. Find the table or section labeled "Matriz de Competências". This matrix contains the general "Ementa" and "Competências" fields, but also a more detailed breakdown.
+      - For each "Competência" in the matrix (the individual competency items, not the general text block), extract its name.
       - For each "Habilidade" associated with that competency, extract its name.
       - For each "Habilidade", extract the "Descritores" associated with it. This is often a list. Combine them into a single comma-separated string.
       - Structure this into the 'competencyMatrix' array. If this section is not present, return an empty array.

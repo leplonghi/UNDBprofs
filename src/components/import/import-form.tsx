@@ -124,6 +124,7 @@ export function ImportForm() {
         courseName: extractedData.courseName,
         courseCode: extractedData.courseCode,
         syllabus: extractedData.syllabus,
+        competencies: extractedData.competencies,
         workload: extractedData.workload,
         semester: extractedData.semester,
         competencyMatrix: extractedData.competencyMatrix || [],
@@ -132,7 +133,6 @@ export function ImportForm() {
         bibliography: extractedData.bibliography || { basic: '', complementary: '', recommended: '' },
         classSchedule: extractedData.classSchedule || [],
         classType: extractedData.classType || 'Modular',
-        // O campo 'competencies' (geral) não é mais preenchido aqui para seguir a nova estrutura
       });
     }
   }, [extractedData, form]);

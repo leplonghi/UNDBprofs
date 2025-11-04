@@ -42,12 +42,11 @@ export interface Course {
   name: string;
   code: string;
   syllabus: string;
+  competencies?: string;
   learningUnits?: LearningUnit[];
   competencyMatrix?: Competency[];
   thematicTree: { name: string; description: string }[];
   bibliography: Bibliography;
-  semester?: string; 
-  competencies?: string; 
 }
 
 export interface ClassScheduleItem {

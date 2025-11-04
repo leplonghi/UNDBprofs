@@ -112,17 +112,17 @@ function CourseInformation({
       </CardHeader>
       <CardContent className="space-y-6">
         
-        {(course.competencyMatrix || course.syllabus) && (
-            <div>
+        {(course.syllabus || course.competencies || (course.competencyMatrix && course.competencyMatrix.length > 0)) && (
+             <div>
                 <h3 className="font-semibold mb-2">Matriz de Competências</h3>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-lg border p-4">
                     <div>
                         <h4 className="font-medium text-center mb-2">EMENTA</h4>
-                        <p className="text-sm text-muted-foreground">{course.syllabus}</p>
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{course.syllabus}</p>
                     </div>
                      <div>
                         <h4 className="font-medium text-center mb-2">COMPETÊNCIAS</h4>
-                        <p className="text-sm text-muted-foreground">{course.competencies}</p>
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{course.competencies}</p>
                     </div>
                 </div>
 
