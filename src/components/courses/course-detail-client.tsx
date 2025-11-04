@@ -83,6 +83,13 @@ function CourseInformation({
     return '';
   }
 
+  const thematicTreeColors = [
+      'bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-800',
+      'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800',
+      'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800',
+      'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800',
+      'bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-800',
+  ];
 
   return (
     <Card>
@@ -155,7 +162,7 @@ function CourseInformation({
             <h3 className="font-semibold">Árvore Temática</h3>
             <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {course.thematicTree.map((item, index) => (
-                <Card key={index}>
+                <Card key={index} className={cn(thematicTreeColors[index % thematicTreeColors.length])}>
                   <CardHeader>
                     <CardTitle className='text-lg'>{item.name}</CardTitle>
                   </CardHeader>

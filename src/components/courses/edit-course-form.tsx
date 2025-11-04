@@ -36,6 +36,7 @@ import { ClassScheduleEditor } from '@/components/import/ClassScheduleEditor';
 import { Badge } from '../ui/badge';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+import { cn } from '@/lib/utils';
 
 const competencySchema = z.object({
     competency: z.string(),
@@ -226,6 +227,14 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
   const competencyMatrix = form.watch('competencyMatrix');
   const learningUnits = form.watch('learningUnits');
   const thematicTree = form.watch('thematicTree');
+  
+  const thematicTreeColors = [
+      'bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-800',
+      'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800',
+      'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800',
+      'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800',
+      'bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-800',
+  ];
 
   if (isCourseLoading || areClassroomsLoading) {
     return (
@@ -354,7 +363,7 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
                             <h3 className="text-sm font-medium mb-2">Árvore Temática</h3>
                             <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {thematicTree.map((item, index) => (
-                                <Card key={index}>
+                                <Card key={index} className={cn(thematicTreeColors[index % thematicTreeColors.length])}>
                                 <CardHeader>
                                     <CardTitle className='text-lg'>{item.name}</CardTitle>
                                 </CardHeader>
