@@ -14,11 +14,12 @@ import { StatsCards } from '@/components/dashboard/stats-cards';
 import { RecentCourses } from '@/components/dashboard/recent-courses';
 import { OverviewChart } from '@/components/dashboard/overview-chart';
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PlusCircle, LayoutGrid, BookOpenCheck } from 'lucide-react';
 import { TutorialTab } from '@/components/dashboard/tutorial-tab';
+import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
-// Force change detection
 export default function DashboardPage() {
   const router = useRouter();
   const { user } = useUser();
@@ -110,13 +111,40 @@ export default function DashboardPage() {
           </Button>
         </div>
       </div>
+      
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="hover:bg-accent/50 transition-colors">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-full bg-primary/10 text-primary">
+                <LayoutGrid className="h-8 w-8" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold">Visão Geral</h2>
+                <p className="text-sm text-muted-foreground">Métricas e resumos das suas atividades.</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Link href="/ajuda">
+          <Card className="hover:bg-accent/50 transition-colors h-full">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400">
+                  <BookOpenCheck className="h-8 w-8" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold">Tutorial Rápido</h2>
+                  <p className="text-sm text-muted-foreground">Aprenda a usar os principais recursos.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
 
-       <Tabs defaultValue="overview">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-          <TabsTrigger value="tutorial">Tutorial Rápido</TabsTrigger>
-        </TabsList>
-        <TabsContent value="overview" className="mt-6 space-y-6">
+       <div className="space-y-6">
           <StatsCards
             totalDisciplinas={totalDisciplinas}
             totalTurmas={classroomsCount}
@@ -133,11 +161,7 @@ export default function DashboardPage() {
               <OverviewChart data={studentsPerCourse} isLoading={isLoadingStats} />
             </div>
           </div>
-        </TabsContent>
-        <TabsContent value="tutorial" className="mt-6">
-            <TutorialTab />
-        </TabsContent>
-       </Tabs>
+        </div>
     </div>
   );
 }
