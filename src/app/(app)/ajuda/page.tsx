@@ -21,29 +21,56 @@ export default function AjudaPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Perguntas Frequentes</CardTitle>
+          <CardTitle>Perguntas Frequentes e Guias</CardTitle>
+          <CardDescription>Clique em uma pergunta para ver a resposta detalhada.</CardDescription>
         </CardHeader>
         <CardContent>
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="item-1">
               <AccordionTrigger>O que é o UNDBProf e qual seu objetivo?</AccordionTrigger>
               <AccordionContent>
-                O UNDBProf é uma ferramenta de auxílio pessoal, criada por um professor para professores, com o objetivo de otimizar e automatizar tarefas acadêmicas. É importante ressaltar que este aplicativo não possui nenhum vínculo oficial com a instituição UNDB e não substitui os sistemas oficiais da faculdade. O objetivo é ser um assistente para reduzir o tempo gasto com trabalhos manuais e repetitivos, permitindo que você dedique mais energia ao planejamento de aulas e à interação com os alunos.
+                <div className="space-y-2 text-base">
+                  <p>O UNDBProf é uma ferramenta de auxílio pessoal, criada por um professor para professores, com o objetivo de otimizar e automatizar tarefas acadêmicas. O foco é ser um <span className="font-semibold text-primary">assistente inteligente</span> para o seu dia a dia.</p>
+                  <p><span className="font-bold">Importante:</span> Este aplicativo não possui nenhum vínculo oficial com a instituição UNDB e não substitui os sistemas oficiais da faculdade (como AlunOnline ou o Portal do Professor). Ele funciona como uma camada de produtividade sobre os processos existentes.</p>
+                  <p>O objetivo principal é reduzir drasticamente o tempo gasto com trabalhos manuais e repetitivos (como digitalizar cronogramas, criar planilhas de notas, etc.), permitindo que você dedique mais energia ao que realmente importa: o planejamento de aulas criativas e a interação com os alunos.</p>
+                </div>
               </AccordionContent>
             </AccordionItem>
 
             <AccordionItem value="item-2">
               <AccordionTrigger>Como funciona a importação de disciplinas com IA?</AccordionTrigger>
               <AccordionContent>
-                <div className="space-y-2">
-                    <p>Este é um dos recursos mais poderosos do UNDBProf. O processo é simples:</p>
-                    <ol className="list-decimal pl-6 space-y-1">
-                        <li>Vá para a página <strong>Disciplinas</strong> e clique em <strong>Adicionar/Importar Disciplina</strong>.</li>
-                        <li>Na aba <strong>Importar com IA</strong>, arraste ou selecione o arquivo PDF do seu Plano de Ensino.</li>
-                        <li>Clique em <strong>Iniciar Extração com IA</strong>. O sistema irá ler o documento e extrair automaticamente todas as informações relevantes: nome da disciplina, código, ementa, objetivos, bibliografia e, o mais importante, o cronograma completo de aulas.</li>
-                        <li>Após a extração, você será levado a uma tela de revisão. Confira se os dados estão corretos, faça os ajustes necessários e clique em <strong>Confirmar e Salvar</strong>.</li>
-                        <li>Pronto! A disciplina e a primeira turma, já com o cronograma de aulas, estarão criadas no sistema.</li>
+                <div className="space-y-4 text-base">
+                    <p className="font-semibold text-primary">Este é o recurso mais poderoso do UNDBProf. Chega de digitar o plano de ensino manualmente!</p>
+                    <p>O processo foi desenhado para ser o mais simples possível:</p>
+                    <ol className="list-decimal pl-6 space-y-2">
+                        <li>
+                            <strong>Acesse a Página:</strong> No menu, vá para a página <strong>Disciplinas</strong> e clique no botão <strong>Adicionar/Importar Disciplina</strong>.
+                        </li>
+                        <li>
+                            <strong>Envie o PDF:</strong> Na aba <strong>Importar com IA</strong>, arraste e solte o arquivo PDF do seu Plano de Ensino (o modelo oficial da UNDB) na área indicada, ou clique para selecioná-lo em seu computador.
+                        </li>
+                        <li>
+                            <strong>Inicie a Extração:</strong> Clique em <strong>Iniciar Extração com IA</strong>. Nesse momento, o sistema envia o documento para um modelo de inteligência artificial treinado para ler e entender a estrutura dos planos de ensino da UNDB. A IA identifica e extrai automaticamente:
+                            <ul className="list-disc pl-6 mt-2">
+                                <li>Nome da disciplina e código</li>
+                                <li>Ementa e Competências</li>
+                                <li>Matriz de Competências (com Habilidades e Descritores)</li>
+                                <li>Carga horária e semestre</li>
+                                <li>Bibliografia (básica, complementar e recomendada)</li>
+                                <li>E o mais importante: o <span className="font-bold">cronograma completo de aulas</span>, data por data, com tópicos, atividades e locais.</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <strong>Revise e Ajuste:</strong> Após a extração (que leva alguns segundos), você será levado a uma tela de revisão. Aqui, todos os dados extraídos são apresentados em um formulário. <span className="font-semibold">É crucial que você revise as informações</span> para garantir que a IA extraiu tudo corretamente. Faça os ajustes necessários diretamente nos campos.
+                        </li>
+                        <li>
+                            <strong>Confirme e Salve:</strong> Quando tudo estiver correto, clique em <strong>Confirmar e Salvar</strong>. O sistema irá criar a disciplina, a primeira turma, o cronograma de aulas e a estrutura de avaliação (preset de notas) automaticamente para você.
+                        </li>
                     </ol>
+                    <div className="p-3 bg-accent rounded-md">
+                        <p className="text-sm text-accent-foreground"><span className="font-bold">Dica:</span> A qualidade da extração depende da qualidade do PDF. Use o arquivo original, não uma foto escaneada, para obter os melhores resultados.</p>
+                    </div>
                 </div>
               </AccordionContent>
             </AccordionItem>
@@ -51,12 +78,29 @@ export default function AjudaPage() {
             <AccordionItem value="item-3">
               <AccordionTrigger>Como adiciono alunos a uma turma?</AccordionTrigger>
               <AccordionContent>
-                <div className="space-y-2">
-                    <p>Dentro da página de uma disciplina, acesse a aba <strong>Gerenciamento da Turma</strong> e depois a sub-aba <strong>Alunos</strong>. Clique no botão <strong>Adicionar Alunos</strong>. Você terá duas opções:</p>
-                    <ul className="list-disc pl-6 mt-2 space-y-1">
-                        <li><strong>Importar CSV:</strong> Baixe a lista de alunos do sistema da faculdade (AlunOnline, por exemplo) em formato CSV. Envie o arquivo e o sistema irá cadastrar todos os alunos na turma de uma só vez. As colunas necessárias são `Nome` e `E-mail`.</li>
-                        <li><strong>Extrair com IA:</strong> Envie um documento (PDF ou imagem) que contenha a lista de alunos. A IA tentará extrair nome, e-mail e matrícula. Você poderá revisar os dados antes de confirmar a importação.</li>
-                    </ul>
+                <div className="space-y-4 text-base">
+                    <p>Depois de criar uma disciplina, o próximo passo é popular a turma com seus alunos. Para isso, entre na página da disciplina desejada, vá para a aba <strong>Gerenciamento da Turma</strong> e depois para a sub-aba <strong>Alunos</strong>. Clique no botão <strong>Adicionar Alunos</strong>. Você terá duas opções eficientes:</p>
+                    
+                    <div className="space-y-2">
+                        <h4 className="font-semibold">Opção 1: Importar via Arquivo CSV (Recomendado)</h4>
+                        <ol className="list-decimal pl-6 space-y-1">
+                            <li>Baixe a lista de alunos do sistema oficial da faculdade (AlunOnline, por exemplo) em formato <span className="font-mono bg-muted px-1 rounded">.csv</span>.</li>
+                            <li>Abra o arquivo em um editor de planilhas (Excel, Google Sheets) e garanta que ele contenha, no mínimo, as colunas <span className="font-mono bg-muted px-1 rounded">Nome</span> e <span className="font-mono bg-muted px-1 rounded">E-mail</span>. Uma coluna <span className="font-mono bg-muted px-1 rounded">Matrícula</span> também é recomendada.</li>
+                            <li>Na janela "Adicionar Alunos", na aba <strong>Importar CSV</strong>, selecione este arquivo.</li>
+                            <li>Clique em <strong>Enviar Lista</strong>. O sistema irá ler o arquivo e cadastrar todos os alunos na turma de uma só vez.</li>
+                        </ol>
+                    </div>
+
+                    <div className="space-y-2">
+                        <h4 className="font-semibold">Opção 2: Extrair de um Documento com IA</h4>
+                         <p>Se você tiver a lista de alunos em um PDF ou até mesmo em uma imagem (como um print de tela), a IA pode ajudar.</p>
+                        <ul className="list-disc pl-6 mt-2 space-y-1">
+                            <li>Na aba <strong>Extrair com IA</strong>, envie o arquivo (PDF, JPG, PNG).</li>
+                            <li>Clique em <strong>Extrair Alunos</strong>. A IA tentará identificar nomes, e-mails e matrículas no documento.</li>
+                            <li>Uma tabela de revisão será exibida. Como a extração de documentos variados pode não ser 100% precisa, <span className="font-bold">verifique e corrija</span> os dados extraídos antes de confirmar.</li>
+                            <li>Clique em <strong>Salvar Alunos</strong> para adicioná-los à turma.</li>
+                        </ul>
+                    </div>
                 </div>
               </AccordionContent>
             </AccordionItem>
@@ -64,13 +108,31 @@ export default function AjudaPage() {
             <AccordionItem value="item-4">
               <AccordionTrigger>Como funciona o lançamento de notas?</AccordionTrigger>
               <AccordionContent>
-                <div className="space-y-2">
-                    <p>Acesse a disciplina, vá em <strong>Gerenciamento da Turma</strong> e selecione a aba <strong>Lançamento de Notas</strong>. Lá você verá a planilha de notas. O sistema já vem com os presets de avaliação para disciplinas Modulares e Integradoras.</p>
-                     <ul className="list-disc pl-6 mt-2 space-y-1">
-                        <li><strong>Notas Individuais:</strong> Simplesmente digite a nota de cada aluno em sua respectiva célula. As notas são salvas automaticamente.</li>
-                        <li><strong>Notas em Grupo:</strong> Selecione os alunos que fazem parte de um grupo usando as caixas de seleção e clique em <strong>Agrupar</strong>. O sistema criará um grupo e você poderá lançar uma única nota que será replicada para todos os membros. Ideal para projetos e trabalhos em equipe.</li>
-                        <li><strong>Cálculo de Média:</strong> As médias N1, N2 e a Nota Final são calculadas automaticamente à medida que você lança as notas.</li>
-                    </ul>
+                <div className="space-y-4 text-base">
+                    <p>O sistema de notas foi criado para ser flexível e rápido. Acesse a disciplina, vá em <strong>Gerenciamento da Turma</strong> e selecione a aba <strong>Lançamento de Notas</strong>. Lá você encontrará a planilha de notas da sua turma.</p>
+                     <p>O sistema já cria automaticamente as atividades avaliativas com base no tipo da sua turma (Modular ou Integradora), mas você pode personalizá-las em <strong>Gerenciamento da Turma {'>'} Configurações</strong>.</p>
+                     <div className="space-y-2">
+                        <h4 className="font-semibold">Lançando Notas:</h4>
+                        <ul className="list-disc pl-6 mt-2 space-y-2">
+                            <li>
+                                <strong>Notas Individuais:</strong> Simplesmente digite a nota de cada aluno na sua respectiva célula na planilha. As notas <span className="font-bold">não são salvas automaticamente</span>. Após fazer suas alterações, clique no botão <strong>Salvar Notas</strong> no topo da página.
+                            </li>
+                            <li>
+                                <strong>Notas em Grupo:</strong> Este recurso é ideal para projetos e trabalhos em equipe.
+                                <ol className="list-decimal pl-6 mt-1">
+                                    <li>Marque a caixa de seleção ao lado do nome dos alunos que fazem parte de um grupo.</li>
+                                    <li>Clique no botão <strong>Agrupar</strong>. O sistema criará um grupo com os alunos selecionados.</li>
+                                    <li>Agora você pode lançar uma única nota para o grupo, e ela será replicada para todos os membros. Você ainda pode ajustar a nota de um membro individualmente, se necessário.</li>
+                                </ol>
+                            </li>
+                            <li>
+                                <strong>Cálculo de Média:</strong> As médias N1, N2 (para Integradoras) e a Nota Final são calculadas <span className="font-bold text-primary">automaticamente</span> à medida que você lança as notas, dando a você e ao aluno uma visão clara do desempenho em tempo real.
+                            </li>
+                             <li>
+                                <strong>Exportação:</strong> Você pode exportar a planilha de notas completa para CSV ou PDF a qualquer momento usando o botão <strong>Exportar</strong>.
+                            </li>
+                        </ul>
+                     </div>
                 </div>
               </AccordionContent>
             </AccordionItem>
@@ -78,18 +140,42 @@ export default function AjudaPage() {
              <AccordionItem value="item-5">
               <AccordionTrigger>O que é a página de Documentos?</AccordionTrigger>
               <AccordionContent>
-                É o seu repositório de arquivos centralizado. Nela, você pode:
-                 <ul className="list-disc pl-6 mt-2 space-y-1">
-                    <li><strong>Adicionar Seus Documentos:</strong> Faça upload de slides de aula, artigos, trabalhos e outros materiais, ou adicione links para arquivos no Google Drive, Dropbox, etc. Você pode associar cada documento a uma disciplina específica para manter tudo organizado.</li>
-                    <li><strong>Baixar Modelos Institucionais:</strong> A UNDB oferece modelos (templates) para Planos de Ensino e outros documentos oficiais. Nesta seção, você pode baixá-los diretamente, sem precisar procurar em outros lugares.</li>
-                </ul>
+                 <div className="space-y-4 text-base">
+                    <p>É o seu repositório de arquivos centralizado, projetado para manter seus materiais de aula organizados e acessíveis. Ele se divide em duas seções:</p>
+                    <div className="space-y-2">
+                        <h4 className="font-semibold">1. Meus Documentos</h4>
+                        <p>Esta é a sua biblioteca pessoal. Nela, você pode:</p>
+                        <ul className="list-disc pl-6 mt-2 space-y-1">
+                            <li><strong>Adicionar Seus Documentos:</strong> Faça upload de arquivos diretamente do seu computador (slides de aula, artigos, trabalhos, etc.).</li>
+                            <li><strong>Adicionar Links Externos:</strong> Em vez de fazer upload, você pode simplesmente adicionar um link para um arquivo no Google Drive, Dropbox, YouTube, ou qualquer outro site.</li>
+                            <li><strong>Associar a uma Disciplina:</strong> Ao adicionar um documento, você pode associá-lo a uma ou mais disciplinas. Isso ajuda a manter tudo organizado e facilita a localização de materiais específicos para cada turma.</li>
+                        </ul>
+                    </div>
+                     <div className="space-y-2">
+                        <h4 className="font-semibold">2. Modelos Institucionais</h4>
+                        <p>Para facilitar sua vida, reunimos aqui os modelos (templates) de documentos oficiais mais importantes da UNDB. Nesta seção, você pode baixar diretamente, com um clique:</p>
+                        <ul className="list-disc pl-6 mt-2 space-y-1">
+                            <li>Modelo de Plano de Ensino para Disciplina Modular</li>
+                            <li>Modelo de Plano de Ensino para Disciplina Integradora (Estúdios)</li>
+                            <li>Modelo de Avaliação N1/N2</li>
+                        </ul>
+                        <p>Chega de procurar esses arquivos em e-mails ou pastas antigas!</p>
+                    </div>
+                 </div>
               </AccordionContent>
             </AccordionItem>
             
             <AccordionItem value="item-6">
               <AccordionTrigger>Posso sugerir melhorias ou relatar um problema?</AccordionTrigger>
-              <AccordionContent>
-                Sim! Sua participação é fundamental. Use a página de <strong>Feedback</strong> (acessível pelo menu do usuário) para enviar sugestões de novos recursos, relatar erros ou propor melhorias. Estamos construindo esta ferramenta em conjunto com você.
+              <AccordionContent className="text-base">
+                <p>Sim! Sua participação é fundamental para a evolução do UNDBProf. Esta ferramenta está em constante desenvolvimento, e o seu feedback é o principal guia para as próximas atualizações.</p>
+                <p className="mt-2">No menu do seu perfil (clicando no seu avatar no canto superior direito), você encontrará a opção <strong>Feedback</strong>. Use-a para:</p>
+                 <ul className="list-disc pl-6 mt-2 space-y-1">
+                    <li>Sugerir novos recursos que facilitariam seu trabalho.</li>
+                    <li>Relatar erros ou comportamentos inesperados (bugs).</li>
+                    <li>Propor melhorias em funcionalidades existentes.</li>
+                </ul>
+                 <p className="mt-2">Estamos construindo esta ferramenta em conjunto com você. Não hesite em compartilhar suas ideias!</p>
               </AccordionContent>
             </AccordionItem>
           </Accordion>
