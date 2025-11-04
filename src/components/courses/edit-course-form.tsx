@@ -52,22 +52,20 @@ const learningUnitSchema = z.object({
 });
 
 const formSchema = z.object({
-  courseName: z.string().min(1, 'Nome do curso é obrigatório.'),
-  courseCode: z.string().min(1, 'Código do curso é obrigatório.'),
-  syllabus: z.string().min(1, 'Ementa é obrigatória.'),
+  courseName: z.string().optional(),
+  courseCode: z.string().optional(),
+  syllabus: z.string().optional(),
   competencies: z.string().optional(),
-  workload: z.string().min(1, 'Carga horária é obrigatória.'),
-  semester: z.string().min(1, 'Semestre é obrigatório.'),
-  classType: z.enum(['Integradora', 'Modular'], {
-    required_error: 'O tipo da turma é obrigatório.',
-  }),
+  workload: z.string().optional(),
+  semester: z.string().optional(),
+  classType: z.enum(['Integradora', 'Modular']).optional(),
   competencyMatrix: z.array(competencySchema).optional(),
   learningUnits: z.array(learningUnitSchema).optional(),
   thematicTree: z
     .array(
       z.object({
-        name: z.string().min(1, 'O nome é obrigatório.'),
-        description: z.string().min(1, 'A descrição é obrigatória.'),
+        name: z.string(),
+        description: z.string(),
       })
     )
     .optional(),
@@ -75,16 +73,16 @@ const formSchema = z.object({
     basic: z.string().optional(),
     complementary: z.string().optional(),
     recommended: z.string().optional(),
-  }),
+  }).optional(),
   classSchedule: z
     .array(
       z.object({
-        date: z.string().min(1, 'A data é obrigatória.'),
-        type: z.string().min(1, 'O tipo é obrigatório.'),
-        topic: z.string().min(1, 'O tópico é obrigatório.'),
-        content: z.string().min(1, 'O conteúdo é obrigatório.'),
-        activity: z.string().min(1, 'A atividade é obrigatória.'),
-        location: z.string().min(1, 'O local é obrigatório.'),
+        date: z.string(),
+        type: z.string(),
+        topic: z.string(),
+        content: z.string(),
+        activity: z.string(),
+        location: z.string(),
       })
     )
     .optional(),
@@ -190,9 +188,9 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
       learningUnits: values.learningUnits || [],
       thematicTree: values.thematicTree || [],
       bibliography: {
-        basic: values.bibliography.basic || '',
-        complementary: values.bibliography.complementary || '',
-        recommended: values.bibliography.recommended || '',
+        basic: values.bibliography?.basic || '',
+        complementary: values.bibliography?.complementary || '',
+        recommended: values.bibliography?.recommended || '',
       },
     };
 
