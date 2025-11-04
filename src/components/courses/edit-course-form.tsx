@@ -55,6 +55,7 @@ const formSchema = z.object({
   courseName: z.string().min(1, 'Nome do curso é obrigatório.'),
   courseCode: z.string().min(1, 'Código do curso é obrigatório.'),
   syllabus: z.string().min(1, 'Ementa é obrigatória.'),
+  competencies: z.string().optional(),
   workload: z.string().min(1, 'Carga horária é obrigatória.'),
   semester: z.string().min(1, 'Semestre é obrigatório.'),
   classType: z.enum(['Integradora', 'Modular'], {
@@ -126,6 +127,7 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
       courseName: '',
       courseCode: '',
       syllabus: '',
+      competencies: '',
       workload: '',
       semester: '',
       classType: 'Integradora',
@@ -143,6 +145,7 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
         courseName: course.name,
         courseCode: course.code,
         syllabus: course.syllabus,
+        competencies: course.competencies,
         competencyMatrix: course.competencyMatrix || [],
         learningUnits: course.learningUnits || [],
         thematicTree: course.thematicTree || [],
@@ -182,6 +185,7 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
       name: values.courseName,
       code: values.courseCode,
       syllabus: values.syllabus,
+      competencies: values.competencies,
       competencyMatrix: values.competencyMatrix || [],
       learningUnits: values.learningUnits || [],
       thematicTree: values.thematicTree || [],
@@ -305,38 +309,40 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
                         )}
                         />
                     </div>
-                    <FormField
-                        control={form.control}
-                        name="syllabus"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Ementa</FormLabel>
-                            <FormControl>
-                            <Textarea rows={5} {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                    {learningUnits && learningUnits.length > 0 && (
-                        <FormItem>
-                            <FormLabel>Unidades de Aprendizagem</FormLabel>
-                            <Accordion type="multiple" className="w-full">
-                                {learningUnits.map((unit, index) => (
-                                    <AccordionItem value={`unit-${index}`} key={index}>
-                                        <AccordionTrigger>{unit.name}</AccordionTrigger>
-                                        <AccordionContent>
-                                            <p className="text-muted-foreground whitespace-pre-wrap">{unit.content}</p>
-                                        </AccordionContent>
-                                    </AccordionItem>
-                                ))}
-                            </Accordion>
-                        </FormItem>
-                    )}
-                    {competencyMatrix && competencyMatrix.length > 0 && (
-                        <FormItem>
-                            <FormLabel>Matriz de Competências</FormLabel>
-                            <Accordion type="multiple" className="w-full border rounded-md px-4">
+                    
+                    <div>
+                        <h3 className="text-sm font-medium mb-2">Matriz de Competências</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-lg border p-4">
+                            <FormField
+                                control={form.control}
+                                name="syllabus"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className='text-center block'>Ementa</FormLabel>
+                                    <FormControl>
+                                    <Textarea rows={5} {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                             <FormField
+                                control={form.control}
+                                name="competencies"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className='text-center block'>Competências</FormLabel>
+                                    <FormControl>
+                                    <Textarea rows={5} {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        {competencyMatrix && competencyMatrix.length > 0 && (
+                            <Accordion type="multiple" className="w-full border rounded-md px-4 mt-4">
                                 {competencyMatrix.map((comp, compIndex) => (
                                     <AccordionItem value={`comp-${compIndex}`} key={compIndex} className="border-b-0">
                                         <AccordionTrigger className="text-base font-semibold">{comp.competency}</AccordionTrigger>
@@ -351,6 +357,23 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
                                                     </div>
                                                 ))}
                                             </div>
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                ))}
+                            </Accordion>
+                        )}
+                    </div>
+                    
+
+                    {learningUnits && learningUnits.length > 0 && (
+                        <FormItem>
+                            <FormLabel>Unidades de Aprendizagem</FormLabel>
+                            <Accordion type="multiple" className="w-full">
+                                {learningUnits.map((unit, index) => (
+                                    <AccordionItem value={`unit-${index}`} key={index}>
+                                        <AccordionTrigger>{unit.name}</AccordionTrigger>
+                                        <AccordionContent>
+                                            <p className="text-muted-foreground whitespace-pre-wrap">{unit.content}</p>
                                         </AccordionContent>
                                     </AccordionItem>
                                 ))}

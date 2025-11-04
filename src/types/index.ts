@@ -46,9 +46,7 @@ export interface Course {
   competencyMatrix?: Competency[];
   thematicTree: { name: string; description: string }[];
   bibliography: Bibliography;
-  // Deprecated fields, kept for compatibility if needed, but not primary.
   semester?: string; 
-  objectives?: string; 
   competencies?: string; 
 }
 

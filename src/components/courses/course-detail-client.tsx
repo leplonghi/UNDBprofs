@@ -111,10 +111,44 @@ function CourseInformation({
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div>
-          <h3 className="font-semibold">Ementa</h3>
-          <p className="text-muted-foreground">{course.syllabus}</p>
-        </div>
+        
+        {(course.competencyMatrix || course.syllabus) && (
+            <div>
+                <h3 className="font-semibold mb-2">Matriz de Competências</h3>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-lg border p-4">
+                    <div>
+                        <h4 className="font-medium text-center mb-2">EMENTA</h4>
+                        <p className="text-sm text-muted-foreground">{course.syllabus}</p>
+                    </div>
+                     <div>
+                        <h4 className="font-medium text-center mb-2">COMPETÊNCIAS</h4>
+                        <p className="text-sm text-muted-foreground">{course.competencies}</p>
+                    </div>
+                </div>
+
+                {course.competencyMatrix && course.competencyMatrix.length > 0 && (
+                    <Accordion type="multiple" className="w-full border rounded-md px-4 mt-4">
+                        {course.competencyMatrix.map((comp, compIndex) => (
+                            <AccordionItem value={`comp-${compIndex}`} key={compIndex} className={cn("border-b", compIndex === course.competencyMatrix!.length - 1 && "border-b-0")}>
+                                <AccordionTrigger className="text-base font-semibold">{comp.competency}</AccordionTrigger>
+                                <AccordionContent>
+                                    <div className="space-y-4 pl-4">
+                                        {comp.skills.map((skill, skillIndex) => (
+                                            <div key={skillIndex}>
+                                                <h4 className="font-medium">{skill.skill}</h4>
+                                                <p className="text-sm text-muted-foreground">
+                                                    <strong>Descritores:</strong> {skill.descriptors}
+                                                </p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </AccordionContent>
+                            </AccordionItem>
+                        ))}
+                    </Accordion>
+                )}
+            </div>
+        )}
 
         {course.learningUnits && course.learningUnits.length > 0 && (
            <div>
@@ -130,31 +164,6 @@ function CourseInformation({
                 ))}
             </Accordion>
            </div>
-        )}
-
-        {course.competencyMatrix && course.competencyMatrix.length > 0 && (
-             <div>
-                <h3 className="font-semibold mb-2">Matriz de Competências</h3>
-                <Accordion type="multiple" className="w-full border rounded-md px-4">
-                    {course.competencyMatrix.map((comp, compIndex) => (
-                        <AccordionItem value={`comp-${compIndex}`} key={compIndex} className={cn("border-b", compIndex === course.competencyMatrix!.length - 1 && "border-b-0")}>
-                            <AccordionTrigger className="text-base font-semibold">{comp.competency}</AccordionTrigger>
-                            <AccordionContent>
-                                <div className="space-y-4 pl-4">
-                                    {comp.skills.map((skill, skillIndex) => (
-                                        <div key={skillIndex}>
-                                            <h4 className="font-medium">{skill.skill}</h4>
-                                            <p className="text-sm text-muted-foreground">
-                                                <strong>Descritores:</strong> {skill.descriptors}
-                                            </p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </AccordionContent>
-                        </AccordionItem>
-                    ))}
-                </Accordion>
-            </div>
         )}
         
         {course.thematicTree && course.thematicTree.length > 0 && (

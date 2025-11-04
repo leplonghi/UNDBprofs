@@ -23,6 +23,8 @@ import { createActivitiesFromPreset } from '@/lib/presets';
 import { Badge } from '../ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { cn } from '@/lib/utils';
+
 
 const competencySchema = z.object({
     competency: z.string(),
@@ -41,6 +43,7 @@ const formSchema = z.object({
   courseName: z.string().optional(),
   courseCode: z.string().optional(),
   syllabus: z.string().optional(),
+  competencies: z.string().optional(),
   workload: z.string().optional(),
   semester: z.string().optional(),
   classType: z.enum(['Integradora', 'Modular']).optional(),
@@ -78,6 +81,7 @@ export function ImportForm() {
       courseName: '',
       courseCode: '',
       syllabus: '',
+      competencies: '',
       workload: '',
       semester: '',
       classType: 'Integradora',
@@ -128,6 +132,7 @@ export function ImportForm() {
         bibliography: extractedData.bibliography || { basic: '', complementary: '', recommended: '' },
         classSchedule: extractedData.classSchedule || [],
         classType: extractedData.classType || 'Modular',
+        // O campo 'competencies' (geral) não é mais preenchido aqui para seguir a nova estrutura
       });
     }
   }, [extractedData, form]);
@@ -157,6 +162,7 @@ export function ImportForm() {
         name: values.courseName || 'Nome não definido',
         code: values.courseCode || 'N/A',
         syllabus: values.syllabus || 'Ementa não definida',
+        competencies: values.competencies || 'Competências não definidas',
         competencyMatrix: values.competencyMatrix || [],
         learningUnits: values.learningUnits || [],
         thematicTree: values.thematicTree || [],
@@ -212,6 +218,14 @@ export function ImportForm() {
   const competencyMatrix = form.watch('competencyMatrix');
   const learningUnits = form.watch('learningUnits');
   const thematicTree = form.watch('thematicTree');
+  
+  const thematicTreeColors = [
+      'bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-800',
+      'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800',
+      'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800',
+      'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800',
+      'bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-800',
+  ];
 
 
   if (!extractedData) {
@@ -257,38 +271,40 @@ export function ImportForm() {
                     )}
                   />
                 </div>
-                 <FormField
-                  control={form.control}
-                  name="syllabus"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Ementa</FormLabel>
-                      <FormControl>
-                        <Textarea rows={5} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                 {learningUnits && learningUnits.length > 0 && (
-                    <FormItem>
-                        <FormLabel>Unidades de Aprendizagem</FormLabel>
-                        <Accordion type="multiple" className="w-full">
-                            {learningUnits.map((unit, index) => (
-                                <AccordionItem value={`unit-${index}`} key={index}>
-                                    <AccordionTrigger>{unit.name}</AccordionTrigger>
-                                    <AccordionContent>
-                                        <p className="text-muted-foreground whitespace-pre-wrap">{unit.content}</p>
-                                    </AccordionContent>
-                                </AccordionItem>
-                            ))}
-                        </Accordion>
-                    </FormItem>
-                 )}
-                 {competencyMatrix && competencyMatrix.length > 0 && (
-                     <FormItem>
-                        <FormLabel>Matriz de Competências</FormLabel>
-                        <Accordion type="multiple" className="w-full border rounded-md px-4">
+
+                 <div>
+                    <h3 className="text-sm font-medium mb-2">Matriz de Competências</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-lg border p-4">
+                        <FormField
+                            control={form.control}
+                            name="syllabus"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className='text-center block'>Ementa</FormLabel>
+                                <FormControl>
+                                <Textarea rows={5} {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="competencies"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className='text-center block'>Competências</FormLabel>
+                                <FormControl>
+                                <Textarea rows={5} {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                    </div>
+
+                    {competencyMatrix && competencyMatrix.length > 0 && (
+                        <Accordion type="multiple" className="w-full border rounded-md px-4 mt-4">
                             {competencyMatrix.map((comp, compIndex) => (
                                 <AccordionItem value={`comp-${compIndex}`} key={compIndex} className="border-b-0">
                                     <AccordionTrigger className="text-base font-semibold">{comp.competency}</AccordionTrigger>
@@ -307,15 +323,33 @@ export function ImportForm() {
                                 </AccordionItem>
                             ))}
                         </Accordion>
+                    )}
+                </div>
+
+
+                 {learningUnits && learningUnits.length > 0 && (
+                    <FormItem>
+                        <FormLabel>Unidades de Aprendizagem</FormLabel>
+                        <Accordion type="multiple" className="w-full">
+                            {learningUnits.map((unit, index) => (
+                                <AccordionItem value={`unit-${index}`} key={index}>
+                                    <AccordionTrigger>{unit.name}</AccordionTrigger>
+                                    <AccordionContent>
+                                        <p className="text-muted-foreground whitespace-pre-wrap">{unit.content}</p>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            ))}
+                        </Accordion>
                     </FormItem>
                  )}
+                 
 
                 {thematicTree && thematicTree.length > 0 && (
                     <div>
                         <h3 className="text-sm font-medium mb-2">Árvore Temática</h3>
                         <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {thematicTree.map((item, index) => (
-                            <Card key={index}>
+                            <Card key={index} className={cn(thematicTreeColors[index % thematicTreeColors.length])}>
                             <CardHeader>
                                 <CardTitle className='text-lg'>{item.name}</CardTitle>
                             </CardHeader>

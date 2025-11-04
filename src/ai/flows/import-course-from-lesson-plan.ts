@@ -112,7 +112,7 @@ const prompt = ai.definePrompt({
       - Structure this into the 'learningUnits' array. If this section is not present, return an empty array.
 
   4.  **Extract Class Schedule (Main Content Table)**:
-      - This is the most detailed part of the document. Go through the table that has columns like "UNIDADE DE APRENDIZAGEM", "HABILidades", "DESCRITORES", and a column with activities and times.
+      - This is the most detailed part of the document. Go through the table that has columns like "UNIDADE DE APRENDIZAGEM", "HABILIDADES", "DESCRITORES", and a column with activities and times.
       - For each row in this table, you MUST extract:
         - 'topic': The content from the "UNIDADE DE APRENDIZAGEM" column (e.g., "I - Teoria e Método").
         - 'type': The content from the "HABILIDADES" column (e.g., "- Interpretação crítica da legislação...").
@@ -130,7 +130,7 @@ const prompt = ai.definePrompt({
   6.  **Extract Bibliography (Bibliografia)**:
       - This is a CRITICAL step. You MUST identify three distinct sections: "Básica", "Complementar", and "Recomendada".
       - For each section, extract the full text content, including all numbering, author names, titles, and formatting.
-      - **CRITICAL**: You MUST preserve the original line breaks (\n) within each bibliography section. Do not merge lines. The output for each bibliography field must be a single string containing the full, formatted text of that section.
+      - **CRITICAL**: You MUST preserve the original line breaks (\\n) within each bibliography section. Do not merge lines. The output for each bibliography field must be a single string containing the full, formatted text of that section.
       - If a section (e.g., "Recomendada") is not found, its corresponding JSON field must be an empty string.
 
   7.  **Determine classType (Critical Classification)**:
@@ -142,7 +142,7 @@ const prompt = ai.definePrompt({
 
   **Final Output Instructions**:
   - Be extremely faithful to the original text. Do not invent, summarize, or alter any content.
-  - If any field or section is not present in the document, leave the corresponding JSON field as an empty string or an empty array for lists.
+  - If any field or section is not present in the document, you MUST return an empty string, an empty array, or an empty object for the corresponding field.
   - The final output must be a clean, complete, and perfectly structured JSON, ready for automatic system integration.
 
   Lesson Plan Document: {{media url=lessonPlanDataUri}}`,
