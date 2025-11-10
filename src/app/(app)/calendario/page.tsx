@@ -43,7 +43,8 @@ type EventCategory =
   | 'feriado'
   | 'substitutiva'
   | 'prova-final'
-  | 'course-event';
+  | 'course-event'
+  | 'aniversario';
 
 interface CalendarEvent {
   date: Date;
@@ -53,6 +54,8 @@ interface CalendarEvent {
 }
 
 const staticEvents: Omit<CalendarEvent, 'courseCode'>[] = [
+  // Aniversário
+  { date: new Date(2025, 7, 13), description: 'Aniversário do Professor', category: 'aniversario' },
   // Agosto
   { date: new Date(2025, 7, 13), description: 'Início INTEGRADORA QUARTA FEIRA', category: 'integradora-quarta' },
   { date: new Date(2025, 7, 14), description: 'Início I MODULAR', category: 'modular-i' },
@@ -103,6 +106,7 @@ const categoryColors: Record<EventCategory, string> = {
     'substitutiva': 'bg-red-500 text-white',
     'prova-final': 'bg-red-700 text-white',
     'course-event': 'bg-primary text-primary-foreground',
+    'aniversario': 'bg-blue-500 text-white',
 };
 
 const categoryBgColors: Record<EventCategory, string> = {
@@ -116,6 +120,7 @@ const categoryBgColors: Record<EventCategory, string> = {
   'substitutiva': 'bg-red-100 dark:bg-red-900/20',
   'prova-final': 'bg-red-200 dark:bg-red-900/40',
   'course-event': 'bg-primary/10',
+  'aniversario': 'bg-blue-100 dark:bg-blue-900/20',
 };
 
 
@@ -130,6 +135,7 @@ const categoryLabels: Record<EventCategory, string> = {
   'substitutiva': 'Avaliação Substitutiva',
   'prova-final': 'Prova Final',
   'course-event': 'Evento de Disciplina',
+  'aniversario': 'Aniversário',
 };
 
 const CalendarMonth = ({

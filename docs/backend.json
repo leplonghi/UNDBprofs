@@ -23,6 +23,11 @@
           "type": "string",
           "description": "The date the professor registered in the system.",
           "format": "date-time"
+        },
+        "birthday": {
+          "type": "string",
+          "description": "The professor's birth date.",
+          "format": "date"
         }
       },
       "required": [
@@ -317,6 +322,11 @@
         "description": {
           "type": "string",
           "description": "A description of the event."
+        },
+        "type": {
+          "type": "string",
+          "description": "The type of event.",
+          "enum": ["aniversario", "academico"]
         }
       },
       "required": [

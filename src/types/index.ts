@@ -118,6 +118,7 @@ export interface AcademicEvent {
     name: string;
     dateTime: string; // ISO 8601 format
     description: string;
+    type?: 'aniversario' | 'academico';
 }
 
 export type StudentSituation = 'Aprovado' | 'Prova Final' | 'Reprovado';
