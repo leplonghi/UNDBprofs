@@ -107,24 +107,17 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
+        <Card>
             <CardHeader>
-                <CardTitle className="text-2xl text-primary">{welcomeMessage}</CardTitle>
+                <CardTitle className="text-xl text-primary">{welcomeMessage}</CardTitle>
                 <CardDescription>
-                    Pronto para organizar suas aulas? Comece importando uma disciplina ou veja um resumo de suas atividades abaixo.
+                    Veja um resumo de suas atividades ou comece importando uma nova disciplina.
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <Button size="lg" onClick={() => router.push('/disciplinas/nova')}>
-                    <PlusCircle className="mr-2 h-5 w-5" />
-                    Adicionar/Importar Disciplina
-                </Button>
+                <TutorialCard />
             </CardContent>
         </Card>
-        
-        <TutorialCard />
-      </div>
 
 
        <div className="space-y-6">
