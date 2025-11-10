@@ -8,23 +8,29 @@ import { DocumentsTable } from '@/components/documents/documents-table';
 import { AddDocumentDialog } from '@/components/documents/add-document-dialog';
 import { useRouter } from 'next/navigation';
 
-// Mock data for institutional templates
-const institutionalTemplates = [
-  {
-    name: 'Modelo de Plano de Ensino - Disciplina Modular',
-    description: 'Template oficial para criação de planos de ensino para disciplinas modulares.',
-    url: '#', // Replace with actual URL
-  },
-  {
-    name: 'Modelo de Plano de Ensino - Disciplina Integradora',
-    description: 'Template oficial para criação de planos de ensino para disciplinas integradoras (Estúdios).',
-    url: '#', // Replace with actual URL
-  },
-  {
-    name: 'Modelo de Avaliação N1/N2',
-    description: 'Estrutura padrão para avaliações N1 e N2.',
-    url: '#', // Replace with actual URL
-  },
+const driveFolders = [
+    { name: 'Apresentações', url: '#' },
+    { name: 'Atas', url: '#' },
+    { name: 'Avaliações', url: '#' },
+    { name: 'Calendários', url: '#' },
+    { name: 'Editais', url: '#' },
+    { name: 'Estudo Dirigido', url: '#' },
+    { name: 'Eventos', url: '#' },
+    { name: 'Grupos de Pesquisa', url: '#' },
+    { name: 'Líderes', url: '#' },
+    { name: 'Manual do Calouro', url: '#' },
+    { name: 'Metodologias Ativas', url: '#' },
+    { name: 'Microsoft Teams', url: '#' },
+    { name: 'Monitoria', url: '#' },
+    { name: 'Neurodivergências', url: '#' },
+    { name: 'Pesquisa', url: '#' },
+    { name: 'Planejamento Unidades Curriculares', url: '#' },
+    { name: 'Plano de Ensino e Proposta Av Qualis', url: '#' },
+    { name: 'Programa das Disciplinas', url: '#' },
+    { name: 'Projeto Pedagógico', url: '#' },
+    { name: 'Regimento Interno', url: '#' },
+    { name: 'UNDBClassroom', url: '#' },
+    { name: 'Visitas Técnicas', url: '#' },
 ];
 
 export default function DocumentsPage() {
@@ -64,34 +70,23 @@ export default function DocumentsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Modelos Institucionais (Templates)</CardTitle>
+            <CardTitle>Drive da Coordenação</CardTitle>
             <CardDescription>
-              Modelos de documentos oficiais da UNDB prontos para download.
+              Acesse pastas e arquivos importantes do Google Drive da coordenação.
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {institutionalTemplates.map((template) => (
-              <div
-                key={template.name}
-                className="flex items-center justify-between rounded-lg border p-4"
+          <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {driveFolders.map((folder) => (
+              <a
+                key={folder.name}
+                href={folder.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between rounded-lg border p-4 hover:bg-accent hover:shadow-md transition-all"
               >
-                <div className="flex-1">
-                  <p className="font-semibold">{template.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {template.description}
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  asChild
-                  className="ml-4 flex-shrink-0"
-                >
-                  <a href={template.url} download>
-                    <DownloadCloud className="h-5 w-5" />
-                  </a>
-                </Button>
-              </div>
+                <p className="font-semibold">{folder.name}</p>
+                <DownloadCloud className="h-5 w-5 text-muted-foreground ml-4 flex-shrink-0" />
+              </a>
             ))}
           </CardContent>
         </Card>
