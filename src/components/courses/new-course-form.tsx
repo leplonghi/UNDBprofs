@@ -1,6 +1,6 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
@@ -156,196 +156,198 @@ export default function NewCourseForm() {
   }
 
   return (
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nome da Disciplina</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="code"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Código</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <FormField
-              control={form.control}
-              name="syllabus"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Ementa</FormLabel>
-                  <FormControl>
-                    <Textarea rows={5} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="objectives"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Objetivos</FormLabel>
-                  <FormControl>
-                    <Textarea rows={5} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <FormField
-            control={form.control}
-            name="competencies"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Competências Gerais</FormLabel>
-                <FormControl>
-                  <Textarea rows={5} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-            <Accordion type="multiple" className="w-full space-y-4">
-                 <AccordionItem value="item-1" className="border rounded-md px-4">
-                    <AccordionTrigger className="font-semibold">Matriz de Competências e Árvore Temática (Opcional)</AccordionTrigger>
-                    <AccordionContent className="pt-4 space-y-4">
-                        <p className="text-sm text-muted-foreground">Adicione aqui a matriz detalhada e a árvore temática, se aplicável.</p>
-                         {/* Placeholder para os componentes de edição da matriz e árvore */}
-                        <div className="p-4 border-dashed border-2 rounded-md text-center text-muted-foreground">
-                            Editor da Matriz de Competências virá aqui.
-                        </div>
-                         <div className="p-4 border-dashed border-2 rounded-md text-center text-muted-foreground">
-                            Editor da Árvore Temática virá aqui.
-                        </div>
-                    </AccordionContent>
-                </AccordionItem>
-
-                 <AccordionItem value="item-2" className="border rounded-md px-4">
-                    <AccordionTrigger className="font-semibold">Bibliografia (Opcional)</AccordionTrigger>
-                    <AccordionContent className="pt-4 space-y-4">
-                       <FormField
-                        control={form.control}
-                        name="bibliography_basic"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Básica</FormLabel>
-                            <FormControl>
-                                <Textarea rows={5} {...field} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                        <FormField
-                        control={form.control}
-                        name="bibliography_complementary"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Complementar</FormLabel>
-                            <FormControl>
-                                <Textarea rows={5} {...field} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                        <FormField
-                        control={form.control}
-                        name="bibliography_recommended"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Recomendada</FormLabel>
-                            <FormControl>
-                                <Textarea rows={3} {...field} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                    </AccordionContent>
-                </AccordionItem>
-            </Accordion>
-          
-            <div className="space-y-4 rounded-lg border p-4">
-                <h3 className="font-semibold text-lg">Dados da Turma Padrão</h3>
-                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                     <FormField
-                        control={form.control}
-                        name="semester"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Semestre</FormLabel>
-                            <FormControl>
-                            <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                     <FormField
-                        control={form.control}
-                        name="workload"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Carga Horária</FormLabel>
-                            <FormControl>
-                            <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="classType"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Tipo da Turma</FormLabel>
-                            {/* Adicionar um seletor aqui seria o ideal */}
-                            <FormControl>
-                               <Input {...field} />
-                            </FormControl>
-                             <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                 </div>
-                 <ClassScheduleEditor control={form.control} />
+      <FormProvider {...form}>
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Nome da Disciplina</FormLabel>
+                    <FormControl>
+                        <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <FormField
+                control={form.control}
+                name="code"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Código</FormLabel>
+                    <FormControl>
+                        <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
             </div>
 
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <FormField
+                control={form.control}
+                name="syllabus"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Ementa</FormLabel>
+                    <FormControl>
+                        <Textarea rows={5} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <FormField
+                control={form.control}
+                name="objectives"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Objetivos</FormLabel>
+                    <FormControl>
+                        <Textarea rows={5} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </div>
 
-          <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : null}
-              Criar Disciplina e Turma Padrão
-          </Button>
-        </form>
-      </Form>
+            <FormField
+                control={form.control}
+                name="competencies"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Competências Gerais</FormLabel>
+                    <FormControl>
+                    <Textarea rows={5} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+
+                <Accordion type="multiple" className="w-full space-y-4">
+                    <AccordionItem value="item-1" className="border rounded-md px-4">
+                        <AccordionTrigger className="font-semibold">Matriz de Competências e Árvore Temática (Opcional)</AccordionTrigger>
+                        <AccordionContent className="pt-4 space-y-4">
+                            <p className="text-sm text-muted-foreground">Adicione aqui a matriz detalhada e a árvore temática, se aplicável.</p>
+                            {/* Placeholder para os componentes de edição da matriz e árvore */}
+                            <div className="p-4 border-dashed border-2 rounded-md text-center text-muted-foreground">
+                                Editor da Matriz de Competências virá aqui.
+                            </div>
+                            <div className="p-4 border-dashed border-2 rounded-md text-center text-muted-foreground">
+                                Editor da Árvore Temática virá aqui.
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
+
+                    <AccordionItem value="item-2" className="border rounded-md px-4">
+                        <AccordionTrigger className="font-semibold">Bibliografia (Opcional)</AccordionTrigger>
+                        <AccordionContent className="pt-4 space-y-4">
+                        <FormField
+                            control={form.control}
+                            name="bibliography_basic"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Básica</FormLabel>
+                                <FormControl>
+                                    <Textarea rows={5} {...field} />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                            <FormField
+                            control={form.control}
+                            name="bibliography_complementary"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Complementar</FormLabel>
+                                <FormControl>
+                                    <Textarea rows={5} {...field} />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                            <FormField
+                            control={form.control}
+                            name="bibliography_recommended"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Recomendada</FormLabel>
+                                <FormControl>
+                                    <Textarea rows={3} {...field} />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                        </AccordionContent>
+                    </AccordionItem>
+                </Accordion>
+            
+                <div className="space-y-4 rounded-lg border p-4">
+                    <h3 className="font-semibold text-lg">Dados da Turma Padrão</h3>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                        <FormField
+                            control={form.control}
+                            name="semester"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Semestre</FormLabel>
+                                <FormControl>
+                                <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="workload"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Carga Horária</FormLabel>
+                                <FormControl>
+                                <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="classType"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Tipo da Turma</FormLabel>
+                                {/* Adicionar um seletor aqui seria o ideal */}
+                                <FormControl>
+                                <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                    </div>
+                    <ClassScheduleEditor control={form.control} />
+                </div>
+
+
+            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
+                Criar Disciplina e Turma Padrão
+            </Button>
+            </form>
+        </Form>
+      </FormProvider>
   );
 }
