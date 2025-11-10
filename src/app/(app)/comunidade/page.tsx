@@ -7,7 +7,7 @@ import { BrainCircuit, CalendarClock, PartyPopper, Coffee, Loader2 } from 'lucid
 import { Button } from '@/components/ui/button';
 import { useIdeas } from '@/hooks/use-ideas';
 import { IdeaCard } from '@/components/community/idea-card';
-import { AddIdeaDialog } from '@/components_community/add-idea-dialog';
+import { AddIdeaDialog } from '@/components/community/add-idea-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const IdeasClubTab = () => {
