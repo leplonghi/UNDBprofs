@@ -46,8 +46,8 @@ export interface Course {
   competencies?: string;
   learningUnits?: LearningUnit[];
   competencyMatrix?: Competency[];
-  thematicTree: { name: string; description: string }[];
-  bibliography: Bibliography;
+  thematicTree?: { name: string; description: string }[];
+  bibliography?: Bibliography;
 }
 
 export interface ClassScheduleItem {
@@ -128,5 +128,3 @@ export interface StudentAnalytics {
     finalGrade: number;
     situation: StudentSituation;
 }
-
-    

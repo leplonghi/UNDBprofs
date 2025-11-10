@@ -51,9 +51,15 @@ export default function NewCoursePage() {
                 />
             </TabsContent>
             <TabsContent value="manual">
-                <div className="p-6">
-                    <NewCourseForm />
-                </div>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Cadastro Manual de Disciplina</CardTitle>
+                        <CardDescription>Preencha os campos abaixo. Uma turma padrão ('Modular') será criada automaticamente.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <NewCourseForm />
+                    </CardContent>
+                </Card>
             </TabsContent>
             </Tabs>
         </CardContent>

@@ -22,6 +22,7 @@ const formSchema = z.object({
   code: z.string().min(1, 'Código é obrigatório.'),
   syllabus: z.string().min(1, 'Ementa é obrigatória.'),
   objectives: z.string().optional(),
+  competencies: z.string().optional(),
   bibliography_basic: z.string().optional(),
   bibliography_complementary: z.string().optional(),
   bibliography_recommended: z.string().optional(),
@@ -42,6 +43,7 @@ export default function NewCourseForm() {
       code: '',
       syllabus: '',
       objectives: '',
+      competencies: '',
       bibliography_basic: '',
       bibliography_complementary: '',
       bibliography_recommended: '',
@@ -71,9 +73,10 @@ export default function NewCourseForm() {
       code: values.code,
       syllabus: values.syllabus,
       objectives: values.objectives || '',
+      competencies: values.competencies || '',
       learningUnits: [],
       competencyMatrix: [],
-      thematicTree: [], // Default empty value
+      thematicTree: [],
       bibliography: {
         basic: values.bibliography_basic || '',
         complementary: values.bibliography_complementary || '',
@@ -81,7 +84,6 @@ export default function NewCourseForm() {
       },
     };
     
-    // Create default classroom with default activities
     const defaultActivities = createActivitiesFromPreset('Modular');
     const defaultSemester = '2025.2';
 
@@ -120,116 +122,129 @@ export default function NewCourseForm() {
 
   return (
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <div className="space-y-4">
-             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Nome da Disciplina</FormLabel>
-                        <FormControl>
-                        <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="code"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Código</FormLabel>
-                        <FormControl>
-                        <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                </div>
-                <FormField
-                  control={form.control}
-                  name="syllabus"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Ementa</FormLabel>
-                      <FormControl>
-                        <Textarea rows={5} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                 <FormField
-                  control={form.control}
-                  name="objectives"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Objetivos</FormLabel>
-                      <FormControl>
-                        <Textarea rows={5} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className='space-y-2'>
-                    <h3 className='font-medium text-sm'>Bibliografia</h3>
-                    <FormField
-                    control={form.control}
-                    name="bibliography_basic"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Básica</FormLabel>
-                        <FormControl>
-                            <Textarea rows={5} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                    <FormField
-                    control={form.control}
-                    name="bibliography_complementary"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Complementar</FormLabel>
-                        <FormControl>
-                            <Textarea rows={5} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                    <FormField
-                    control={form.control}
-                    name="bibliography_recommended"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Recomendada</FormLabel>
-                        <FormControl>
-                            <Textarea rows={3} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                </div>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome da Disciplina</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="code"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Código</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
-            <div className="pt-6">
-                 <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                    {form.formState.isSubmitting ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : null}
-                    Criar Disciplina
-                </Button>
-            </div>
+
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="syllabus"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Ementa</FormLabel>
+                  <FormControl>
+                    <Textarea rows={5} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="objectives"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Objetivos</FormLabel>
+                  <FormControl>
+                    <Textarea rows={5} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="competencies"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Competências Gerais</FormLabel>
+                <FormControl>
+                  <Textarea rows={5} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <div className='space-y-4'>
+              <h3 className='font-medium text-sm'>Bibliografia</h3>
+              <FormField
+              control={form.control}
+              name="bibliography_basic"
+              render={({ field }) => (
+                  <FormItem>
+                  <FormLabel>Básica</FormLabel>
+                  <FormControl>
+                      <Textarea rows={5} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                  </FormItem>
+              )}
+              />
+              <FormField
+              control={form.control}
+              name="bibliography_complementary"
+              render={({ field }) => (
+                  <FormItem>
+                  <FormLabel>Complementar</FormLabel>
+                  <FormControl>
+                      <Textarea rows={5} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                  </FormItem>
+              )}
+              />
+              <FormField
+              control={form.control}
+              name="bibliography_recommended"
+              render={({ field }) => (
+                  <FormItem>
+                  <FormLabel>Recomendada</FormLabel>
+                  <FormControl>
+                      <Textarea rows={3} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                  </FormItem>
+              )}
+              />
+          </div>
+
+          <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+              {form.formState.isSubmitting ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
+              Criar Disciplina e Turma Padrão
+          </Button>
         </form>
       </Form>
   );
 }
-
-    

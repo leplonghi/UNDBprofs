@@ -163,5 +163,3 @@ const importCourseFromLessonPlanFlow = ai.defineFlow(
     return output!;
   }
 );
-
-    
