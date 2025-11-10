@@ -49,6 +49,9 @@ interface AddDocumentDialogProps {
   onOpenChange: (isOpen: boolean) => void;
 }
 
+const MAX_FILE_SIZE_MB = 1;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
 export function AddDocumentDialog({
   isOpen,
   onOpenChange,
@@ -98,7 +101,20 @@ export function AddDocumentDialog({
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
-      setFile(selectedFile);
+        if (selectedFile.size > MAX_FILE_SIZE_BYTES) {
+            toast({
+                variant: 'destructive',
+                title: 'Arquivo muito grande',
+                description: `O arquivo excede o limite de ${MAX_FILE_SIZE_MB}MB. Por favor, use a opção "Link Externo".`,
+            });
+            // Clear the file input
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+            setFile(null);
+        } else {
+            setFile(selectedFile);
+        }
     }
   };
 
