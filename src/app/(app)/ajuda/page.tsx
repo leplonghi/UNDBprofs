@@ -161,12 +161,13 @@ export default function AjudaPage() {
                         </ul>
                     </div>
                      <div className="space-y-2">
-                        <h4 className="font-semibold">2. Modelos Institucionais</h4>
-                        <p>Para facilitar sua vida, reunimos aqui os modelos (templates) de documentos oficiais mais importantes da UNDB. Nesta seção, você pode baixar diretamente, com um clique:</p>
+                        <h4 className="font-semibold">2. Drive da Coordenação</h4>
+                        <p>Para facilitar sua vida, reunimos aqui os modelos (templates) de documentos oficiais mais importantes da UNDB, diretamente do Google Drive da coordenação. Nesta seção, você pode acessar as pastas com um clique:</p>
                         <ul className="list-disc pl-6 mt-2 space-y-1">
-                            <li>Modelo de Plano de Ensino para Disciplina Modular</li>
-                            <li>Modelo de Plano de Ensino para Disciplina Integradora (Estúdios)</li>
-                            <li>Modelo de Avaliação N1/N2</li>
+                            <li>Modelos de Planos de Ensino</li>
+                            <li>Templates de Avaliações N1/N2</li>
+                            <li>Estruturas de Atas e Editais</li>
+                            <li>E muitos outros documentos institucionais.</li>
                         </ul>
                         <p>Chega de procurar esses arquivos em e-mails ou pastas antigas!</p>
                     </div>
@@ -193,3 +194,5 @@ export default function AjudaPage() {
     </div>
   );
 }
+
+    
