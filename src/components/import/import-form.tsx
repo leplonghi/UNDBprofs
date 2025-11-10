@@ -246,48 +246,19 @@ export function ImportForm() {
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                     
-                    <div className="space-y-4 rounded-lg border p-4">
-                        <h3 className="font-semibold text-lg text-primary">Dados da Disciplina</h3>
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <FormField
-                            control={form.control}
-                            name="courseName"
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Nome da Disciplina</FormLabel>
-                                <FormControl>
-                                <Input {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="courseCode"
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Código</FormLabel>
-                                <FormControl>
-                                <Input {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
-                        </div>
-
-                        <div>
-                            <h3 className="text-sm font-medium mb-2">Estrutura Pedagógica</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-lg border p-4">
+                    <Accordion type="multiple" defaultValue={['item-1', 'item-2']} className="w-full space-y-4">
+                        <AccordionItem value="item-1" className="border rounded-lg">
+                           <AccordionTrigger className="px-6 text-lg font-semibold">Dados da Disciplina</AccordionTrigger>
+                           <AccordionContent className="px-6 space-y-6">
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <FormField
                                     control={form.control}
-                                    name="syllabus"
+                                    name="courseName"
                                     render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className='text-center block'>Ementa</FormLabel>
+                                        <FormLabel>Nome da Disciplina</FormLabel>
                                         <FormControl>
-                                        <Textarea rows={5} {...field} />
+                                        <Input {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -295,23 +266,52 @@ export function ImportForm() {
                                 />
                                 <FormField
                                     control={form.control}
-                                    name="objectives"
+                                    name="courseCode"
                                     render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className='text-center block'>Objetivos</FormLabel>
+                                        <FormLabel>Código</FormLabel>
                                         <FormControl>
-                                        <Textarea rows={5} {...field} />
+                                        <Input {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
                                     )}
                                 />
-                                <FormField
+                                </div>
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    <FormField
+                                        control={form.control}
+                                        name="syllabus"
+                                        render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Ementa</FormLabel>
+                                            <FormControl>
+                                            <Textarea rows={5} {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="objectives"
+                                        render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Objetivos</FormLabel>
+                                            <FormControl>
+                                            <Textarea rows={5} {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                        )}
+                                    />
+                                </div>
+                                 <FormField
                                     control={form.control}
                                     name="competencies"
                                     render={({ field }) => (
-                                    <FormItem className="md:col-span-2">
-                                        <FormLabel className='text-center block'>Competências Gerais</FormLabel>
+                                    <FormItem>
+                                        <FormLabel>Competências Gerais</FormLabel>
                                         <FormControl>
                                         <Textarea rows={5} {...field} />
                                         </FormControl>
@@ -319,163 +319,169 @@ export function ImportForm() {
                                     </FormItem>
                                     )}
                                 />
-                            </div>
 
-                            {competencyMatrix && competencyMatrix.length > 0 && (
-                                <Accordion type="multiple" className="w-full border rounded-md px-4 mt-4">
-                                    <AccordionItem value="comp-matrix" className="border-b-0">
-                                        <AccordionTrigger className="text-base font-semibold">Matriz de Competências Detalhada</AccordionTrigger>
-                                        <AccordionContent>
-                                            {competencyMatrix.map((comp, compIndex) => (
-                                                <Accordion key={compIndex} type="multiple" className="w-full mt-2">
-                                                    <AccordionItem value={`comp-${compIndex}`} >
-                                                        <AccordionTrigger className="text-base font-medium bg-muted/50 px-4 rounded-t-md">{comp.competency}</AccordionTrigger>
-                                                        <AccordionContent className="p-4 border border-t-0 rounded-b-md">
-                                                            <div className="space-y-4">
-                                                                {comp.skills.map((skill, skillIndex) => (
-                                                                    <div key={skillIndex}>
-                                                                        <h4 className="font-medium">{skill.skill}</h4>
-                                                                        <p className="text-sm text-muted-foreground">
-                                                                            <strong>Descritores:</strong> {skill.descriptors}
-                                                                        </p>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        </AccordionContent>
-                                                    </AccordionItem>
-                                                </Accordion>
-                                            ))}
-                                        </AccordionContent>
-                                    </AccordionItem>
-                                </Accordion>
-                            )}
-                        </div>
-
-
-                        {learningUnits && learningUnits.length > 0 && (
-                            <FormItem>
-                                <FormLabel>Unidades de Aprendizagem</FormLabel>
-                                <Accordion type="multiple" className="w-full">
-                                    {learningUnits.map((unit, index) => (
-                                        <AccordionItem value={`unit-${index}`} key={index}>
-                                            <AccordionTrigger>{unit.name}</AccordionTrigger>
-                                            <AccordionContent>
-                                                <p className="text-muted-foreground whitespace-pre-wrap">{unit.content}</p>
+                                {competencyMatrix && competencyMatrix.length > 0 && (
+                                    <Accordion type="multiple" className="w-full">
+                                        <AccordionItem value="comp-matrix" className="border rounded-md px-4">
+                                            <AccordionTrigger className="text-base font-semibold">Matriz de Competências Detalhada</AccordionTrigger>
+                                            <AccordionContent className="pt-4">
+                                                {competencyMatrix.map((comp, compIndex) => (
+                                                    <Accordion key={compIndex} type="multiple" className="w-full mt-2">
+                                                        <AccordionItem value={`comp-${compIndex}`} >
+                                                            <AccordionTrigger className="text-base font-medium bg-muted/50 px-4 rounded-t-md">{comp.competency}</AccordionTrigger>
+                                                            <AccordionContent className="p-4 border border-t-0 rounded-b-md">
+                                                                <div className="space-y-4">
+                                                                    {comp.skills.map((skill, skillIndex) => (
+                                                                        <div key={skillIndex}>
+                                                                            <h4 className="font-medium">{skill.skill}</h4>
+                                                                            <p className="text-sm text-muted-foreground">
+                                                                                <strong>Descritores:</strong> {skill.descriptors}
+                                                                            </p>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </AccordionContent>
+                                                        </AccordionItem>
+                                                    </Accordion>
+                                                ))}
                                             </AccordionContent>
                                         </AccordionItem>
-                                    ))}
-                                </Accordion>
-                            </FormItem>
-                        )}
-                        
+                                    </Accordion>
+                                )}
 
-                        {thematicTree && thematicTree.length > 0 && (
-                            <div>
-                                <h3 className="text-sm font-medium mb-2">Árvore Temática</h3>
-                                <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {thematicTree.map((item, index) => (
-                                    <Card key={index} className={cn(thematicTreeColors[index % thematicTreeColors.length])}>
-                                    <CardHeader>
-                                        <CardTitle className='text-lg'>{item.name}</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <p className="text-sm text-muted-foreground">
-                                        {item.description}
-                                        </p>
-                                    </CardContent>
-                                    </Card>
-                                ))}
+                                {learningUnits && learningUnits.length > 0 && (
+                                    <FormItem>
+                                        <Accordion type="multiple" className="w-full">
+                                            <AccordionItem value="learning-units" className="border rounded-md px-4">
+                                                <AccordionTrigger className="text-base font-semibold">Unidades de Aprendizagem</AccordionTrigger>
+                                                <AccordionContent className="pt-4">
+                                                    {learningUnits.map((unit, index) => (
+                                                        <AccordionItem value={`unit-${index}`} key={index}>
+                                                            <AccordionTrigger>{unit.name}</AccordionTrigger>
+                                                            <AccordionContent>
+                                                                <p className="text-muted-foreground whitespace-pre-wrap">{unit.content}</p>
+                                                            </AccordionContent>
+                                                        </AccordionItem>
+                                                    ))}
+                                                </AccordionContent>
+                                            </AccordionItem>
+                                        </Accordion>
+                                    </FormItem>
+                                )}
+                                
+
+                                {thematicTree && thematicTree.length > 0 && (
+                                    <div>
+                                        <h3 className="font-semibold mb-2">Árvore Temática</h3>
+                                        <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {thematicTree.map((item, index) => (
+                                            <Card key={index} className={cn(thematicTreeColors[index % thematicTreeColors.length])}>
+                                            <CardHeader>
+                                                <CardTitle className='text-lg'>{item.name}</CardTitle>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <p className="text-sm text-muted-foreground">
+                                                {item.description}
+                                                </p>
+                                            </CardContent>
+                                            </Card>
+                                        ))}
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                <div className='space-y-4'>
+                                    <h4 className='font-medium'>Bibliografia</h4>
+                                    <FormField
+                                    control={form.control}
+                                    name="bibliography.basic"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                        <FormLabel>Básica</FormLabel>
+                                        <FormControl>
+                                            <Textarea rows={5} {...field} className="font-sans" />
+                                        </FormControl>
+                                        <FormMessage />
+                                        </FormItem>
+                                    )}
+                                    />
+                                    <FormField
+                                    control={form.control}
+                                    name="bibliography.complementary"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                        <FormLabel>Complementar</FormLabel>
+                                        <FormControl>
+                                            <Textarea rows={5} {...field} className="font-sans" />
+                                        </FormControl>
+                                        <FormMessage />
+                                        </FormItem>
+                                    )}
+                                    />
+                                    <FormField
+                                    control={form.control}
+                                    name="bibliography.recommended"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                        <FormLabel>Recomendada</FormLabel>
+                                        <FormControl>
+                                            <Textarea rows={3} {...field} className="font-sans" />
+                                        </FormControl>
+                                        <FormMessage />
+                                        </FormItem>
+                                    )}
+                                    />
                                 </div>
-                            </div>
-                        )}
-                        
-                        <div className='space-y-4'>
-                            <h4 className='font-medium'>Bibliografia</h4>
-                            <FormField
-                            control={form.control}
-                            name="bibliography.basic"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Básica</FormLabel>
-                                <FormControl>
-                                    <Textarea rows={5} {...field} className="font-sans" />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                            <FormField
-                            control={form.control}
-                            name="bibliography.complementary"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Complementar</FormLabel>
-                                <FormControl>
-                                    <Textarea rows={5} {...field} className="font-sans" />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                            <FormField
-                            control={form.control}
-                            name="bibliography.recommended"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Recomendada</FormLabel>
-                                <FormControl>
-                                    <Textarea rows={3} {...field} className="font-sans" />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                        </div>
-                    </div>
+                           </AccordionContent>
+                        </AccordionItem>
 
-                    <div className="space-y-4 rounded-lg border p-4">
-                        <h3 className="font-semibold text-lg text-primary">Dados da Turma</h3>
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                        <FormField
-                            control={form.control}
-                            name="semester"
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Semestre</FormLabel>
-                                <FormControl>
-                                <Input {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="workload"
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Carga Horária</FormLabel>
-                                <FormControl>
-                                <Input {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
-                        <div className="space-y-2">
-                            <FormLabel>Tipo da Turma (Detectado)</FormLabel>
-                            <div className="flex items-center h-10">
-                                <Badge variant={detectedClassType === 'Integradora' ? 'default' : 'secondary'}>
-                                    {detectedClassType}
-                                </Badge>
-                            </div>
-                            <p className='text-sm text-muted-foreground'>
-                                A IA detectou este tipo e aplicará o preset de avaliação correspondente.
-                            </p>
-                        </div>
-                        </div>
-                        <ClassScheduleEditor control={form.control} />
-                    </div>
+                        <AccordionItem value="item-2" className="border rounded-lg">
+                           <AccordionTrigger className="px-6 text-lg font-semibold">Dados da Turma e Cronograma</AccordionTrigger>
+                           <AccordionContent className="px-6 space-y-6">
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                                <FormField
+                                    control={form.control}
+                                    name="semester"
+                                    render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Semestre</FormLabel>
+                                        <FormControl>
+                                        <Input {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="workload"
+                                    render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Carga Horária</FormLabel>
+                                        <FormControl>
+                                        <Input {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                    )}
+                                />
+                                <div className="space-y-2">
+                                    <FormLabel>Tipo da Turma (Detectado)</FormLabel>
+                                    <div className="flex items-center h-10">
+                                        <Badge variant={detectedClassType === 'Integradora' ? 'default' : 'secondary'}>
+                                            {detectedClassType}
+                                        </Badge>
+                                    </div>
+                                    <p className='text-sm text-muted-foreground'>
+                                        A IA detectou este tipo e aplicará o preset de avaliação correspondente.
+                                    </p>
+                                </div>
+                                </div>
+                                <ClassScheduleEditor control={form.control} />
+                           </AccordionContent>
+                        </AccordionItem>
+
+                    </Accordion>
                     
                     <Button type="submit" className="w-full" disabled={isSaving}>
                         {isSaving ? (

@@ -29,14 +29,14 @@ import { doc, writeBatch, query, collection } from 'firebase/firestore';
 import type {
   Course,
   Classroom,
-  ClassScheduleItem,
-  Bibliography,
 } from '@/types';
 import { ClassScheduleEditor } from '@/components/import/ClassScheduleEditor';
 import { Badge } from '../ui/badge';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
+
 
 const competencySchema = z.object({
     competency: z.string(),
@@ -97,6 +97,7 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
   const router = useRouter();
   const firestore = useFirestore();
   const { user } = useUser();
+  const isMobile = useIsMobile();
 
   const courseDocRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -276,209 +277,49 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
                     <h1 className="text-2xl font-bold text-primary">Editar Plano de Ensino</h1>
                     <p className="text-muted-foreground">Modifique as informações da disciplina e da turma abaixo.</p>
                 </div>
-                <Button onClick={form.handleSubmit(onSubmit)} disabled={isSaving}>
-                    {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                    Salvar
-                </Button>
+                 {!isMobile && (
+                    <Button onClick={form.handleSubmit(onSubmit)} disabled={isSaving}>
+                        {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                        Salvar
+                    </Button>
+                )}
             </div>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <Card>
-                      <CardHeader>
-                          <CardTitle>Dados da Disciplina</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                              <FormField
-                              control={form.control}
-                              name="courseName"
-                              render={({ field }) => (
-                                  <FormItem>
-                                  <FormLabel>Nome da Disciplina</FormLabel>
-                                  <FormControl>
-                                      <Input {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                  </FormItem>
-                              )}
-                              />
-                              <FormField
-                              control={form.control}
-                              name="courseCode"
-                              render={({ field }) => (
-                                  <FormItem>
-                                  <FormLabel>Código</FormLabel>
-                                  <FormControl>
-                                      <Input {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                  </FormItem>
-                              )}
-                              />
-                          </div>
-                          
-                          <div>
-                              <h3 className="text-sm font-medium mb-2">Estrutura Pedagógica</h3>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-lg border p-4">
-                                  <FormField
-                                      control={form.control}
-                                      name="syllabus"
-                                      render={({ field }) => (
-                                      <FormItem>
-                                          <FormLabel className='text-center block'>Ementa</FormLabel>
-                                          <FormControl>
-                                          <Textarea rows={5} {...field} />
-                                          </FormControl>
-                                          <FormMessage />
-                                      </FormItem>
-                                      )}
-                                  />
-                                  <FormField
-                                      control={form.control}
-                                      name="objectives"
-                                      render={({ field }) => (
-                                      <FormItem>
-                                          <FormLabel className='text-center block'>Objetivos</FormLabel>
-                                          <FormControl>
-                                          <Textarea rows={5} {...field} />
-                                          </FormControl>
-                                          <FormMessage />
-                                      </FormItem>
-                                      )}
-                                  />
-                                  <FormField
-                                      control={form.control}
-                                      name="competencies"
-                                      render={({ field }) => (
-                                      <FormItem className="md:col-span-2">
-                                          <FormLabel className='text-center block'>Competências Gerais</FormLabel>
-                                          <FormControl>
-                                          <Textarea rows={5} {...field} />
-                                          </FormControl>
-                                          <FormMessage />
-                                      </FormItem>
-                                      )}
-                                  />
-                              </div>
-
-                              {competencyMatrix && competencyMatrix.length > 0 && (
-                                  <Accordion type="multiple" className="w-full border rounded-md px-4 mt-4">
-                                      <AccordionItem value="comp-matrix" className="border-b-0">
-                                          <AccordionTrigger className="text-base font-semibold">Matriz de Competências Detalhada</AccordionTrigger>
-                                          <AccordionContent>
-                                              {competencyMatrix.map((comp, compIndex) => (
-                                                  <Accordion key={compIndex} type="multiple" className="w-full mt-2">
-                                                      <AccordionItem value={`comp-${compIndex}`} >
-                                                          <AccordionTrigger className="text-base font-medium bg-muted/50 px-4 rounded-t-md">{comp.competency}</AccordionTrigger>
-                                                          <AccordionContent className="p-4 border border-t-0 rounded-b-md">
-                                                              <div className="space-y-4">
-                                                                  {comp.skills.map((skill, skillIndex) => (
-                                                                      <div key={skillIndex}>
-                                                                          <h4 className="font-medium">{skill.skill}</h4>
-                                                                          <p className="text-sm text-muted-foreground">
-                                                                              <strong>Descritores:</strong> {skill.descriptors}
-                                                                          </p>
-                                                                      </div>
-                                                                  ))}
-                                                              </div>
-                                                          </AccordionContent>
-                                                      </AccordionItem>
-                                                  </Accordion>
-                                              ))}
-                                          </AccordionContent>
-                                      </AccordionItem>
-                                  </Accordion>
-                              )}
-                          </div>
-                          
-
-                          {learningUnits && learningUnits.length > 0 && (
-                              <FormItem>
-                                  <FormLabel>Unidades de Aprendizagem</FormLabel>
-                                  <Accordion type="multiple" className="w-full">
-                                      {learningUnits.map((unit, index) => (
-                                          <AccordionItem value={`unit-${index}`} key={index}>
-                                              <AccordionTrigger>{unit.name}</AccordionTrigger>
-                                              <AccordionContent>
-                                                  <p className="text-muted-foreground whitespace-pre-wrap">{unit.content}</p>
-                                              </AccordionContent>
-                                          </AccordionItem>
-                                      ))}
-                                  </Accordion>
-                              </FormItem>
-                          )}
-                          
-                          {thematicTree && thematicTree.length > 0 && (
-                              <div>
-                                  <h3 className="text-sm font-medium mb-2">Árvore Temática</h3>
-                                  <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                  {thematicTree.map((item, index) => (
-                                      <Card key={index} className={cn(thematicTreeColors[index % thematicTreeColors.length])}>
-                                      <CardHeader>
-                                          <CardTitle className='text-lg'>{item.name}</CardTitle>
-                                      </CardHeader>
-                                      <CardContent>
-                                          <p className="text-sm text-muted-foreground">
-                                          {item.description}
-                                          </p>
-                                      </CardContent>
-                                      </Card>
-                                  ))}
-                                  </div>
-                              </div>
-                          )}
-
-                          <div className="space-y-4">
-                              <h4 className="font-medium">Bibliografia</h4>
-                              <FormField
-                              control={form.control}
-                              name="bibliography.basic"
-                              render={({ field }) => (
-                                  <FormItem>
-                                  <FormLabel>Básica</FormLabel>
-                                  <FormControl>
-                                      <Textarea rows={5} {...field} className="font-sans" />
-                                  </FormControl>
-                                  <FormMessage />
-                                  </FormItem>
-                              )}
-                              />
-                              <FormField
-                              control={form.control}
-                              name="bibliography.complementary"
-                              render={({ field }) => (
-                                  <FormItem>
-                                  <FormLabel>Complementar</FormLabel>
-                                  <FormControl>
-                                      <Textarea rows={5} {...field} className="font-sans" />
-                                  </FormControl>
-                                  <FormMessage />
-                                  </FormItem>
-                              )}
-                              />
-                              <FormField
-                              control={form.control}
-                              name="bibliography.recommended"
-                              render={({ field }) => (
-                                  <FormItem>
-                                  <FormLabel>Recomendada</FormLabel>
-                                  <FormControl>
-                                      <Textarea rows={3} {...field} className="font-sans" />
-                                  </FormControl>
-                                  <FormMessage />
-                                  </FormItem>
-                              )}
-                              />
-                          </div>
-                      </CardContent>
-                  </Card>
-
-                  <Card>
-                      <CardHeader>
-                          <CardTitle>Dados da Turma</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pb-20 md:pb-6">
+                <Accordion type="multiple" defaultValue={['item-1', 'item-2', 'item-3', 'item-4', 'item-5']} className="w-full space-y-4">
+                    
+                    <AccordionItem value="item-1" className="border rounded-lg">
+                        <AccordionTrigger className="px-6 text-lg font-semibold">Informações Gerais</AccordionTrigger>
+                        <AccordionContent className="px-6 space-y-4">
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <FormField
+                                control={form.control}
+                                name="courseName"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Nome da Disciplina</FormLabel>
+                                    <FormControl>
+                                        <Input {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                                />
+                                <FormField
+                                control={form.control}
+                                name="courseCode"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Código</FormLabel>
+                                    <FormControl>
+                                        <Input {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                                />
+                            </div>
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                               <FormField
                               control={form.control}
                               name="semester"
@@ -520,16 +361,193 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
                               </div>
                               </div>
                           </div>
-                          <ClassScheduleEditor control={form.control} />
-                      </CardContent>
-                  </Card>
+                        </AccordionContent>
+                    </AccordionItem>
 
-                  <Button type="submit" className="w-full" disabled={isSaving}>
-                  {isSaving ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : null}
-                  Salvar Alterações
-                  </Button>
+                     <AccordionItem value="item-2" className="border rounded-lg">
+                        <AccordionTrigger className="px-6 text-lg font-semibold">Estrutura Pedagógica</AccordionTrigger>
+                        <AccordionContent className="px-6 space-y-4">
+                             <FormField
+                                control={form.control}
+                                name="syllabus"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Ementa</FormLabel>
+                                    <FormControl>
+                                    <Textarea rows={5} {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="objectives"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Objetivos</FormLabel>
+                                    <FormControl>
+                                    <Textarea rows={5} {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="competencies"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Competências Gerais</FormLabel>
+                                    <FormControl>
+                                    <Textarea rows={5} {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                        </AccordionContent>
+                     </AccordionItem>
+                    
+                      <AccordionItem value="item-3" className="border rounded-lg">
+                        <AccordionTrigger className="px-6 text-lg font-semibold">Estruturas Detalhadas (Opcional)</AccordionTrigger>
+                        <AccordionContent className="px-6 space-y-6">
+                            {competencyMatrix && competencyMatrix.length > 0 && (
+                               <Accordion type="multiple" className="w-full">
+                                    <AccordionItem value="comp-matrix-inner">
+                                        <AccordionTrigger className="text-base font-semibold">Matriz de Competências</AccordionTrigger>
+                                        <AccordionContent className='pt-4'>
+                                            {competencyMatrix.map((comp, compIndex) => (
+                                                <Accordion key={compIndex} type="multiple" className="w-full mt-2">
+                                                    <AccordionItem value={`comp-${compIndex}`} >
+                                                        <AccordionTrigger className="text-base font-medium bg-muted/50 px-4 rounded-t-md">{comp.competency}</AccordionTrigger>
+                                                        <AccordionContent className="p-4 border border-t-0 rounded-b-md">
+                                                            <div className="space-y-4">
+                                                                {comp.skills.map((skill, skillIndex) => (
+                                                                    <div key={skillIndex}>
+                                                                        <h4 className="font-medium">{skill.skill}</h4>
+                                                                        <p className="text-sm text-muted-foreground">
+                                                                            <strong>Descritores:</strong> {skill.descriptors}
+                                                                        </p>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </AccordionContent>
+                                                    </AccordionItem>
+                                                </Accordion>
+                                            ))}
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                </Accordion>
+                            )}
+
+                             {learningUnits && learningUnits.length > 0 && (
+                                <FormItem>
+                                    <Accordion type="multiple" className="w-full">
+                                        <AccordionItem value="learning-units-inner">
+                                            <AccordionTrigger className="text-base font-semibold">Unidades de Aprendizagem</AccordionTrigger>
+                                            <AccordionContent className='pt-4'>
+                                                {learningUnits.map((unit, index) => (
+                                                    <AccordionItem value={`unit-${index}`} key={index}>
+                                                        <AccordionTrigger>{unit.name}</AccordionTrigger>
+                                                        <AccordionContent>
+                                                            <p className="text-muted-foreground whitespace-pre-wrap">{unit.content}</p>
+                                                        </AccordionContent>
+                                                    </AccordionItem>
+                                                ))}
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    </Accordion>
+                                </FormItem>
+                            )}
+
+                            {thematicTree && thematicTree.length > 0 && (
+                                <div>
+                                    <h3 className="font-semibold mb-2">Árvore Temática</h3>
+                                    <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {thematicTree.map((item, index) => (
+                                        <Card key={index} className={cn(thematicTreeColors[index % thematicTreeColors.length])}>
+                                        <CardHeader>
+                                            <CardTitle className='text-lg'>{item.name}</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <p className="text-sm text-muted-foreground">
+                                            {item.description}
+                                            </p>
+                                        </CardContent>
+                                        </Card>
+                                    ))}
+                                    </div>
+                                </div>
+                            )}
+
+                        </AccordionContent>
+                      </AccordionItem>
+
+                    <AccordionItem value="item-4" className="border rounded-lg">
+                        <AccordionTrigger className="px-6 text-lg font-semibold">Bibliografia</AccordionTrigger>
+                        <AccordionContent className="px-6 space-y-4">
+                             <FormField
+                              control={form.control}
+                              name="bibliography.basic"
+                              render={({ field }) => (
+                                  <FormItem>
+                                  <FormLabel>Básica</FormLabel>
+                                  <FormControl>
+                                      <Textarea rows={5} {...field} className="font-sans" />
+                                  </FormControl>
+                                  <FormMessage />
+                                  </FormItem>
+                              )}
+                              />
+                              <FormField
+                              control={form.control}
+                              name="bibliography.complementary"
+                              render={({ field }) => (
+                                  <FormItem>
+                                  <FormLabel>Complementar</FormLabel>
+                                  <FormControl>
+                                      <Textarea rows={5} {...field} className="font-sans" />
+                                  </FormControl>
+                                  <FormMessage />
+                                  </FormItem>
+                              )}
+                              />
+                              <FormField
+                              control={form.control}
+                              name="bibliography.recommended"
+                              render={({ field }) => (
+                                  <FormItem>
+                                  <FormLabel>Recomendada</FormLabel>
+                                  <FormControl>
+                                      <Textarea rows={3} {...field} className="font-sans" />
+                                  </FormControl>
+                                  <FormMessage />
+                                  </FormItem>
+                              )}
+                              />
+                        </AccordionContent>
+                    </AccordionItem>
+
+                     <AccordionItem value="item-5" className="border rounded-lg">
+                        <AccordionTrigger className="px-6 text-lg font-semibold">Cronograma de Aulas</AccordionTrigger>
+                        <AccordionContent className="px-6">
+                            <ClassScheduleEditor control={form.control} />
+                        </AccordionContent>
+                     </AccordionItem>
+
+                </Accordion>
+                
+                {isMobile && (
+                    <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4 z-10">
+                        <Button type="submit" className="w-full" disabled={isSaving}>
+                            {isSaving ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : <Save className="mr-2 h-4 w-4" />}
+                            Salvar Alterações
+                        </Button>
+                    </div>
+                )}
               </form>
             </Form>
         </FormProvider>

@@ -11,6 +11,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { format, addDays, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '../ui/card';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '../ui/accordion';
 
 
 interface ClassScheduleEditorProps {
@@ -24,6 +27,7 @@ export function ClassScheduleEditor({ control }: ClassScheduleEditorProps) {
   });
   
   const { setValue } = useFormContext();
+  const isMobile = useIsMobile();
 
   const handleAutoFillDates = (baseDate: Date) => {
     fields.forEach((field, index) => {
@@ -40,22 +44,8 @@ export function ClassScheduleEditor({ control }: ClassScheduleEditorProps) {
     });
   }
 
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <FormLabel>Cronograma de Aulas</FormLabel>
-        <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={clearAllDates}
-            disabled={fields.length === 0}
-            >
-            <XCircle className="mr-2 h-4 w-4" />
-            Limpar Datas
-        </Button>
-      </div>
-      <div className="rounded-md border">
+  const renderDesktopView = () => (
+    <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -203,14 +193,177 @@ export function ClassScheduleEditor({ control }: ClassScheduleEditorProps) {
           </TableBody>
         </Table>
       </div>
+  );
+
+  const renderMobileView = () => (
+    <Accordion type="multiple" className="space-y-2">
+      {fields.map((item, index) => (
+         <AccordionItem value={`item-${index}`} key={item.id} className="border rounded-md">
+            <AccordionTrigger className="px-4 py-2 text-left">
+                <div className='w-full'>
+                    <p className="font-semibold text-sm">
+                        {`Aula ${index + 1}: ${ (item as any).topic || 'Tópico não definido'}`}
+                    </p>
+                     <p className='text-xs text-muted-foreground mt-1'>
+                        Data: {(item as any).date ? format(parseISO((item as any).date), "dd/MM/yyyy") : 'Não definida'}
+                    </p>
+                </div>
+            </AccordionTrigger>
+            <AccordionContent className="p-4 space-y-4 border-t">
+                 <FormField
+                    control={control}
+                    name={`classSchedule.${index}.date`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Data</FormLabel>
+                         <Popover>
+                            <PopoverTrigger asChild>
+                                <FormControl>
+                                <Button
+                                    variant={"outline"}
+                                    className={cn(
+                                    "w-full pl-3 text-left font-normal",
+                                    !field.value && "text-muted-foreground"
+                                    )}
+                                >
+                                    {field.value ? (
+                                    format(parseISO(field.value), "dd/MM/yyyy")
+                                    ) : (
+                                    <span>Selecione a data</span>
+                                    )}
+                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                                </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                    mode="single"
+                                    selected={field.value ? parseISO(field.value) : undefined}
+                                    onSelect={(date) => {
+                                        if (date) {
+                                           const formattedDate = format(date, 'yyyy-MM-dd');
+                                           field.onChange(formattedDate);
+                                           if (index === 0) {
+                                                handleAutoFillDates(date);
+                                           }
+                                        }
+                                    }}
+                                    initialFocus
+                                />
+                            </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                 <FormField
+                    control={control}
+                    name={`classSchedule.${index}.type`}
+                    render={({ field }) => (
+                      <FormItem>
+                         <FormLabel>Tipo</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Ex: TEÓRICA" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                 <FormField
+                    control={control}
+                    name={`classSchedule.${index}.topic`}
+                    render={({ field }) => (
+                      <FormItem>
+                         <FormLabel>Tópico</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Ex: UA I" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                   <FormField
+                    control={control}
+                    name={`classSchedule.${index}.content`}
+                    render={({ field }) => (
+                      <FormItem>
+                         <FormLabel>Conteúdo</FormLabel>
+                        <FormControl>
+                          <Textarea {...field} placeholder="Tópicos da aula" rows={3} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                   <FormField
+                    control={control}
+                    name={`classSchedule.${index}.activity`}
+                    render={({ field }) => (
+                      <FormItem>
+                         <FormLabel>Atividade</FormLabel>
+                        <FormControl>
+                           <Textarea {...field} placeholder="Atividade em sala" rows={3}/>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                   <FormField
+                    control={control}
+                    name={`classSchedule.${index}.location`}
+                    render={({ field }) => (
+                      <FormItem>
+                         <FormLabel>Local</FormLabel>
+                        <FormControl>
+                           <Input {...field} placeholder="Ex: Sala de Aula"/>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => remove(index)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Remover Aula
+                  </Button>
+            </AccordionContent>
+         </AccordionItem>
+      ))}
+    </Accordion>
+  )
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h4 className="font-medium">Cronograma de Aulas</h4>
+        <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={clearAllDates}
+            disabled={fields.length === 0}
+            >
+            <XCircle className="mr-2 h-4 w-4" />
+            Limpar Datas
+        </Button>
+      </div>
+      
+      {isMobile ? renderMobileView() : renderDesktopView()}
+      
        <Button
         type="button"
         variant="outline"
         size="sm"
+        className='w-full'
         onClick={() => append({ date: '', type: '', topic: '', content: '', activity: '', location: '' })}
       >
         <PlusCircle className="mr-2 h-4 w-4" />
-        Adicionar Aula
+        Adicionar Aula ao Cronograma
       </Button>
     </div>
   );
