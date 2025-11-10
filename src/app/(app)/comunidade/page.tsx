@@ -8,42 +8,48 @@ import { Button } from '@/components/ui/button';
 import { useIdeas } from '@/hooks/use-ideas';
 import { IdeaCard } from '@/components/community/idea-card';
 import { AddIdeaDialog } from '@/components/community/add-idea-dialog';
+import { IdeaDetailsSheet } from '@/components/community/idea-details-sheet';
 import { Skeleton } from '@/components/ui/skeleton';
+import type { Idea } from '@/types';
 
 const IdeasClubTab = () => {
     const [isAddIdeaOpen, setIsAddIdeaOpen] = React.useState(false);
+    const [selectedIdea, setSelectedIdea] = React.useState<Idea | null>(null);
     const { ideas, isLoading } = useIdeas();
 
     return (
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                    <CardTitle>Clube das Ideias</CardTitle>
-                    <CardDescription>Proponha, apoie e discuta ideias para melhorar nossa comunidade acadêmica.</CardDescription>
-                </div>
-                <Button onClick={() => setIsAddIdeaOpen(true)}>Nova Ideia</Button>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <AddIdeaDialog isOpen={isAddIdeaOpen} onOpenChange={setIsAddIdeaOpen} />
-                {isLoading ? (
-                    <div className="space-y-4">
-                        <Skeleton className="h-24 w-full" />
-                        <Skeleton className="h-24 w-full" />
-                        <Skeleton className="h-24 w-full" />
+        <>
+            <AddIdeaDialog isOpen={isAddIdeaOpen} onOpenChange={setIsAddIdeaOpen} />
+            <IdeaDetailsSheet idea={selectedIdea} onOpenChange={() => setSelectedIdea(null)} />
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                        <CardTitle>Clube das Ideias</CardTitle>
+                        <CardDescription>Proponha, apoie e discuta ideias para melhorar nossa comunidade acadêmica.</CardDescription>
                     </div>
-                ) : ideas && ideas.length > 0 ? (
-                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {ideas.map((idea) => (
-                            <IdeaCard key={idea.id} idea={idea} />
-                        ))}
-                    </div>
-                ) : (
-                    <div className="border-2 border-dashed rounded-lg p-8 text-center text-muted-foreground">
-                        <p>Nenhuma ideia proposta ainda. Seja o primeiro a compartilhar!</p>
-                    </div>
-                )}
-            </CardContent>
-        </Card>
+                    <Button onClick={() => setIsAddIdeaOpen(true)}>Nova Ideia</Button>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    {isLoading ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <Skeleton className="h-48 w-full" />
+                            <Skeleton className="h-48 w-full" />
+                            <Skeleton className="h-48 w-full" />
+                        </div>
+                    ) : ideas && ideas.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {ideas.map((idea) => (
+                                <IdeaCard key={idea.id} idea={idea} onSelect={() => setSelectedIdea(idea)} />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="border-2 border-dashed rounded-lg p-8 text-center text-muted-foreground">
+                            <p>Nenhuma ideia proposta ainda. Seja o primeiro a compartilhar!</p>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        </>
     );
 };
 

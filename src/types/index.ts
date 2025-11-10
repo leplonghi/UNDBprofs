@@ -145,15 +145,16 @@ export interface Idea {
   createdAt: string; // ISO 8601 string
   updatedAt: string; // ISO 8601 string
   supportCount: number;
+  commentCount?: number;
 }
 
 export interface IdeaSupport {
-  id: string; // Document ID is userId
-  supportedAt: string;
+  id?: string; // Document ID will be the userId
+  supportedAt: string; // ISO 8601 string
 }
 
 export interface IdeaComment {
-  id: string;
+  id?: string;
   userId: string;
   userName: string;
   text: string;
