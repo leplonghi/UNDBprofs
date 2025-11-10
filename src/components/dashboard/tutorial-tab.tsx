@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import {
   Accordion,
@@ -17,15 +19,15 @@ export function TutorialCard() {
                 Não sabe por onde começar? Veja o Guia Rápido
             </AccordionTrigger>
             <AccordionContent className="pt-2">
-                <ul className="list-disc pl-5 space-y-2 text-sm text-muted-foreground">
+                <ul className="list-disc pl-5 space-y-3 text-sm text-muted-foreground">
                     <li>
-                        <strong>Importe Disciplinas com IA:</strong> Envie um Plano de Ensino em PDF e a IA extrai tudo para você.
+                        <strong>Importe Disciplinas com IA:</strong> Envie um Plano de Ensino em PDF para criar uma disciplina completa, com cronograma de aulas e estrutura de notas, em segundos.
                     </li>
                     <li>
-                        <strong>Adicione Alunos:</strong> Importe listas de alunos via CSV ou extraia de documentos.
+                        <strong>Adicione Alunos em Massa:</strong> Use a importação de arquivos (.csv) ou a extração por IA para adicionar toda a sua turma de uma só vez, sem digitação manual.
                     </li>
                     <li>
-                        <strong>Lance Notas:</strong> Gerencie notas individualmente ou em grupo, com médias calculadas automaticamente.
+                        <strong>Lance Notas de Forma Inteligente:</strong> Crie grupos para trabalhos em equipe, lance uma única nota para o grupo e veja as médias N1/N2 serem calculadas automaticamente.
                     </li>
                 </ul>
                     <Button asChild variant="secondary" size="sm" className="mt-4 w-full">
