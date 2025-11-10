@@ -14,8 +14,23 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import type { Course, Classroom } from '@/types';
+import type { Course, Classroom, ClassScheduleItem } from '@/types';
 import { createActivitiesFromPreset } from '@/lib/presets';
+import { ClassScheduleEditor } from '../import/ClassScheduleEditor';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+
+const competencySchema = z.object({
+    competency: z.string(),
+    skills: z.array(z.object({
+        skill: z.string(),
+        descriptors: z.string(),
+    })),
+});
+
+const learningUnitSchema = z.object({
+    name: z.string(),
+    content: z.string(),
+});
 
 const formSchema = z.object({
   name: z.string().min(1, 'Nome da disciplina é obrigatório.'),
@@ -26,6 +41,20 @@ const formSchema = z.object({
   bibliography_basic: z.string().optional(),
   bibliography_complementary: z.string().optional(),
   bibliography_recommended: z.string().optional(),
+  semester: z.string().min(1, "Semestre é obrigatório (ex: 2025.2)"),
+  workload: z.string().min(1, "Carga horária é obrigatória"),
+  classType: z.enum(['Integradora', 'Modular']).default('Modular'),
+  competencyMatrix: z.array(competencySchema).optional(),
+  learningUnits: z.array(learningUnitSchema).optional(),
+  thematicTree: z.array(z.object({ name: z.string(), description: z.string() })).optional(),
+  classSchedule: z.array(z.object({ 
+      date: z.string(), 
+      type: z.string(), 
+      topic: z.string(),
+      content: z.string(), 
+      activity: z.string(),
+      location: z.string(),
+    })).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -47,6 +76,13 @@ export default function NewCourseForm() {
       bibliography_basic: '',
       bibliography_complementary: '',
       bibliography_recommended: '',
+      semester: '2025.2',
+      workload: '80h',
+      classType: 'Modular',
+      competencyMatrix: [],
+      learningUnits: [],
+      thematicTree: [],
+      classSchedule: [],
     },
   });
 
@@ -74,9 +110,9 @@ export default function NewCourseForm() {
       syllabus: values.syllabus,
       objectives: values.objectives || '',
       competencies: values.competencies || '',
-      learningUnits: [],
-      competencyMatrix: [],
-      thematicTree: [],
+      learningUnits: values.learningUnits || [],
+      competencyMatrix: values.competencyMatrix || [],
+      thematicTree: values.thematicTree || [],
       bibliography: {
         basic: values.bibliography_basic || '',
         complementary: values.bibliography_complementary || '',
@@ -84,17 +120,16 @@ export default function NewCourseForm() {
       },
     };
     
-    const defaultActivities = createActivitiesFromPreset('Modular');
-    const defaultSemester = '2025.2';
+    const defaultActivities = createActivitiesFromPreset(values.classType);
 
-    const classroomData: Classroom = {
+    const classroomData: Omit<Classroom, 'classSchedule'> & { classSchedule: ClassScheduleItem[] } = {
         id: classroomId,
         courseId: courseId,
-        name: `Turma de ${defaultSemester}`,
-        semester: defaultSemester,
-        workload: 'N/D',
-        classType: 'Modular',
-        classSchedule: [],
+        name: `Turma de ${values.semester}`,
+        semester: values.semester,
+        workload: values.workload,
+        classType: values.classType,
+        classSchedule: values.classSchedule ?? [],
         activities: defaultActivities,
     };
 
@@ -194,49 +229,115 @@ export default function NewCourseForm() {
               </FormItem>
             )}
           />
+
+            <Accordion type="multiple" className="w-full space-y-4">
+                 <AccordionItem value="item-1" className="border rounded-md px-4">
+                    <AccordionTrigger className="font-semibold">Matriz de Competências e Árvore Temática (Opcional)</AccordionTrigger>
+                    <AccordionContent className="pt-4 space-y-4">
+                        <p className="text-sm text-muted-foreground">Adicione aqui a matriz detalhada e a árvore temática, se aplicável.</p>
+                         {/* Placeholder para os componentes de edição da matriz e árvore */}
+                        <div className="p-4 border-dashed border-2 rounded-md text-center text-muted-foreground">
+                            Editor da Matriz de Competências virá aqui.
+                        </div>
+                         <div className="p-4 border-dashed border-2 rounded-md text-center text-muted-foreground">
+                            Editor da Árvore Temática virá aqui.
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+
+                 <AccordionItem value="item-2" className="border rounded-md px-4">
+                    <AccordionTrigger className="font-semibold">Bibliografia (Opcional)</AccordionTrigger>
+                    <AccordionContent className="pt-4 space-y-4">
+                       <FormField
+                        control={form.control}
+                        name="bibliography_basic"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Básica</FormLabel>
+                            <FormControl>
+                                <Textarea rows={5} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name="bibliography_complementary"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Complementar</FormLabel>
+                            <FormControl>
+                                <Textarea rows={5} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name="bibliography_recommended"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Recomendada</FormLabel>
+                            <FormControl>
+                                <Textarea rows={3} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                    </AccordionContent>
+                </AccordionItem>
+            </Accordion>
           
-          <div className='space-y-4'>
-              <h3 className='font-medium text-sm'>Bibliografia</h3>
-              <FormField
-              control={form.control}
-              name="bibliography_basic"
-              render={({ field }) => (
-                  <FormItem>
-                  <FormLabel>Básica</FormLabel>
-                  <FormControl>
-                      <Textarea rows={5} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                  </FormItem>
-              )}
-              />
-              <FormField
-              control={form.control}
-              name="bibliography_complementary"
-              render={({ field }) => (
-                  <FormItem>
-                  <FormLabel>Complementar</FormLabel>
-                  <FormControl>
-                      <Textarea rows={5} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                  </FormItem>
-              )}
-              />
-              <FormField
-              control={form.control}
-              name="bibliography_recommended"
-              render={({ field }) => (
-                  <FormItem>
-                  <FormLabel>Recomendada</FormLabel>
-                  <FormControl>
-                      <Textarea rows={3} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                  </FormItem>
-              )}
-              />
-          </div>
+            <div className="space-y-4 rounded-lg border p-4">
+                <h3 className="font-semibold text-lg">Dados da Turma Padrão</h3>
+                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                     <FormField
+                        control={form.control}
+                        name="semester"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Semestre</FormLabel>
+                            <FormControl>
+                            <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                     <FormField
+                        control={form.control}
+                        name="workload"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Carga Horária</FormLabel>
+                            <FormControl>
+                            <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="classType"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Tipo da Turma</FormLabel>
+                            {/* Adicionar um seletor aqui seria o ideal */}
+                            <FormControl>
+                               <Input {...field} />
+                            </FormControl>
+                             <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                 </div>
+                 <ClassScheduleEditor control={form.control} />
+            </div>
+
 
           <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
               {form.formState.isSubmitting ? (
