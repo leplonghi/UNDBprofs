@@ -21,6 +21,7 @@ const formSchema = z.object({
   name: z.string().min(1, 'Nome da disciplina é obrigatório.'),
   code: z.string().min(1, 'Código é obrigatório.'),
   syllabus: z.string().min(1, 'Ementa é obrigatória.'),
+  objectives: z.string().optional(),
   bibliography_basic: z.string().optional(),
   bibliography_complementary: z.string().optional(),
   bibliography_recommended: z.string().optional(),
@@ -40,6 +41,7 @@ export default function NewCourseForm() {
       name: '',
       code: '',
       syllabus: '',
+      objectives: '',
       bibliography_basic: '',
       bibliography_complementary: '',
       bibliography_recommended: '',
@@ -68,6 +70,7 @@ export default function NewCourseForm() {
       name: values.name,
       code: values.code,
       syllabus: values.syllabus,
+      objectives: values.objectives || '',
       learningUnits: [],
       competencyMatrix: [],
       thematicTree: [], // Default empty value
@@ -160,6 +163,19 @@ export default function NewCourseForm() {
                     </FormItem>
                   )}
                 />
+                 <FormField
+                  control={form.control}
+                  name="objectives"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Objetivos</FormLabel>
+                      <FormControl>
+                        <Textarea rows={5} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <div className='space-y-2'>
                     <h3 className='font-medium text-sm'>Bibliografia</h3>
                     <FormField
@@ -215,3 +231,5 @@ export default function NewCourseForm() {
       </Form>
   );
 }
+
+    

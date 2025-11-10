@@ -112,39 +112,50 @@ function CourseInformation({
       </CardHeader>
       <CardContent className="space-y-6">
         
-        {(course.syllabus || course.competencies || (course.competencyMatrix && course.competencyMatrix.length > 0)) && (
+        {(course.syllabus || course.objectives || course.competencies || (course.competencyMatrix && course.competencyMatrix.length > 0)) && (
              <div>
-                <h3 className="font-semibold mb-2">Matriz de Competências</h3>
+                <h3 className="font-semibold mb-2">Estrutura Pedagógica</h3>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-lg border p-4">
                     <div>
                         <h4 className="font-medium text-center mb-2">EMENTA</h4>
                         <p className="text-sm text-muted-foreground whitespace-pre-wrap">{course.syllabus}</p>
                     </div>
                      <div>
-                        <h4 className="font-medium text-center mb-2">COMPETÊNCIAS</h4>
+                        <h4 className="font-medium text-center mb-2">OBJETIVOS</h4>
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{course.objectives}</p>
+                    </div>
+                     <div className='md:col-span-2'>
+                        <h4 className="font-medium text-center mb-2">COMPETÊNCIAS GERAIS</h4>
                         <p className="text-sm text-muted-foreground whitespace-pre-wrap">{course.competencies}</p>
                     </div>
                 </div>
 
                 {course.competencyMatrix && course.competencyMatrix.length > 0 && (
                     <Accordion type="multiple" className="w-full border rounded-md px-4 mt-4">
-                        {course.competencyMatrix.map((comp, compIndex) => (
-                            <AccordionItem value={`comp-${compIndex}`} key={compIndex} className={cn("border-b", compIndex === course.competencyMatrix!.length - 1 && "border-b-0")}>
-                                <AccordionTrigger className="text-base font-semibold">{comp.competency}</AccordionTrigger>
-                                <AccordionContent>
-                                    <div className="space-y-4 pl-4">
-                                        {comp.skills.map((skill, skillIndex) => (
-                                            <div key={skillIndex}>
-                                                <h4 className="font-medium">{skill.skill}</h4>
-                                                <p className="text-sm text-muted-foreground">
-                                                    <strong>Descritores:</strong> {skill.descriptors}
-                                                </p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </AccordionContent>
-                            </AccordionItem>
-                        ))}
+                         <AccordionItem value="comp-matrix" className="border-b-0">
+                            <AccordionTrigger className="text-base font-semibold">Matriz de Competências Detalhada</AccordionTrigger>
+                            <AccordionContent>
+                                {course.competencyMatrix.map((comp, compIndex) => (
+                                    <Accordion key={compIndex} type="multiple" className="w-full mt-2">
+                                        <AccordionItem value={`comp-${compIndex}`} >
+                                            <AccordionTrigger className="text-base font-medium bg-muted/50 px-4 rounded-t-md">{comp.competency}</AccordionTrigger>
+                                            <AccordionContent className="p-4 border border-t-0 rounded-b-md">
+                                                <div className="space-y-4">
+                                                    {comp.skills.map((skill, skillIndex) => (
+                                                        <div key={skillIndex}>
+                                                            <h4 className="font-medium">{skill.skill}</h4>
+                                                            <p className="text-sm text-muted-foreground">
+                                                                <strong>Descritores:</strong> {skill.descriptors}
+                                                            </p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    </Accordion>
+                                ))}
+                            </AccordionContent>
+                        </AccordionItem>
                     </Accordion>
                 )}
             </div>
@@ -370,3 +381,5 @@ export function CourseDetailClient({ courseId }: { courseId: string }) {
     </div>
   );
 }
+
+    

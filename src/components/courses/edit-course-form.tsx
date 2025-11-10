@@ -55,6 +55,7 @@ const formSchema = z.object({
   courseName: z.string().optional(),
   courseCode: z.string().optional(),
   syllabus: z.string().optional(),
+  objectives: z.string().optional(),
   competencies: z.string().optional(),
   workload: z.string().optional(),
   semester: z.string().optional(),
@@ -125,6 +126,7 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
       courseName: '',
       courseCode: '',
       syllabus: '',
+      objectives: '',
       competencies: '',
       workload: '',
       semester: '',
@@ -143,6 +145,7 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
         courseName: course.name,
         courseCode: course.code,
         syllabus: course.syllabus,
+        objectives: course.objectives,
         competencies: course.competencies,
         competencyMatrix: course.competencyMatrix || [],
         learningUnits: course.learningUnits || [],
@@ -183,6 +186,7 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
       name: values.courseName,
       code: values.courseCode,
       syllabus: values.syllabus,
+      objectives: values.objectives,
       competencies: values.competencies,
       competencyMatrix: values.competencyMatrix || [],
       learningUnits: values.learningUnits || [],
@@ -313,7 +317,7 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
                         </div>
                         
                         <div>
-                            <h3 className="text-sm font-medium mb-2">Matriz de Competências</h3>
+                            <h3 className="text-sm font-medium mb-2">Estrutura Pedagógica</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-lg border p-4">
                                 <FormField
                                     control={form.control}
@@ -330,10 +334,23 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
                                 />
                                 <FormField
                                     control={form.control}
-                                    name="competencies"
+                                    name="objectives"
                                     render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className='text-center block'>Competências</FormLabel>
+                                        <FormLabel className='text-center block'>Objetivos</FormLabel>
+                                        <FormControl>
+                                        <Textarea rows={5} {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="competencies"
+                                    render={({ field }) => (
+                                    <FormItem className="md:col-span-2">
+                                        <FormLabel className='text-center block'>Competências Gerais</FormLabel>
                                         <FormControl>
                                         <Textarea rows={5} {...field} />
                                         </FormControl>
@@ -343,25 +360,32 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
                                 />
                             </div>
 
-                            {competencyMatrix && competencyMatrix.length > 0 && (
+                             {competencyMatrix && competencyMatrix.length > 0 && (
                                 <Accordion type="multiple" className="w-full border rounded-md px-4 mt-4">
-                                    {competencyMatrix.map((comp, compIndex) => (
-                                        <AccordionItem value={`comp-${compIndex}`} key={compIndex} className="border-b-0">
-                                            <AccordionTrigger className="text-base font-semibold">{comp.competency}</AccordionTrigger>
-                                            <AccordionContent>
-                                                <div className="space-y-4 pl-4">
-                                                    {comp.skills.map((skill, skillIndex) => (
-                                                        <div key={skillIndex}>
-                                                            <h4 className="font-medium">{skill.skill}</h4>
-                                                            <p className="text-sm text-muted-foreground">
-                                                                <strong>Descritores:</strong> {skill.descriptors}
-                                                            </p>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </AccordionContent>
-                                        </AccordionItem>
-                                    ))}
+                                    <AccordionItem value="comp-matrix" className="border-b-0">
+                                        <AccordionTrigger className="text-base font-semibold">Matriz de Competências Detalhada</AccordionTrigger>
+                                        <AccordionContent>
+                                            {competencyMatrix.map((comp, compIndex) => (
+                                                <Accordion key={compIndex} type="multiple" className="w-full mt-2">
+                                                    <AccordionItem value={`comp-${compIndex}`} >
+                                                        <AccordionTrigger className="text-base font-medium bg-muted/50 px-4 rounded-t-md">{comp.competency}</AccordionTrigger>
+                                                        <AccordionContent className="p-4 border border-t-0 rounded-b-md">
+                                                            <div className="space-y-4">
+                                                                {comp.skills.map((skill, skillIndex) => (
+                                                                    <div key={skillIndex}>
+                                                                        <h4 className="font-medium">{skill.skill}</h4>
+                                                                        <p className="text-sm text-muted-foreground">
+                                                                            <strong>Descritores:</strong> {skill.descriptors}
+                                                                        </p>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </AccordionContent>
+                                                    </AccordionItem>
+                                                </Accordion>
+                                            ))}
+                                        </AccordionContent>
+                                    </AccordionItem>
                                 </Accordion>
                             )}
                         </div>
@@ -510,3 +534,5 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
     </div>
   );
 }
+
+    
