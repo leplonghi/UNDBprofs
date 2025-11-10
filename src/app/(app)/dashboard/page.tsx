@@ -13,8 +13,7 @@ import type { Course, AcademicEvent, Classroom } from '@/types';
 import { StatsCards } from '@/components/dashboard/stats-cards';
 import { RecentCourses } from '@/components/dashboard/recent-courses';
 import { OverviewChart } from '@/components/dashboard/overview-chart';
-import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
+import { UpcomingEvents } from '@/components/dashboard/upcoming-events';
 import { TutorialCard } from '@/components/dashboard/tutorial-tab';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
@@ -130,8 +129,9 @@ export default function DashboardPage() {
           />
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-3 space-y-6">
               <RecentCourses courses={courses || []} classroomsByCourse={classroomsByCourse} isLoading={isLoadingCourses || isLoadingStats} />
+              <UpcomingEvents events={academicEvents} courses={courses} isLoading={isLoadingEvents || isLoadingCourses} />
             </div>
             <div className="lg:col-span-2">
               <OverviewChart data={studentsPerCourse} isLoading={isLoadingStats} />

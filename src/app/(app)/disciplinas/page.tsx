@@ -17,7 +17,8 @@ export default function CoursesPage() {
         <div className="flex items-center gap-2">
           <Button onClick={() => router.push('/disciplinas/nova')}>
             <PlusCircle className="mr-2 h-4 w-4" />
-            Adicionar/Importar Disciplina
+            <span className="md:hidden">Adicionar</span>
+            <span className="hidden md:inline">Adicionar/Importar Disciplina</span>
           </Button>
         </div>
       </div>
