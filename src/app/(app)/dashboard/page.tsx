@@ -15,7 +15,7 @@ import { RecentCourses } from '@/components/dashboard/recent-courses';
 import { OverviewChart } from '@/components/dashboard/overview-chart';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
-import { TutorialTab } from '@/components/dashboard/tutorial-tab';
+import { TutorialCard } from '@/components/dashboard/tutorial-tab';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 export default function DashboardPage() {
@@ -107,22 +107,25 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       
-      <Card>
-          <CardHeader>
-              <CardTitle className="text-2xl text-primary">{welcomeMessage}</CardTitle>
-              <CardDescription>
-                  Pronto para organizar suas aulas? Comece importando uma disciplina ou veja um resumo de suas atividades abaixo.
-              </CardDescription>
-          </CardHeader>
-          <CardContent>
-              <Button size="lg" onClick={() => router.push('/disciplinas/nova')}>
-                  <PlusCircle className="mr-2 h-5 w-5" />
-                  Adicionar/Importar Disciplina
-              </Button>
-          </CardContent>
-      </Card>
-      
-      <TutorialTab />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2">
+            <CardHeader>
+                <CardTitle className="text-2xl text-primary">{welcomeMessage}</CardTitle>
+                <CardDescription>
+                    Pronto para organizar suas aulas? Comece importando uma disciplina ou veja um resumo de suas atividades abaixo.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Button size="lg" onClick={() => router.push('/disciplinas/nova')}>
+                    <PlusCircle className="mr-2 h-5 w-5" />
+                    Adicionar/Importar Disciplina
+                </Button>
+            </CardContent>
+        </Card>
+        
+        <TutorialCard />
+      </div>
+
 
        <div className="space-y-6">
           <StatsCards
