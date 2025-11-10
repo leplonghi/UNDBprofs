@@ -23,7 +23,7 @@ export function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-20 border-t bg-background/95 backdrop-blur-sm">
-      <div className="mx-auto grid h-16 max-w-lg grid-cols-5 items-center justify-around">
+      <div className="grid h-16 grid-cols-5 justify-items-center">
         {menuItems.map((item) => {
           const isActive = pathname.startsWith(item.href);
           return (
@@ -31,7 +31,7 @@ export function BottomNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex flex-col items-center gap-1 p-2 text-xs text-muted-foreground transition-colors hover:text-primary',
+                'flex flex-col items-center justify-center gap-1 p-2 text-xs text-muted-foreground transition-colors hover:text-primary w-full h-full',
                 isActive && 'text-primary'
               )}
             >
@@ -44,5 +44,3 @@ export function BottomNav() {
     </nav>
   );
 }
-
-    
