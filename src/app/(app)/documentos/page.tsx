@@ -3,36 +3,27 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { DownloadCloud, PlusCircle, ArrowLeft } from 'lucide-react';
+import { Folder, PlusCircle, ArrowLeft, ExternalLink } from 'lucide-react';
 import { DocumentsTable } from '@/components/documents/documents-table';
 import { AddDocumentDialog } from '@/components/documents/add-document-dialog';
 import { useRouter } from 'next/navigation';
 
 const driveFolders = [
-    { name: 'Apresentações', url: 'https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/modelos%2FAPRESENTAC%CC%A7A%CC%83O%20-%20MODELO.pptx?alt=media' },
-    { name: 'Atas', url: 'https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/modelos%2FATA%20DE%20REUNIA%CC%83O.docx?alt=media' },
-    { name: 'Avaliações', url: 'https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/modelos%2FAVALIAC%CC%A7A%CC%83O%20N1%20N2%20-%20MODELO.docx?alt=media' },
-    { name: 'Calendários', url: 'https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/modelos%2FCALENDA%CC%81RIO%20DE%20AVALIAC%CC%A7O%CC%83ES%202025.1.docx?alt=media' },
-    { name: 'Editais', url: 'https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/modelos%2FEDITAL%20DE%20SELECAO%20DE%20MONitores.docx?alt=media' },
-    { name: 'Estudo Dirigido', url: 'https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/modelos%2FESTUDO%20DIRIGIDO.docx?alt=media' },
-    { name: 'Eventos', url: 'https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/modelos%2FEVENTO%20ACADE%CC%82MICO.docx?alt=media' },
-    { name: 'Grupos de Pesquisa', url: 'https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/modelos%2FGRUPO%20DE%20PESQUISA.docx?alt=media' },
-    { name: 'Líderes', url: 'https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/modelos%2FLIDERES%20DE%20TURMA.docx?alt=media' },
-    { name: 'Manual do Calouro', url: 'https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/modelos%2FMANUAL%20DO%20CALOURO.docx?alt=media' },
-    { name: 'Metodologias Ativas', url: 'https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/modelos%2FMETODOLOGIAS%20ATIVAS.docx?alt=media' },
-    { name: 'Microsoft Teams', url: 'https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/modelos%2FMICROSOFT%20TEAMS.docx?alt=media' },
-    { name: 'Monitoria', url: 'https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/modelos%2FMONITORIA%20-%20EDITAL.docx?alt=media' },
-    { name: 'Neurodivergências', url: 'https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/modelos%2FNEURODIVERGE%CC%82NCIAS.docx?alt=media' },
-    { name: 'Pesquisa', url: 'https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/modelos%2FPESQUISA.docx?alt=media' },
-    { name: 'Planejamento Unidades Curriculares', url: 'https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/modelos%2FPLANEJAMENTO%20UNIDADES%20CURRICULARES.docx?alt=media' },
-    { name: 'Plano de Ensino (Integradora)', url: 'https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/modelos%2FPLANO%20DE%20ENSINO%20-%20INTEGRADORA.pdf?alt=media' },
-    { name: 'Plano de Ensino (Modular)', url: 'https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/modelos%2FPLANO%20DE%20ENSINO%20-%20MODULAR.pdf?alt=media' },
-    { name: 'Plano de Ensino e Proposta Av Qualis', url: 'https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/modelos%2FPLANO%20DE%20ENSINO%20E%20PROPOSTA%20AV%20QUALIS.docx?alt=media' },
-    { name: 'Programa das Disciplinas', url: 'https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/modelos%2FPROGRAMA%20DAS%20DISCIPLINAS.docx?alt=media' },
-    { name: 'Projeto Pedagógico', url: 'https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/modelos%2FPROJETO%20PEDAGO%CC%81GICO.docx?alt=media' },
-    { name: 'Regimento Interno', url: 'https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/modelos%2FREGIMENTO%20INTERNO.docx?alt=media' },
-    { name: 'UNDBClassroom', url: 'https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/modelos%2FUNDBCLASSROOM.docx?alt=media' },
-    { name: 'Visitas Técnicas', url: 'https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/modelos%2FVISITAS%20TE%CC%81CNICAS.docx?alt=media' },
+    { name: 'Apresentações', description: 'Modelos de slides para aulas e eventos.', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_APRESENTACOES' },
+    { name: 'Atas de Reunião', description: 'Templates para registrar reuniões de colegiado.', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_ATAS' },
+    { name: 'Avaliações N1/N2', description: 'Estruturas e modelos para as avaliações.', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_AVALIACOES' },
+    { name: 'Calendários', description: 'Cronogramas acadêmicos e de avaliações.', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_CALENDARIOS' },
+    { name: 'Editais', description: 'Modelos para editais de monitoria e pesquisa.', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_EDITAIS' },
+    { name: 'Estudo Dirigido', description: 'Templates para atividades de estudo dirigido.', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_ESTUDO' },
+    { name: 'Eventos Acadêmicos', description: 'Documentação para organização de eventos.', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_EVENTOS' },
+    { name: 'Grupos de Pesquisa', description: 'Documentos para gestão de grupos de pesquisa.', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_PESQUISA' },
+    { name: 'Líderes de Turma', description: 'Informações e guias para líderes de turma.', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_LIDERES' },
+    { name: 'Manual do Calouro', description: 'Guia de boas-vindas para novos alunos.', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_CALOURO' },
+    { name: 'Metodologias Ativas', description: 'Materiais de apoio sobre metodologias.', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_METODOLOGIAS' },
+    { name: 'Planos de Ensino', description: 'Modelos de planos para disciplinas modulares e integradoras.', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_PLANOS' },
+    { name: 'Projeto Pedagógico', description: 'Documento do Projeto Pedagógico do Curso (PPC).', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_PPC' },
+    { name: 'Regimento Interno', description: 'Normas e regimento interno da instituição.', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_REGIMENTO' },
+    { name: 'Visitas Técnicas', description: 'Formulários e guias para visitas técnicas.', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_VISITAS' },
 ];
 
 export default function DocumentsPage() {
@@ -74,20 +65,28 @@ export default function DocumentsPage() {
           <CardHeader>
             <CardTitle>Drive da Coordenação</CardTitle>
             <CardDescription>
-              Acesse pastas e arquivos importantes do Google Drive da coordenação.
+              Acesse pastas e arquivos importantes do Google Drive da coordenação. Os links abrirão em uma nova aba.
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+           <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {driveFolders.map((folder) => (
               <a
                 key={folder.name}
                 href={folder.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-between rounded-lg border p-4 hover:bg-accent hover:shadow-md transition-all"
+                className="group rounded-lg border p-4 transition-all hover:bg-accent hover:shadow-md"
               >
-                <p className="font-semibold">{folder.name}</p>
-                <DownloadCloud className="h-5 w-5 text-muted-foreground ml-4 flex-shrink-0" />
+                <div className="flex items-start justify-between">
+                    <div className='flex items-center gap-4'>
+                        <Folder className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+                        <div>
+                            <p className="font-semibold">{folder.name}</p>
+                            <p className="text-sm text-muted-foreground">{folder.description}</p>
+                        </div>
+                    </div>
+                    <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                </div>
               </a>
             ))}
           </CardContent>
