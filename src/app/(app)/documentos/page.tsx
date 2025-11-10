@@ -9,22 +9,118 @@ import { AddDocumentDialog } from '@/components/documents/add-document-dialog';
 import { useRouter } from 'next/navigation';
 
 const driveFolders = [
-    { name: 'Apresentações', description: 'Modelos de slides para aulas e eventos.', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_APRESENTACOES' },
-    { name: 'Atas de Reunião', description: 'Templates para registrar reuniões de colegiado.', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_ATAS' },
-    { name: 'Avaliações N1/N2', description: 'Estruturas e modelos para as avaliações.', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_AVALIACOES' },
-    { name: 'Calendários', description: 'Cronogramas acadêmicos e de avaliações.', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_CALENDARIOS' },
-    { name: 'Editais', description: 'Modelos para editais de monitoria e pesquisa.', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_EDITAIS' },
-    { name: 'Estudo Dirigido', description: 'Templates para atividades de estudo dirigido.', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_ESTUDO' },
-    { name: 'Eventos Acadêmicos', description: 'Documentação para organização de eventos.', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_EVENTOS' },
-    { name: 'Grupos de Pesquisa', description: 'Documentos para gestão de grupos de pesquisa.', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_PESQUISA' },
-    { name: 'Líderes de Turma', description: 'Informações e guias para líderes de turma.', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_LIDERES' },
-    { name: 'Manual do Calouro', description: 'Guia de boas-vindas para novos alunos.', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_CALOURO' },
-    { name: 'Metodologias Ativas', description: 'Materiais de apoio sobre metodologias.', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_METODOLOGIAS' },
-    { name: 'Planos de Ensino', description: 'Modelos de planos para disciplinas modulares e integradoras.', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_PLANOS' },
-    { name: 'Projeto Pedagógico', description: 'Documento do Projeto Pedagógico do Curso (PPC).', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_PPC' },
-    { name: 'Regimento Interno', description: 'Normas e regimento interno da instituição.', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_REGIMENTO' },
-    { name: 'Visitas Técnicas', description: 'Formulários e guias para visitas técnicas.', url: 'https://drive.google.com/drive/folders/1_FOLDER_ID_VISITAS' },
+  {
+    name: 'Apresentações',
+    description: 'Modelos de slides para aulas e eventos.',
+    url: 'https://drive.google.com/drive/folders/1s3wX3VVxiJP-LpMZ3OsEH6aEgIq_vrnA?usp=drive_link',
+  },
+  {
+    name: 'Atas de Reunião',
+    description: 'Templates para registrar reuniões de colegiado.',
+    url: 'https://drive.google.com/drive/folders/1LqGBuC19i__zpq32Cd-jhvBLtGzNFNOX?usp=drive_link',
+  },
+  {
+    name: 'Avaliações N1/N2',
+    description: 'Estruturas e modelos para as avaliações.',
+    url: 'https://drive.google.com/drive/folders/1lmIzifBMWQrGylqxBhmW2kRaXQbHrzbj?usp=drive_link',
+  },
+  {
+    name: 'Calendários',
+    description: 'Cronogramas acadêmicos e de avaliações.',
+    url: 'https://drive.google.com/drive/folders/1cbSSM4o-vKQ09NfZ8BpXxM4dr3AghnnF?usp=drive_link',
+  },
+  {
+    name: 'Editais',
+    description: 'Modelos para editais de monitoria e pesquisa.',
+    url: 'https://drive.google.com/drive/folders/1tIzz536qs1oCb8fvIMAivdCF5xgc_HdQ?usp=drive_link',
+  },
+  {
+    name: 'Estudo Dirigido',
+    description: 'Templates para atividades de estudo dirigido.',
+    url: 'https://drive.google.com/drive/folders/1fX88c0DZf68TSCmu_jel-GpBPHsELfli?usp=drive_link',
+  },
+  {
+    name: 'Eventos Acadêmicos',
+    description: 'Documentação para organização de eventos.',
+    url: 'https://drive.google.com/drive/folders/1xA5JQQP3fAXYpHxmmcaeEL7VmJtDt7_O?usp=drive_link',
+  },
+  {
+    name: 'Grupos de Pesquisa',
+    description: 'Documentos para gestão de grupos de pesquisa.',
+    url: 'https://drive.google.com/drive/folders/1-4qRwU5qJ61qdga8U83smFSYJqNmOlxr?usp=drive_link',
+  },
+  {
+    name: 'Líderes de Turma',
+    description: 'Guias e informações para líderes de turma.',
+    url: 'https://drive.google.com/drive/folders/1By7a7QwaZADs_NhPUrnqth4EGDAcoMku?usp=drive_link',
+  },
+  {
+    name: 'Manual do Calouro',
+    description: 'Guia de boas-vindas para novos alunos.',
+    url: 'https://drive.google.com/drive/folders/165y9fYZbtmqe7dtbK5RoTGCX2fi9oY4g?usp=drive_link',
+  },
+  {
+    name: 'Metodologias Ativas',
+    description: 'Materiais de apoio sobre metodologias.',
+    url: 'https://drive.google.com/drive/folders/1pqC-rOkLw_Voj-sE_Bmv5FTgS6WvorU2?usp=drive_link',
+  },
+  {
+    name: 'Microsoft Teams',
+    description: 'Materiais e orientações de uso institucional.',
+    url: 'https://drive.google.com/drive/folders/1DqlyGSBIj-XlMgTe8KmVLOc4CZ_TIey8?usp=drive_link',
+  },
+  {
+    name: 'Monitoria',
+    description: 'Documentos e editais de monitoria.',
+    url: 'https://drive.google.com/drive/folders/1u1cXD3MPV7TIp_w2NYIKAfxkjCdBKgP2?usp=drive_link',
+  },
+  {
+    name: 'Neurodivergências',
+    description: 'Materiais de apoio e inclusão pedagógica.',
+    url: 'https://drive.google.com/drive/folders/1qEsh7w3ZqUIjgIDebJA4Y6NuLwl7UBUk?usp=drive_link',
+  },
+  {
+    name: 'Pesquisa',
+    description: 'Modelos e orientações para pesquisas.',
+    url: 'https://drive.google.com/drive/folders/1Jr--rBbpTZ4c0iI2IwR2TyvURJuP1zOk?usp=drive_link',
+  },
+  {
+    name: 'Planejamento de Unidades Curriculares',
+    description: 'Modelos de planejamento acadêmico.',
+    url: 'https://drive.google.com/drive/folders/1LuYZkx-zm78Q2JsPa9-J2d6234T38iqb?usp=drive_link',
+  },
+  {
+    name: 'Plano de Ensino e Proposta Qualis',
+    description: 'Planos e modelos de proposta Qualis.',
+    url: 'https://drive.google.com/drive/folders/1yVxXqaFYCp5KxXzX4zpisXKJUgeO9QRH?usp=drive_link',
+  },
+  {
+    name: 'Programa das Disciplinas',
+    description: 'Programas e ementas institucionais.',
+    url: 'https://drive.google.com/drive/folders/1uEeztfSjAQa-jKgw9OsmqCnBnfgQrRpO?usp=drive_link',
+  },
+  {
+    name: 'Projeto Pedagógico',
+    description: 'Documento do Projeto Pedagógico do Curso (PPC).',
+    url: 'https://drive.google.com/drive/folders/1uiMVKVT6OlE-jFj1EuNDjOoghMh_f4UP?usp=drive_link',
+  },
+  {
+    name: 'Regimento Interno',
+    description: 'Normas e regimentos da instituição.',
+    url: 'https://drive.google.com/drive/folders/1IF5JiIpzu7ZHx_FZBuLK7srAwUWWtcd2?usp=drive_link',
+  },
+  {
+    name: 'UNDB Classroom',
+    description: 'Modelos e materiais para o ambiente virtual.',
+    url: 'https://drive.google.com/drive/folders/1XJVU06gupzWrU7vcGPkmXnfYCfkaURZl?usp=drive_link',
+  },
+  {
+    name: 'Visitas Técnicas',
+    description: 'Formulários e guias de visitas técnicas.',
+    url: 'https://drive.google.com/drive/folders/1a4iluNo7VXg4KBKXDMsH99x7nebXmJwq?usp=drive_link',
+  },
 ];
+
 
 export default function DocumentsPage() {
   const [isAddOpen, setIsAddOpen] = React.useState(false);
