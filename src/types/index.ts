@@ -129,3 +129,33 @@ export interface StudentAnalytics {
     finalGrade: number;
     situation: StudentSituation;
 }
+
+// Community Module Types
+export type IdeaStatus = 'nova' | 'em_analise' | 'implementada';
+
+export interface Idea {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  status: IdeaStatus;
+  authorId: string;
+  authorName: string;
+  course: string;
+  createdAt: string; // ISO 8601 string
+  updatedAt: string; // ISO 8601 string
+  supportCount: number;
+}
+
+export interface IdeaSupport {
+  id: string; // Document ID is userId
+  supportedAt: string;
+}
+
+export interface IdeaComment {
+  id: string;
+  userId: string;
+  userName: string;
+  text: string;
+  createdAt: string; // ISO 8601 string
+}

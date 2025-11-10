@@ -1,24 +1,51 @@
 'use client';
 
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BrainCircuit, CalendarClock, PartyPopper, Coffee } from 'lucide-react';
+import { BrainCircuit, CalendarClock, PartyPopper, Coffee, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useIdeas } from '@/hooks/use-ideas';
+import { IdeaCard } from '@/components/community/idea-card';
+import { AddIdeaDialog } from '@/components_community/add-idea-dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 
-const IdeasClubTab = () => (
-  <Card>
-    <CardHeader>
-      <CardTitle>Clube das Ideias</CardTitle>
-      <CardDescription>Proponha, apoie e discuta ideias para melhorar nossa comunidade acadêmica.</CardDescription>
-    </CardHeader>
-    <CardContent className="space-y-4">
-        <Button>Nova Ideia</Button>
-        <div className="border-2 border-dashed rounded-lg p-8 text-center text-muted-foreground">
-            <p>Em breve: Lista de ideias, filtros e detalhes.</p>
-        </div>
-    </CardContent>
-  </Card>
-);
+const IdeasClubTab = () => {
+    const [isAddIdeaOpen, setIsAddIdeaOpen] = React.useState(false);
+    const { ideas, isLoading } = useIdeas();
+
+    return (
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                    <CardTitle>Clube das Ideias</CardTitle>
+                    <CardDescription>Proponha, apoie e discuta ideias para melhorar nossa comunidade acadêmica.</CardDescription>
+                </div>
+                <Button onClick={() => setIsAddIdeaOpen(true)}>Nova Ideia</Button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <AddIdeaDialog isOpen={isAddIdeaOpen} onOpenChange={setIsAddIdeaOpen} />
+                {isLoading ? (
+                    <div className="space-y-4">
+                        <Skeleton className="h-24 w-full" />
+                        <Skeleton className="h-24 w-full" />
+                        <Skeleton className="h-24 w-full" />
+                    </div>
+                ) : ideas && ideas.length > 0 ? (
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {ideas.map((idea) => (
+                            <IdeaCard key={idea.id} idea={idea} />
+                        ))}
+                    </div>
+                ) : (
+                    <div className="border-2 border-dashed rounded-lg p-8 text-center text-muted-foreground">
+                        <p>Nenhuma ideia proposta ainda. Seja o primeiro a compartilhar!</p>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    );
+};
 
 const TimelineEventsTab = () => (
   <Card>
@@ -112,5 +139,3 @@ export default function CommunityPage() {
     </div>
   );
 }
-
-    
