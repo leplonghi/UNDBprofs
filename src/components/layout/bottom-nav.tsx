@@ -6,13 +6,15 @@ import {
   Calendar,
   Folder,
   LayoutDashboard,
+  Users2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/disciplinas', label: 'Disciplinas', icon: BookCopy },
-  { href: '/documentos', label: 'Documentos', icon: Folder },
+  { href: '/comunidade', label: 'Comunidade', icon: Users2 },
+  { href: '/documentos', label: 'Docs', icon: Folder },
   { href: '/calendario', label: 'Calendário', icon: Calendar },
 ];
 
@@ -21,7 +23,7 @@ export function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-20 border-t bg-background/95 backdrop-blur-sm">
-      <div className="mx-auto grid h-16 max-w-md grid-cols-4 items-center justify-around">
+      <div className="mx-auto grid h-16 max-w-lg grid-cols-5 items-center justify-around">
         {menuItems.map((item) => {
           const isActive = pathname.startsWith(item.href);
           return (
@@ -42,3 +44,5 @@ export function BottomNav() {
     </nav>
   );
 }
+
+    

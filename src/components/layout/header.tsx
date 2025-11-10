@@ -12,11 +12,13 @@ import {
   Calendar,
   Folder,
   LayoutDashboard,
+  Users2
 } from 'lucide-react';
 
 const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/disciplinas', label: 'Disciplinas', icon: BookCopy },
+  { href: '/comunidade', label: 'Comunidade', icon: Users2 },
   { href: '/documentos', label: 'Documentos', icon: Folder },
   { href: '/calendario', label: 'Calendário', icon: Calendar },
 ];
@@ -54,3 +56,5 @@ export default function Header() {
     </header>
   );
 }
+
+    

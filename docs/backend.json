@@ -28,13 +28,24 @@
           "type": "string",
           "description": "The professor's birth date.",
           "format": "date"
+        },
+        "course": {
+          "type": "string",
+          "description": "The course the professor is associated with (e.g., 'Arquitetura e Urbanismo')."
+        },
+        "role": {
+            "type": "string",
+            "description": "The role of the user.",
+            "enum": ["professor", "coordenador"]
         }
       },
       "required": [
         "id",
         "email",
         "name",
-        "registrationDate"
+        "registrationDate",
+        "course",
+        "role"
       ]
     },
     "Course": {
@@ -337,6 +348,117 @@
         "dateTime",
         "description"
       ]
+    },
+    "Idea": {
+      "title": "Idea",
+      "type": "object",
+      "description": "Represents an idea proposed in the 'Clube das Ideias'.",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "status": { "type": "string", "enum": ["nova", "em_analise", "implementada"] },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "course": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "supportCount": { "type": "number" }
+      },
+      "required": ["id", "title", "description", "category", "status", "authorId", "authorName", "course", "createdAt", "updatedAt", "supportCount"]
+    },
+    "IdeaSupport": {
+        "title": "IdeaSupport",
+        "type": "object",
+        "description": "Represents a user's support for an idea.",
+        "properties": {
+            "userId": { "type": "string" },
+            "supportedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["userId", "supportedAt"]
+    },
+    "IdeaComment": {
+        "title": "IdeaComment",
+        "type": "object",
+        "description": "A comment on an idea.",
+        "properties": {
+            "userId": { "type": "string" },
+            "userName": { "type": "string" },
+            "text": { "type": "string" },
+            "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["userId", "userName", "text", "createdAt"]
+    },
+    "CommunityEvent": {
+        "title": "CommunityEvent",
+        "type": "object",
+        "description": "An event in the community timeline.",
+        "properties": {
+            "id": { "type": "string" },
+            "title": { "type": "string" },
+            "description": { "type": "string" },
+            "type": { "type": "string", "enum": ["banca", "seminario", "visita_tecnica", "aula_aberta", "outro"] },
+            "date": { "type": "string", "format": "date-time" },
+            "course": { "type": "string" },
+            "location": { "type": "string" },
+            "createdById": { "type": "string" },
+            "createdByName": { "type": "string" },
+            "createdAt": { "type": "string", "format": "date-time" },
+            "updatedAt": { "type": "string", "format": "date-time" },
+            "isOfficial": { "type": "boolean" }
+        },
+        "required": ["id", "title", "description", "type", "date", "course", "location", "createdById", "createdByName", "createdAt", "updatedAt"]
+    },
+    "Celebration": {
+        "title": "Celebration",
+        "type": "object",
+        "description": "A celebration of a milestone or achievement.",
+        "properties": {
+            "id": { "type": "string" },
+            "type": { "type": "string", "enum": ["birthday", "achievement", "event"] },
+            "title": { "type": "string" },
+            "personId": { "type": "string" },
+            "personName": { "type": "string" },
+            "course": { "type": "string" },
+            "description": { "type": "string" },
+            "date": { "type": "string", "format": "date-time" },
+            "createdById": { "type": "string" },
+            "createdByName": { "type": "string" },
+            "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["id", "type", "title", "personId", "personName", "course", "description", "date", "createdById", "createdByName", "createdAt"]
+    },
+    "ForumThread": {
+        "title": "ForumThread",
+        "type": "object",
+        "description": "A thread in the 'Café das Ideias' forum.",
+        "properties": {
+            "id": { "type": "string" },
+            "title": { "type": "string" },
+            "body": { "type": "string" },
+            "tags": { "type": "array", "items": { "type": "string" } },
+            "authorId": { "type": "string" },
+            "authorName": { "type": "string" },
+            "course": { "type": "string" },
+            "createdAt": { "type": "string", "format": "date-time" },
+            "updatedAt": { "type": "string", "format": "date-time" },
+            "replyCount": { "type": "number" }
+        },
+        "required": ["id", "title", "body", "authorId", "authorName", "course", "createdAt", "updatedAt", "replyCount"]
+    },
+    "ForumReply": {
+        "title": "ForumReply",
+        "type": "object",
+        "description": "A reply to a forum thread.",
+        "properties": {
+            "authorId": { "type": "string" },
+            "authorName": { "type": "string" },
+            "course": { "type": "string" },
+            "text": { "type": "string" },
+            "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["authorId", "authorName", "course", "text", "createdAt"]
     }
   },
   "auth": {
@@ -519,8 +641,38 @@
             }
           ]
         }
+      },
+      {
+        "path": "/ideas/{ideaId}",
+        "definition": { "entityName": "Idea", "schema": { "$ref": "#/backend/entities/Idea" } }
+      },
+      {
+        "path": "/ideas/{ideaId}/supports/{supportId}",
+        "definition": { "entityName": "IdeaSupport", "schema": { "$ref": "#/backend/entities/IdeaSupport" } }
+      },
+      {
+        "path": "/ideas/{ideaId}/comments/{commentId}",
+        "definition": { "entityName": "IdeaComment", "schema": { "$ref": "#/backend/entities/IdeaComment" } }
+      },
+      {
+        "path": "/communityEvents/{eventId}",
+        "definition": { "entityName": "CommunityEvent", "schema": { "$ref": "#/backend/entities/CommunityEvent" } }
+      },
+      {
+        "path": "/celebrations/{celebrationId}",
+        "definition": { "entityName": "Celebration", "schema": { "$ref": "#/backend/entities/Celebration" } }
+      },
+      {
+        "path": "/forumThreads/{threadId}",
+        "definition": { "entityName": "ForumThread", "schema": { "$ref": "#/backend/entities/ForumThread" } }
+      },
+      {
+        "path": "/forumThreads/{threadId}/replies/{replyId}",
+        "definition": { "entityName": "ForumReply", "schema": { "$ref": "#/backend/entities/ForumReply" } }
       }
     ],
-    "reasoning": "The Firestore data structure is designed to support the UNDB ProfAssist application, focusing on secure access, efficient data management, and AI integration for lesson plan imports. Authorization Independence is achieved by structuring professor-owned data under their respective user IDs and by denormalizing the 'professorId' into subcollections where professor authorization is required. This eliminates the need for `get()` calls in security rules, enabling atomic operations. QAPs (Rules are not Filters) are supported through structural segregation and dedicated collections. User roles are implicitly managed via path-based ownership, and course/classroom associations are secured by including the relevant professorId in each document. The structure supports secure list operations by scoping data to specific professor's or courses. Explicit state modeling would be incorporated into fields like status to improve the clarity and maintainability. This design ensures that each collection maintains a homogeneous security posture, simplifying rules and enhancing debuggability."
+    "reasoning": "The Firestore data structure is designed to support the UNDB ProfAssist application, focusing on secure access, efficient data management, and AI integration for lesson plan imports. Authorization Independence is achieved by structuring professor-owned data under their respective user IDs and by denormalizing the 'professorId' into subcollections where professor authorization is required. This eliminates the need for `get()` calls in security rules, enabling atomic operations. QAPs (Rules are not Filters) are supported through structural segregation and dedicated collections. User roles are implicitly managed via path-based ownership, and course/classroom associations are secured by including the relevant professorId in each document. The structure supports secure list operations by scoping data to specific professor's or courses. Explicit state modeling would be incorporated into fields like status to improve the clarity and maintainability. This design ensures that each collection maintains a homogeneous security posture, simplifying rules and enhancing debuggability. Added collections for the Community module, with public read access for authenticated professors and ownership-based write access."
   }
 }
+
+    

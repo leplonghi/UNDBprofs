@@ -5,29 +5,19 @@
  * This ruleset enforces a strict user-ownership model for professor-related data,
  * ensuring that professors can only access and modify data associated with their accounts.
  * Students have read access to their own records.
+ * Community features are readable by all authenticated professors, with write access restricted by ownership.
  *
  * Data Structure:
  * - /professors/{professorId}: Stores professor profiles, where professorId MUST match the authenticated user's UID.
- * - /professors/{professorId}/courses/{courseId}: Stores courses owned by a professor.
- * - /professors/{professorId}/courses/{courseId}/classrooms/{classroomId}: Stores classrooms for a specific course.
- * - /students/{studentId}: Stores student profiles, globally accessible for reads, but create/update are limited to admins or the student themselves.
- * - /professors/{professorId}/courses/{courseId}/classrooms/{classroomId}/classroomStudents/{classRoomStudentId} Represents the association between a classroom and a student.
- * - /professors/{professorId}/documents/{documentId}: Stores professor documents.
- * - /professors/{professorId}/academicEvents/{academicEventId}: Stores academic events for all courses of a professor.
+ * - /professors/{professorId}/...: Subcollections for courses, classrooms, etc., owned by the professor.
+ * - /students/{studentId}: Stores student profiles.
+ * - /ideas/{ideaId}, /communityEvents/{eventId}, etc.: Community module collections.
  *
  * Key Security Decisions:
  * - Path-based ownership is enforced for all professor-owned data. The professorId in the path MUST match the authenticated user's UID.
  * - Data consistency is enforced by validating that the professorId stored in the document matches the professorId in the path.
- * - Students can only read their own profiles.
- * - No public data listing is permitted. List operations are restricted to owners for their respective data.
- *
- * Denormalization for Authorization:
- * The 'professorId' is denormalized into subcollections (courses, classrooms, documents, academicEvents) to enable
- * fast, independent authorization checks without requiring additional `get()` calls.
- *
- * Structural Segregation:
- * Private data (professor profiles, courses, classrooms, documents, academicEvents) is stored under the /professors/{professorId} path,
- * ensuring that only the professor has access.
+ * - Community data is generally readable by any authenticated professor to foster collaboration.
+ * - Write operations (create, update, delete) on community data are restricted to the document owner.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -49,187 +39,135 @@ service cloud.firestore {
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
-
-    /**
-     * @description Checks if the current user is the owner of the existing resource.
-     * It ensures that the user is signed in, the provided userId matches the authenticated user's UID,
-     * and the resource exists (i.e., it's not a create operation).
-     * @param {string} userId - The user ID to compare against the request's authentication UID.
-     * @return {boolean} True if the user is the owner and the resource exists, false otherwise.
-     */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
-    }
     
     /**
-     * @description Validates the structure and types of a 'grade' object.
-     * @param {map} grade The grade object to validate.
-     * @return {boolean} True if the grade is valid, false otherwise.
+     * @description Checks if the user is an authenticated professor.
+     * Assumes a 'professors' collection exists where the document ID is the user's UID.
+     * This is more secure than checking a role on a user's profile, as it requires document existence.
+     * @return {boolean} True if the user is an authenticated professor, false otherwise.
      */
-    function isValidGrade(grade) {
-      return grade.id is string &&
-             grade.description is string &&
-             grade.score is number;
+    function isProfessor() {
+        return isSignedIn() && exists(/databases/$(database)/documents/professors/$(request.auth.uid));
     }
 
     /**
      * @description
      * Professors collection: professor profiles are stored here. Only the professor can read/write their own profile.
-     * @path /professors/{professorId}
-     * @allow (create) - A professor with UID 'user_abc' can create their profile if professorId == 'user_abc'.
-     * @deny (create) - A professor with UID 'user_abc' cannot create a profile with professorId == 'user_xyz'.
-     * @allow (get) - A professor with UID 'user_abc' can read their profile at /professors/user_abc.
-     * @deny (get) - A professor with UID 'user_abc' cannot read another professor's profile at /professors/user_xyz.
-     * @allow (update) - A professor with UID 'user_abc' can update their profile at /professors/user_abc.
-     * @deny (update) - A professor with UID 'user_abc' cannot update another professor's profile at /professors/user_xyz.
-     * @allow (delete) - A professor with UID 'user_abc' can delete their profile at /professors/user_abc.
-     * @deny (delete) - A professor with UID 'user_abc' cannot delete another professor's profile at /professors/user_xyz.
-     * @principle Enforces document ownership for all operations.  Validates the professorId on create operations to match auth.
      */
     match /professors/{professorId} {
-      allow get: if isOwner(professorId);
+      allow get, update, delete: if isOwner(professorId);
       allow list: if false; // Prevent listing of all professors.
       allow create: if isOwner(professorId) && request.resource.data.id == professorId;
-      allow update: if isExistingOwner(professorId) && request.resource.data.id == resource.data.id; //Enforce immutability of ID
-      allow delete: if isExistingOwner(professorId);
     }
 
     /**
      * @description
-     * Courses subcollection: Courses owned by a specific professor. The professor can read/write courses under their ID.
-     * @path /professors/{professorId}/courses/{courseId}
-     * @allow (create) - A professor with UID 'user_abc' can create a course under /professors/user_abc/courses/course_123 if the document's professorId matches.
-     * @deny (create) - A professor cannot create a course with a mismatched professorId.
-     * @allow (get, list) - A professor can read their own courses.
-     * @deny (get, list) - A professor cannot read another professor's courses.
-     * @allow (update) - A professor can update their own courses, but cannot change the professorId.
-     * @deny (update) - A professor cannot change the ownership of a course.
-     * @allow (delete) - A professor can delete their own courses.
-     * @principle Enforces document ownership and data consistency for all operations.
+     * Courses subcollection and its nested subcollections. Access is controlled by the root professorId.
      */
     match /professors/{professorId}/courses/{courseId} {
       allow get, list, delete: if isOwner(professorId);
       allow create: if isOwner(professorId) && request.resource.data.professorId == professorId;
       allow update: if isOwner(professorId) && request.resource.data.professorId == resource.data.professorId;
 
-      // Cascade delete is handled by cloud functions, but rules on subcollections are still needed.
       match /classrooms/{classroomId} {
-        allow get, list, create, update, delete: if isOwner(professorId);
+        allow read, write: if isOwner(professorId);
 
         match /classroomStudents/{classroomStudentId} {
-          allow get, list, create, update, delete: if isOwner(professorId);
+          allow read, write: if isOwner(professorId);
         }
         
         match /groups/{groupId} {
-           allow get, list, create, update, delete: if isOwner(professorId);
+           allow read, write: if isOwner(professorId);
         }
       }
     }
     
      /**
       * @description
-      * Academic Events collection for a professor. The professor can manage events under their ID.
-      * @path /professors/{professorId}/academicEvents/{academicEventId}
-      * @principle Enforces document ownership for all operations. Allows listing for the owner.
+      * Academic Events collection for a professor.
       */
     match /professors/{professorId}/academicEvents/{academicEventId} {
-        allow get, list, create, update, delete: if isOwner(professorId);
-    }
-
-    /**
-     * @description
-     * Classrooms subcollection: Classrooms owned by a specific professor for a specific course.
-     * The professor can read/write classrooms under their ID and associated course ID.
-     * @path /professors/{professorId}/courses/{courseId}/classrooms/{classroomId}
-     * @allow (create) - A professor with UID 'user_abc' can create a classroom under their course.
-     * @deny (create) - A professor with UID 'user_abc' cannot create a classroom under another professor's course.
-     * @allow (get) - A professor with UID 'user_abc' can read a classroom under their course.
-     * @deny (get) - A professor with UID 'user_abc' cannot read a classroom under another professor's course.
-     * @allow (update) - A professor with UID 'user_abc' can update a classroom under their course.
-     * @deny (update) - A professor with UID 'user_abc' cannot update a classroom under another professor's course.
-     * @allow (delete) - A professor with UID 'user_abc' can delete a classroom under their course.
-     * @deny (delete) - A professor with UID 'user_abc' cannot delete a classroom under another professor's course.
-     * @principle Enforces document ownership for all operations.
-     */
-    match /professors/{professorId}/courses/{courseId}/classrooms/{classroomId} {
-      allow get: if isOwner(professorId);
-      allow list: if isOwner(professorId);
-      allow create: if isOwner(professorId);
-      allow update: if isExistingOwner(professorId);
-      allow delete: if isExistingOwner(professorId);
-    }
-
-    /**
-     * @description
-     * Students collection: Student profiles are stored here. Any authenticated professor can manage student records.
-     * @path /students/{studentId}
-     * @allow (read) - Any authenticated user (professor or student) can read student profiles.
-     * @allow (list) - Any authenticated user can list student profiles.
-     * @allow (write) - Any authenticated professor can create, update, or delete student records.
-     * @principle Allows professors to manage student data, while allowing broader read access.
-     */
-    match /students/{studentId} {
-        allow read, list: if isSignedIn();
-        allow write: if isSignedIn(); // Allows any authenticated user to write.
-    }
-
-     /**
-      * @description
-      * ClassroomStudent subcollection: Represents the association between a classroom and a student. Owned by a specific professor for a specific course and classroom.
-      * The professor can read/write classroomStudents under their ID and associated course and classroom ID.
-      * @path /professors/{professorId}/courses/{courseId}/classrooms/{classroomId}/classroomStudents/{classRoomStudentId}
-      * @allow (create) - A professor with UID 'user_abc' can create a classroomStudent under their course and classroom.
-      * @deny (create) - A professor with UID 'user_abc' cannot create a classroomStudent under another professor's course or classroom.
-      * @allow (get) - A professor with UID 'user_abc' can read a classroomStudent under their course and classroom.
-      * @deny (get) - A professor with UID 'user_abc' cannot read a classroomStudent under another professor's course or classroom.
-      * @allow (update) - A professor with UID 'user_abc' can update a classroomStudent under their course and classroom.
-      * @deny (update) - A professor with UID 'user_abc' cannot update a classroomStudent under another professor's course or classroom.
-      * @allow (delete) - A professor with UID 'user_abc' can delete a classroomStudent under their course and classroom.
-      * @deny (delete) - A professor with UID 'user_abc' cannot delete a classroomStudent under another professor's course or classroom.
-      * @principle Enforces document ownership for all operations.
-      */
-    match /professors/{professorId}/courses/{courseId}/classrooms/{classroomId}/classroomStudents/{classRoomStudentId} {
-        allow get: if isOwner(professorId);
-        allow list: if isOwner(professorId);
-        allow create: if isOwner(professorId);
-        allow update: if isExistingOwner(professorId);
-        allow delete: if isExistingOwner(professorId);
+        allow read, write: if isOwner(professorId);
     }
     
-     /**
-      * @description
-      * Groups subcollection: Represents student groups within a classroom.
-      * @path /professors/{professorId}/courses/{courseId}/classrooms/{classroomId}/groups/{groupId}
-      * @principle Enforces document ownership for all operations.
-      */
-    match /professors/{professorId}/courses/{courseId}/classrooms/{classroomId}/groups/{groupId} {
-        allow get: if isOwner(professorId);
-        allow list: if isOwner(professorId);
-        allow create: if isOwner(professorId);
-        allow update: if isExistingOwner(professorId);
-        allow delete: if isExistingOwner(professorId);
+    /**
+     * @description
+     * Documents subcollection for a professor.
+     */
+    match /professors/{professorId}/documents/{documentId} {
+      allow read, write: if isOwner(professorId);
     }
-
 
     /**
      * @description
-     * Documents subcollection: Documents owned by a specific professor. The professor can read/write documents under their ID.
-     * @path /professors/{professorId}/documents/{documentId}
-     * @allow (create) - A professor with UID 'user_abc' can create a document under /professors/user_abc/documents/doc_123.
-     * @deny (create) - A professor with UID 'user_abc' cannot create a document under /professors/user_xyz/documents/doc_123.
-     * @allow (get) - A professor with UID 'user_abc' can read a document under /professors/user_abc/documents/doc_123.
-     * @deny (get) - A professor with UID 'user_abc' cannot read a document under /professors/user_xyz/documents/doc_123.
-     * @allow (update) - A professor with UID 'user_abc' can update a document under /professors/user_abc/documents/doc_123.
-     * @deny (update) - A professor with UID 'user_abc' cannot update a document under /professors/user_xyz/documents/doc_123.
-     * @allow (delete) - A professor with UID 'user_abc' can delete a document under /professors/user_abc/documents/doc_123.
-     * @deny (delete) - A professor with UID 'user_abc' cannot delete a document under /professors/user_xyz/documents/doc_123.
-     * @principle Enforces document ownership for all operations.
+     * Students collection: Allows professors to manage student data.
      */
-    match /professors/{professorId}/documents/{documentId} {
-      allow get, list: if isOwner(professorId);
-      allow create: if isOwner(professorId) && request.resource.data.professorId == professorId;
-      allow update: if isExistingOwner(professorId) && request.resource.data.professorId == resource.data.professorId;
-      allow delete: if isExistingOwner(professorId);
+    match /students/{studentId} {
+        allow read, list: if isProfessor();
+        allow write: if isProfessor();
+    }
+    
+    // =================================================================
+    // Community Module Rules
+    // General principle: Read access for all professors, write access restricted to owners.
+    // =================================================================
+
+    /**
+     * @description Ideas collection.
+     */
+    match /ideas/{ideaId} {
+      allow read: if isProfessor();
+      allow create: if isProfessor() && request.resource.data.authorId == request.auth.uid;
+      allow update, delete: if isProfessor() && resource.data.authorId == request.auth.uid;
+
+      // Supports subcollection
+      match /supports/{userId} {
+        allow read: if isProfessor();
+        // Allow a user to create/delete their own support document
+        allow create, delete: if isProfessor() && userId == request.auth.uid;
+      }
+
+      // Comments subcollection
+      match /comments/{commentId} {
+        allow read: if isProfessor();
+        allow create: if isProfessor() && request.resource.data.userId == request.auth.uid;
+        allow update, delete: if isProfessor() && resource.data.userId == request.auth.uid;
+      }
+    }
+
+    /**
+     * @description Community Events collection.
+     */
+    match /communityEvents/{eventId} {
+      allow read: if isProfessor();
+      allow create: if isProfessor() && request.resource.data.createdById == request.auth.uid;
+      allow update, delete: if isProfessor() && resource.data.createdById == request.auth.uid;
+    }
+
+    /**
+     * @description Celebrations collection (for non-birthday achievements).
+     */
+    match /celebrations/{celebrationId} {
+      allow read: if isProfessor();
+      allow create: if isProfessor() && request.resource.data.createdById == request.auth.uid;
+      allow update, delete: if isProfessor() && resource.data.createdById == request.auth.uid;
+    }
+
+    /**
+     * @description Forum Threads collection.
+     */
+    match /forumThreads/{threadId} {
+      allow read: if isProfessor();
+      allow create: if isProfessor() && request.resource.data.authorId == request.auth.uid;
+      allow update, delete: if isProfessor() && resource.data.authorId == request.auth.uid;
+
+      // Replies subcollection
+      match /replies/{replyId} {
+        allow read: if isProfessor();
+        allow create: if isProfessor() && request.resource.data.authorId == request.auth.uid;
+        allow update, delete: if isProfessor() && resource.data.authorId == request.auth.uid;
+      }
     }
   }
 }
+    
