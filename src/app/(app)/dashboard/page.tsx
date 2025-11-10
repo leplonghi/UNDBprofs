@@ -111,7 +111,7 @@ export default function DashboardPage() {
             <CardHeader>
                 <CardTitle className="text-xl text-primary">{welcomeMessage}</CardTitle>
                 <CardDescription>
-                    Veja um resumo de suas atividades ou comece importando uma nova disciplina.
+                    Veja um resumo de suas atividades ou siga o guia rápido abaixo.
                 </CardDescription>
             </CardHeader>
             <CardContent>

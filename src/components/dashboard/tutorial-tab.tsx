@@ -8,7 +8,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Button } from '../ui/button';
-import { LifeBuoy } from 'lucide-react';
+import { LifeBuoy, BookCopy } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 
 export function TutorialCard() {
@@ -19,21 +19,25 @@ export function TutorialCard() {
                 Não sabe por onde começar? Veja o Guia Rápido
             </AccordionTrigger>
             <AccordionContent className="pt-2">
-                <ul className="list-disc pl-5 space-y-3 text-sm text-muted-foreground">
+                <ul className="list-decimal pl-5 space-y-3 text-sm text-muted-foreground">
                     <li>
-                        <strong>Importe Disciplinas com IA:</strong> Envie um Plano de Ensino em PDF para criar uma disciplina completa, com cronograma de aulas e estrutura de notas, em segundos.
+                        <strong>Importe um Plano de Ensino (PE):</strong> Vá para a página de{' '}
+                        <Link href="/disciplinas" className="font-bold text-primary hover:underline">
+                         Disciplinas
+                        </Link>
+                        , clique em <strong>Adicionar/Importar</strong> e envie o PDF. O sistema cria a disciplina, a turma e o cronograma para você.
                     </li>
                     <li>
-                        <strong>Adicione Alunos em Massa:</strong> Use a importação de arquivos (.csv) ou a extração por IA para adicionar toda a sua turma de uma só vez, sem digitação manual.
+                        <strong>Adicione Alunos em Massa:</strong> Na página da disciplina, em <strong>Gerenciamento da Turma</strong> {'>'} <strong>Alunos</strong>, importe um arquivo CSV ou extraia de um documento com IA para adicionar toda a turma de uma vez.
                     </li>
                     <li>
-                        <strong>Lance Notas de Forma Inteligente:</strong> Crie grupos para trabalhos em equipe, lance uma única nota para o grupo e veja as médias N1/N2 serem calculadas automaticamente.
+                        <strong>Lance as Notas:</strong> Em <strong>Lançamento de Notas</strong>, crie grupos para trabalhos, lance as notas e veja as médias N1/N2 serem calculadas automaticamente.
                     </li>
                 </ul>
                     <Button asChild variant="secondary" size="sm" className="mt-4 w-full">
                     <Link href="/ajuda">
                         <LifeBuoy className="mr-2 h-4 w-4" />
-                        Ver Tutorial Completo
+                        Ver Tutorial Completo na Página de Ajuda
                     </Link>
                 </Button>
             </AccordionContent>
