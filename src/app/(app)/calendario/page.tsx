@@ -30,7 +30,8 @@ import { cn } from '@/lib/utils';
 import type { AcademicEvent, Course } from '@/types';
 import { isToday, isSameDay, addMonths, subMonths, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 type EventCategory =
   | 'integradora-segunda'
@@ -253,6 +254,7 @@ const CalendarMonth = ({
 export default function CalendarPage() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const router = useRouter();
   const [currentDate, setCurrentDate] = useState(() => new Date(2025, 7, 1)); // Start in August 2025
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
 
@@ -312,12 +314,18 @@ export default function CalendarPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-2xl font-bold text-primary">
-          Calendário Arquitetura e Urbanismo
-        </h1>
-        <p className="text-muted-foreground">2º Semestre de 2025</p>
+      <div className="flex items-center gap-4">
+        <Button variant="outline" size="icon" onClick={() => router.back()}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div>
+          <h1 className="text-2xl font-bold text-primary">
+            Calendário Arquitetura e Urbanismo
+          </h1>
+          <p className="text-muted-foreground">2º Semestre de 2025</p>
+        </div>
       </div>
+
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-4">

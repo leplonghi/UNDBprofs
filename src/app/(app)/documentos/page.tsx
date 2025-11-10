@@ -3,9 +3,10 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { DownloadCloud, PlusCircle } from 'lucide-react';
+import { DownloadCloud, PlusCircle, ArrowLeft } from 'lucide-react';
 import { DocumentsTable } from '@/components/documents/documents-table';
 import { AddDocumentDialog } from '@/components/documents/add-document-dialog';
+import { useRouter } from 'next/navigation';
 
 // Mock data for institutional templates
 const institutionalTemplates = [
@@ -28,15 +29,19 @@ const institutionalTemplates = [
 
 export default function DocumentsPage() {
   const [isAddOpen, setIsAddOpen] = React.useState(false);
+  const router = useRouter();
 
   return (
     <>
       <AddDocumentDialog isOpen={isAddOpen} onOpenChange={setIsAddOpen} />
       <div className="flex flex-col gap-8">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-primary">
-            Armazenamento de Documentos
-          </h1>
+        <div className="flex items-center gap-4">
+            <Button variant="outline" size="icon" onClick={() => router.back()}>
+                <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <h1 className="text-2xl font-bold text-primary">
+                Armazenamento de Documentos
+            </h1>
         </div>
 
         <Card>

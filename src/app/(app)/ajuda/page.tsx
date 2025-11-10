@@ -7,16 +7,25 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Lightbulb } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
 
 export default function AjudaPage() {
+  const router = useRouter();
+
   return (
     <div className="flex flex-col gap-6">
-      <div className="space-y-1">
-        <h1 className="text-2xl font-bold text-primary">Página de Ajuda e Tutorial</h1>
-        <p className="text-muted-foreground">
-          Tire suas dúvidas sobre os recursos e o funcionamento do UNDBProf.
-        </p>
+       <div className="flex items-center gap-4">
+        <Button variant="outline" size="icon" onClick={() => router.back()}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold text-primary">Página de Ajuda e Tutorial</h1>
+          <p className="text-muted-foreground">
+            Tire suas dúvidas sobre os recursos e o funcionamento do UNDBProf.
+          </p>
+        </div>
       </div>
 
       <Card>
