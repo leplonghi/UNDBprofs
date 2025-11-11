@@ -87,7 +87,8 @@ function CourseInformation({
     
     const unitWorkloads = Object.entries(scheduleByTopic).reduce((acc, [topic, items]) => {
         const totalHours = items.reduce((sum, item) => {
-            const hours = parseInt(item.activity.match(/(\d+)h/)?.[1] || '0');
+            const hoursMatch = item.activity.match(/(\d+)h/);
+            const hours = hoursMatch ? parseInt(hoursMatch[1], 10) : 0;
             return sum + hours;
         }, 0);
         acc[topic] = `${totalHours}h`;
@@ -95,7 +96,7 @@ function CourseInformation({
     }, {} as Record<string, string>);
     
     return course.learningUnits.map((unit, index) => {
-      const competency = course.competencyMatrix![index];
+      const competency = course.competencyMatrix[index] || { competency: '', skills: [] };
       const scheduleItems = scheduleByTopic[unit.name.trim()] || [];
       return {
         unit,
@@ -109,7 +110,7 @@ function CourseInformation({
 
   const totalCH = useMemo(() => {
     const total = groupedSchedule.reduce((sum, group) => {
-        return sum + parseInt(group.unitWorkload.replace('h', '') || '0');
+        return sum + parseInt(group.unitWorkload.replace('h', '') || '0', 10);
     }, 0);
     return `${total}H`;
   }, [groupedSchedule]);
