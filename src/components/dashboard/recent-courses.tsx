@@ -105,7 +105,7 @@ export function RecentCourses({ courses, classroomsByCourse, isLoading }: Recent
               </TableRow>
             ) : (
               recentCourses.map((course) => {
-                  const year = course.classroom?.semester?.split('.')[0];
+                  const [year, semesterNumber] = course.classroom?.semester?.split('.') || [null, null];
                   return (
                     <TableRow key={course.id} className={cn(!course.isActive && "text-muted-foreground")}>
                       <TableCell>
@@ -121,7 +121,7 @@ export function RecentCourses({ courses, classroomsByCourse, isLoading }: Recent
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                          {course.classroom?.semester ?? <span className="text-muted-foreground">N/A</span>}
+                          {semesterNumber ? `${semesterNumber}º` : <span className="text-muted-foreground">N/A</span>}
                       </TableCell>
                     </TableRow>
                   )
