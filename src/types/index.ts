@@ -43,9 +43,9 @@ export interface Course {
   code: string;
   syllabus: string;
   objectives: string;
-  competencies?: string;
-  learningUnits?: LearningUnit[];
-  competencyMatrix?: Competency[];
+  competencies: string;
+  learningUnits: LearningUnit[];
+  competencyMatrix: Competency[];
   thematicTree?: { name: string; description: string }[];
   bibliography?: Bibliography;
 }

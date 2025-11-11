@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Card,
@@ -16,7 +16,7 @@ import {
   useMemoFirebase,
   useCollection,
 } from '@/firebase';
-import type { Course, Classroom, ClassScheduleItem, Activity } from '@/types';
+import type { Course, Classroom, ClassScheduleItem, Activity, LearningUnit, Competency } from '@/types';
 import { doc, collection, query } from 'firebase/firestore';
 import {
   Table,
@@ -54,6 +54,13 @@ function CourseDetailsSkeleton() {
   );
 }
 
+interface GroupedScheduleItem {
+    unit: LearningUnit;
+    competency: Competency;
+    unitWorkload: string;
+    scheduleItems: ClassScheduleItem[];
+}
+
 function CourseInformation({
   course,
   classroom,
@@ -62,27 +69,8 @@ function CourseInformation({
   classroom: Classroom | undefined;
 }) {
   const router = useRouter();
-
-  const getTypeColor = (type: string) => {
-    const lowerType = type.toLowerCase();
-    if (lowerType.includes('feriado') || lowerType.includes('recesso')) {
-        return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200';
-    }
-    if (lowerType.includes('avaliação') || lowerType.includes('entrega') || lowerType.includes('n1') || lowerType.includes('n2')) {
-        return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200';
-    }
-    if (lowerType.includes('apresentação')) {
-        return 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200';
-    }
-    if (lowerType.includes('prática')) {
-        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200';
-    }
-    if (lowerType.includes('teórica')) {
-        return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200';
-    }
-    return '';
-  }
-
+  
+  const { user } = useUser();
   const thematicTreeColors = [
       'bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-800',
       'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800',
@@ -90,8 +78,52 @@ function CourseInformation({
       'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800',
       'bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-800',
   ];
-  
-  const { user } = useUser();
+
+  const groupedSchedule = useMemo(() => {
+    if (!course.learningUnits || !course.competencyMatrix || !classroom?.classSchedule) {
+      return [];
+    }
+
+    // Map schedule items by their topic for quick lookup
+    const scheduleByTopic = (classroom.classSchedule || []).reduce((acc, item) => {
+        const key = item.topic.trim();
+        if (!acc[key]) {
+            acc[key] = [];
+        }
+        acc[key].push(item);
+        return acc;
+    }, {} as Record<string, ClassScheduleItem[]>);
+    
+    // Calculate total workload for each unit from the schedule
+    const unitWorkloads = Object.entries(scheduleByTopic).reduce((acc, [topic, items]) => {
+        const totalHours = items.reduce((sum, item) => {
+            const hours = parseInt(item.activity.match(/(\d+)h/)?.[1] || '0');
+            return sum + hours;
+        }, 0);
+        acc[topic] = `${totalHours}h`;
+        return acc;
+    }, {} as Record<string, string>);
+    
+    // Assuming a 1-to-1 mapping between learningUnits and competencyMatrix items by order
+    return course.learningUnits.map((unit, index) => {
+      const competency = course.competencyMatrix![index];
+      const scheduleItems = scheduleByTopic[unit.name.trim()] || [];
+      return {
+        unit,
+        competency,
+        unitWorkload: unitWorkloads[unit.name.trim()] || '0h',
+        scheduleItems,
+      };
+    });
+
+  }, [course.learningUnits, course.competencyMatrix, classroom?.classSchedule]);
+
+  const totalCH = useMemo(() => {
+    const total = groupedSchedule.reduce((sum, group) => {
+        return sum + parseInt(group.unitWorkload.replace('h', '') || '0');
+    }, 0);
+    return `${total}H`;
+  }, [groupedSchedule]);
 
 
   return (
@@ -115,7 +147,6 @@ function CourseInformation({
       </CardHeader>
       <CardContent className="space-y-6">
         
-        {/* PDF Replica Section */}
         <div className="space-y-4 rounded-lg border p-4">
             <h2 className="text-center font-bold text-lg bg-gray-200 dark:bg-gray-700 py-2 rounded-t-md">PLANO DE ENSINO</h2>
             <div className="border">
@@ -153,53 +184,55 @@ function CourseInformation({
             </div>
         </div>
 
-        {/* End of PDF Replica Section */}
-
-        {(course.competencyMatrix && course.competencyMatrix.length > 0) && (
-            <Accordion type="multiple" className="w-full border rounded-lg px-4">
-                 <AccordionItem value="comp-matrix" className="border-b-0">
-                    <AccordionTrigger className="text-base font-semibold">Matriz de Competências Detalhada</AccordionTrigger>
-                    <AccordionContent>
-                        {course.competencyMatrix.map((comp, compIndex) => (
-                            <Accordion key={compIndex} type="multiple" className="w-full mt-2">
-                                <AccordionItem value={`comp-${compIndex}`} >
-                                    <AccordionTrigger className="text-base font-medium bg-muted/50 px-4 rounded-t-md">{comp.competency}</AccordionTrigger>
-                                    <AccordionContent className="p-4 border border-t-0 rounded-b-md">
-                                        <div className="space-y-4">
-                                            {comp.skills.map((skill, skillIndex) => (
-                                                <div key={skillIndex}>
-                                                    <h4 className="font-medium">{skill.skill}</h4>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        <strong>Descritores:</strong> {skill.descriptors}
-                                                    </p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </AccordionContent>
-                                </AccordionItem>
-                            </Accordion>
+        {groupedSchedule && groupedSchedule.length > 0 && (
+             <div className="border rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                    <thead className="bg-gray-200 dark:bg-gray-700 font-bold">
+                        <tr>
+                            <th className="p-2 border-r w-1/6">UNIDADE DE APRENDIZAGEM</th>
+                            <th className="p-2 border-r w-2/6">HABILIDADES</th>
+                            <th className="p-2 border-r w-[80px]">CH</th>
+                            <th className="p-2 border-r w-2/6">DESCRITORES</th>
+                            <th className="p-2 w-[80px]">CH</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {groupedSchedule.map((group, groupIndex) => (
+                            <React.Fragment key={groupIndex}>
+                                {group.scheduleItems.map((item, itemIndex) => (
+                                    <tr key={itemIndex} className="border-b">
+                                        {itemIndex === 0 && (
+                                            <>
+                                                <td className="p-2 border-r align-top" rowSpan={group.scheduleItems.length}>
+                                                    {group.unit.name}
+                                                </td>
+                                                <td className="p-2 border-r align-top" rowSpan={group.scheduleItems.length}>
+                                                    <ul className="list-disc pl-4 space-y-1">
+                                                        {group.competency?.skills?.map((skill, skillIdx) => (
+                                                          <li key={skillIdx}>{skill.skill}</li>
+                                                        ))}
+                                                    </ul>
+                                                </td>
+                                                <td className="p-2 border-r align-top text-center" rowSpan={group.scheduleItems.length}>
+                                                    {group.unitWorkload}
+                                                </td>
+                                            </>
+                                        )}
+                                        <td className="p-2 border-r align-top">{item.content}</td>
+                                        <td className="p-2 text-center align-top">{item.activity.match(/(\d+h)/)?.[0]}</td>
+                                    </tr>
+                                ))}
+                            </React.Fragment>
                         ))}
-                    </AccordionContent>
-                </AccordionItem>
-            </Accordion>
+                        <tr className="bg-gray-200 dark:bg-gray-700 font-bold">
+                            <td colSpan={4} className="p-2 text-right border-r">TOTAL CH</td>
+                            <td className="p-2 text-center">{totalCH}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         )}
 
-        {course.learningUnits && course.learningUnits.length > 0 && (
-           <div>
-            <h3 className="font-semibold mb-2">Unidades de Aprendizagem</h3>
-            <Accordion type="multiple" className="w-full">
-                {course.learningUnits.map((unit, index) => (
-                    <AccordionItem value={`unit-${index}`} key={index}>
-                        <AccordionTrigger>{unit.name}</AccordionTrigger>
-                        <AccordionContent>
-                            <p className="text-muted-foreground whitespace-pre-wrap">{unit.content}</p>
-                        </AccordionContent>
-                    </AccordionItem>
-                ))}
-            </Accordion>
-           </div>
-        )}
-        
         {course.thematicTree && course.thematicTree.length > 0 && (
           <div>
             <h3 className="font-semibold">Árvore Temática</h3>
@@ -266,60 +299,7 @@ function CourseInformation({
             </div>
           </div>
         )}
-        <div>
-          <h3 className="font-semibold">Cronograma de Aulas</h3>
-          {classroom &&
-          classroom.classSchedule &&
-          classroom.classSchedule.length > 0 ? (
-            <div className="mt-2 max-h-[600px] overflow-y-auto rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[100px]">Data</TableHead>
-                    <TableHead className="w-[150px]">Tipo</TableHead>
-                    <TableHead>Tópico</TableHead>
-                    <TableHead>Conteúdo</TableHead>
-                    <TableHead>Atividade</TableHead>
-                    <TableHead className="w-[150px]">Local</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {classroom.classSchedule
-                    .sort(
-                      (a, b) =>
-                        new Date(a.date).getTime() - new Date(b.date).getTime()
-                    )
-                    .map((scheduleItem, index) => (
-                        <TableRow
-                          key={index}
-                          className={cn(getTypeColor(scheduleItem.type))}
-                        >
-                          <TableCell className="font-medium">
-                            {scheduleItem.date}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={'outline'}>
-                              {scheduleItem.type}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            {scheduleItem.topic}
-                          </TableCell>
-                          <TableCell>{scheduleItem.content}</TableCell>
-                          <TableCell>{scheduleItem.activity}</TableCell>
-                          <TableCell>{scheduleItem.location}</TableCell>
-                        </TableRow>
-                      )
-                    )}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <div className="mt-2 py-10 text-center text-muted-foreground border-2 border-dashed rounded-lg">
-              Nenhum cronograma de aulas encontrado para esta turma.
-            </div>
-          )}
-        </div>
+       
       </CardContent>
     </Card>
   );
