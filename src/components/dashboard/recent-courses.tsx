@@ -32,7 +32,7 @@ interface RecentCoursesProps {
 export function RecentCourses({ courses, classroomsByCourse, isLoading }: RecentCoursesProps) {
   
   const recentCourses = useMemo(() => {
-    if (!courses || !classroomsByCourse) return [];
+    if (!courses) return [];
 
     const isSemesterActive = (semester: string): boolean => {
         if (!semester || !semester.includes('.')) return false;
@@ -45,7 +45,6 @@ export function RecentCourses({ courses, classroomsByCourse, isLoading }: Recent
 
         if (year !== currentYear) return false;
         
-        // 1st semester (e.g., Feb-Jul), 2nd semester (e.g., Aug-Dec)
         return sem === 1 ? currentMonth >= 2 && currentMonth <= 7 : currentMonth >= 8 && currentMonth <= 12;
     }
 
@@ -53,22 +52,17 @@ export function RecentCourses({ courses, classroomsByCourse, isLoading }: Recent
       .map(course => {
         const classroom = classroomsByCourse[course.id]?.[0];
         const semester = classroom?.semester || '';
-        const [year, semesterNumber] = semester.split('.');
         const isActive = isSemesterActive(semester);
         
         return {
           ...course,
           classroom,
-          year: year || null,
-          semesterNumber: semesterNumber || null,
           isActive,
         };
       })
       .sort((a, b) => {
-        // Active courses first
         if (a.isActive && !b.isActive) return -1;
         if (!a.isActive && b.isActive) return 1;
-        // Then sort by semester, descending
         return (b.classroom?.semester || '0').localeCompare(a.classroom?.semester || '0');
       })
       .slice(0, 5);
@@ -107,25 +101,29 @@ export function RecentCourses({ courses, classroomsByCourse, isLoading }: Recent
                 </TableCell>
               </TableRow>
             ) : (
-              recentCourses.map((course) => (
-                    <TableRow key={course.id} className={cn(!course.isActive && "text-muted-foreground")}>
-                      <TableCell>
-                        <Link href={`/disciplinas/${course.id}`} className="font-medium hover:underline">
-                            {course.name}
-                        </Link>
-                      </TableCell>
-                      <TableCell>
-                        {course.year ? (
-                            <Badge variant={course.isActive ? "secondary" : "outline"}>{course.year}</Badge>
-                        ) : (
-                            <span className="text-muted-foreground">N/A</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                          {course.semesterNumber ? `${course.semesterNumber}º` : <span className="text-muted-foreground">N/A</span>}
-                      </TableCell>
-                    </TableRow>
-                  ))
+              recentCourses.map((course) => {
+                    const semester = course.classroom?.semester || '';
+                    const [year, semesterNumber] = semester.split('.');
+                    return (
+                        <TableRow key={course.id} className={cn(!course.isActive && "text-muted-foreground")}>
+                          <TableCell>
+                            <Link href={`/disciplinas/${course.id}`} className="font-medium hover:underline">
+                                {course.name}
+                            </Link>
+                          </TableCell>
+                          <TableCell>
+                            {year ? (
+                                <Badge variant={course.isActive ? "secondary" : "outline"}>{year}</Badge>
+                            ) : (
+                                <span className="text-muted-foreground">N/A</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                              {semesterNumber ? `${semesterNumber}º` : <span className="text-muted-foreground">N/A</span>}
+                          </TableCell>
+                        </TableRow>
+                    );
+              })
             )}
           </TableBody>
         </Table>
