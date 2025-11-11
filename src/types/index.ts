@@ -25,6 +25,7 @@ export interface Bibliography {
 
 export interface Competency {
     competency: string;
+    ch?: string;
     skills: {
         skill: string;
         descriptors: string;

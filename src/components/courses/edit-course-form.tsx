@@ -49,6 +49,7 @@ import { ReImportUploadForm } from '../import/re-import-upload-form';
 
 const competencySchema = z.object({
     competency: z.string(),
+    ch: z.string().optional(),
     skills: z.array(z.object({
         skill: z.string(),
         descriptors: z.string(),

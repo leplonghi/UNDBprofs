@@ -109,10 +109,10 @@ const prompt = ai.definePrompt({
       - For each main row in this table (e.g., "I - Teoria e Método", "II - Levantamento e Diagnóstico"):
         - **For \`learningUnits\`**: Create an object with \`name\` (the full text from "UNIDADE DE APRENDIZAGEM") and \`content\` (the full text from the "HABILIDADES" column).
         - **For \`competencyMatrix\`**: This is more detailed. For that same row:
-          - The \`competency\` field is the full text from the "HABILIDADES" column.
+          - The \`competency\` field is the full text from the "HABILIDADES" column. **YOU MUST EXTRACT THIS. DO NOT LEAVE IT EMPTY IF THERE IS TEXT.**
           - The \`ch\` field is the text from the "CH" column right next to "HABILIDADES".
           - The \`skills\` array must be populated. The \`skill\` sub-field can be the same as the main \`competency\`.
-          - **CRITICAL for \`descriptors\`**: The \`skills.descriptors\` field MUST contain the full, multi-line text from the "DESCRITORES" column for that row. You must preserve the line breaks. Each line in the "DESCRITORES" column often ends with its own workload (e.g., "(4h)"). You MUST include this workload information verbatim in the \`descriptors\` string. Do NOT parse it out. Transcribe the full text block as a single string with newlines.
+          - **CRITICAL for \`descriptors\`**: The \`skills.descriptors\` field MUST contain the full, multi-line text from the "DESCRITORES" column for that row. **YOU MUST EXTRACT THIS. DO NOT LEAVE IT EMPTY IF THERE IS TEXT.** You must preserve the line breaks. Each line in the "DESCRITORES" column often ends with its own workload (e.g., "(4h)"). You MUST include this workload information verbatim in the \`descriptors\` string. Do NOT parse it out. Transcribe the full text block as a single string with newlines.
       - **MANDATORY**: You MUST extract the content for \`competencyMatrix\` and \`learningUnits\`. If a column like "HABILIDADES" or "DESCRITORES" appears empty in the PDF, you must still create the corresponding fields in the JSON, but with an empty string "" as the value. Do NOT omit these fields.
 
   3.  **Extract Class Schedule (Main Content Table)**:
