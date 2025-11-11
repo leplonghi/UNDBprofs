@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { assistantEventEmitter } from '@/components/assistant/chat-assistant';
 import { Button } from '@/components/ui/button';
 import { Bot } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 
 export default function DashboardPage() {
@@ -118,7 +119,7 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-6">
       
         <Card>
-             <CardHeader>
+            <CardHeader>
                 <div className="flex justify-between items-start">
                     <div>
                         <CardTitle className="text-xl text-primary">{welcomeMessage}</CardTitle>
@@ -126,14 +127,19 @@ export default function DashboardPage() {
                             Veja um resumo de suas atividades ou siga o guia rápido.
                         </CardDescription>
                     </div>
-                    <div className="text-right">
-                         <h3 className="font-semibold">Passo a passo, para não se confundir prof!</h3>
-                         <p className="text-sm text-muted-foreground">Tutorial</p>
-                    </div>
                 </div>
             </CardHeader>
             <CardContent>
-                <TutorialCard />
+                <Accordion type="single" collapsible>
+                    <AccordionItem value="tutorial">
+                        <AccordionTrigger className="text-sm font-semibold">
+                            Mostrar/Ocultar Tutorial
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-4">
+                            <TutorialCard />
+                        </AccordionContent>
+                    </AccordionItem>
+                </Accordion>
             </CardContent>
         </Card>
 
