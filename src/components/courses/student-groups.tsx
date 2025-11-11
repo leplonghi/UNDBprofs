@@ -76,7 +76,7 @@ const groupColors = [
 export function StudentGroups({
   courseId,
   classroomId,
-  classroomStudents,
+  classroomStudents: initialClassroomStudents,
   isLoading,
   activities,
 }: {
@@ -114,12 +114,12 @@ export function StudentGroups({
   
   useEffect(() => {
     async function fetchAllStudentData() {
-      if (isLoading || classroomStudents.length === 0 || !firestore) {
+      if (isLoading || initialClassroomStudents.length === 0 || !firestore) {
         setIsStudentDataLoading(!isLoading);
         return;
       }
       setIsStudentDataLoading(true);
-      const studentIds = classroomStudents.map(cs => cs.studentId);
+      const studentIds = initialClassroomStudents.map(cs => cs.studentId);
       
       const studentPromises = [];
       // Firestore 'in' query limit is 30
@@ -143,7 +143,16 @@ export function StudentGroups({
       setIsStudentDataLoading(false);
     }
     fetchAllStudentData();
-  }, [classroomStudents, isLoading, firestore]);
+  }, [initialClassroomStudents, isLoading, firestore]);
+
+  const classroomStudents = useMemo(() => {
+    if (Object.keys(allStudentsData).length === 0) return initialClassroomStudents;
+    return initialClassroomStudents.filter(cs => {
+        const studentData = allStudentsData[cs.studentId];
+        return studentData && !studentData.email.endsWith('@undb.edu.br');
+    })
+  }, [initialClassroomStudents, allStudentsData]);
+
 
   useEffect(() => {
     if (isLoading || isStudentDataLoading || !classroomStudents) return;
@@ -175,17 +184,16 @@ export function StudentGroups({
     const studentGroups = groups.map(group => {
       const members = classroomStudents
         .filter(cs => cs.groupId === group.id)
-        .map(cs => cs.id)
-        .sort((a, b) => (allStudentsData[a]?.name || '').localeCompare(allStudentsData[b]?.name || ''));
+        .sort((a, b) => (allStudentsData[a.studentId]?.name || '').localeCompare(allStudentsData[b.studentId]?.name || ''));
 
-      members.forEach(id => allCsIdsInGroups.add(id));
-      return { ...group, members };
+      members.forEach(cs => allCsIdsInGroups.add(cs.id));
+      return { ...group, members: members.map(m => m.id) };
     }).sort((a,b) => a.name.localeCompare(b.name));
 
     const ungroupedStudents = classroomStudents
       .filter(cs => !allCsIdsInGroups.has(cs.id))
       .map(cs => cs.id)
-      .sort((a,b) => (allStudentsData[a]?.name || '').localeCompare(allStudentsData[b]?.name || ''));
+      .sort((a,b) => (allStudentsData[classroomStudents.find(cs => cs.id === a)?.studentId || '']?.name || '').localeCompare(allStudentsData[classroomStudents.find(cs => cs.id === b)?.studentId || '']?.name || ''));
 
     return { studentGroups, ungroupedStudents };
 
@@ -882,7 +890,6 @@ export function StudentGroups({
             </div>
         ) : (
             <Accordion type="multiple" className="w-full">
-              {/* This logic is now simplified and incorrect, needs fixing if mobile view is complex */}
               {(filteredData as ClassroomStudent[]).map((cs) => {
                 const student = allStudentsData[cs.studentId];
                 if (!student) return null;
