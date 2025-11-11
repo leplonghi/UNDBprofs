@@ -155,10 +155,10 @@ function CourseInformation({
 
         <div>
             <h2 className="text-center font-bold text-lg bg-gray-200 dark:bg-gray-700 py-2 rounded-t-lg border border-b-0">MATRIZ DE COMPETÊNCIAS</h2>
-            <div className="border border-b-0">
-                <table className="w-full text-sm">
+            <div className="border">
+                 <table className="w-full text-sm">
                     <tbody>
-                        <tr>
+                        <tr className='border-b'>
                             <td className="p-2 w-1/2 border-r align-top">
                                 <h3 className="font-bold mb-2">EMENTA</h3>
                                 <p className="text-muted-foreground whitespace-pre-wrap">{course.syllabus}</p>
@@ -170,29 +170,28 @@ function CourseInformation({
                         </tr>
                     </tbody>
                 </table>
+                {course.competencyMatrix && course.competencyMatrix.length > 0 && (
+                    <Accordion type="multiple" className="w-full" defaultValue={['comp-0']}>
+                        {course.competencyMatrix.map((comp, compIndex) => (
+                            <AccordionItem key={compIndex} value={`comp-${compIndex}`} className="border-b last:border-b-0">
+                                <AccordionTrigger className="text-base font-medium px-4">{comp.competency}</AccordionTrigger>
+                                <AccordionContent className="p-4 bg-muted/20">
+                                    <div className="space-y-4">
+                                        {comp.skills.map((skill, skillIndex) => (
+                                            <div key={skillIndex}>
+                                                <h4 className="font-medium text-primary">{skill.skill}</h4>
+                                                <p className="text-sm text-muted-foreground">
+                                                    <strong>Descritores:</strong> {skill.descriptors}
+                                                </p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </AccordionContent>
+                            </AccordionItem>
+                        ))}
+                    </Accordion>
+                )}
             </div>
-
-            {course.competencyMatrix && course.competencyMatrix.length > 0 && (
-                <Accordion type="multiple" className="w-full border" defaultValue={['comp-0']}>
-                    {course.competencyMatrix.map((comp, compIndex) => (
-                        <AccordionItem key={compIndex} value={`comp-${compIndex}`} className="border-b last:border-b-0">
-                            <AccordionTrigger className="text-base font-medium px-4">{comp.competency}</AccordionTrigger>
-                            <AccordionContent className="p-4 bg-muted/20">
-                                <div className="space-y-4">
-                                    {comp.skills.map((skill, skillIndex) => (
-                                        <div key={skillIndex}>
-                                            <h4 className="font-medium text-primary">{skill.skill}</h4>
-                                            <p className="text-sm text-muted-foreground">
-                                                <strong>Descritores:</strong> {skill.descriptors}
-                                            </p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </AccordionContent>
-                        </AccordionItem>
-                    ))}
-                </Accordion>
-            )}
         </div>
 
         {groupedSchedule && groupedSchedule.length > 0 && (
