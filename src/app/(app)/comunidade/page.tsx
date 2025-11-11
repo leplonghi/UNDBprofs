@@ -86,7 +86,7 @@ const CelebrationsTab = () => (
 const CoffeeChatTab = () => (
   <Card>
     <CardHeader>
-      <CardTitle>Café das Ideias</CardTitle>
+      <CardTitle>Café Pedagógico</CardTitle>
       <CardDescription>Um espaço para conversas e trocas de experiências informais.</CardDescription>
     </CardHeader>
     <CardContent className="space-y-4">
@@ -126,7 +126,7 @@ export default function CommunityPage() {
           </TabsTrigger>
           <TabsTrigger value="forum" className="flex flex-col sm:flex-row gap-2 py-2">
             <Coffee className="h-5 w-5" />
-            <span>Café das Ideias</span>
+            <span>Café Pedagógico</span>
           </TabsTrigger>
         </TabsList>
         <TabsContent value="ideas" className="mt-6">
