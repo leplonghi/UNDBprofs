@@ -72,6 +72,44 @@ function CourseInformation({
   const router = useRouter();
   const { user } = useUser();
 
+   const learningUnitsWithDetails = useMemo(() => {
+    if (!course.learningUnits || !course.competencyMatrix) return [];
+
+    return course.learningUnits.map((unit, index) => {
+        const competency = course.competencyMatrix?.[index];
+        const skills = competency?.skills || [];
+        
+        let chHabilidades = 0;
+        const descritoresComCH = skills.flatMap(skill => {
+            const lines = skill.descriptors.split('\n');
+            return lines.map(line => {
+                const match = line.match(/\s\((\d+)h\)$/);
+                const ch = match ? parseInt(match[1], 10) : 0;
+                chHabilidades += ch;
+                return {
+                    text: match ? line.replace(match[0], '') : line,
+                    ch: ch > 0 ? `${ch}h` : ''
+                };
+            });
+        });
+        
+        return {
+            unitName: unit.name,
+            habilidades: competency?.competency || '',
+            chHabilidades: `${chHabilidades}h`,
+            descritores: descritoresComCH,
+        };
+    });
+  }, [course]);
+
+  const totalCH = useMemo(() => {
+    return learningUnitsWithDetails.reduce((total, unit) => {
+        const chValue = parseInt(unit.chHabilidades, 10);
+        return total + (isNaN(chValue) ? 0 : chValue);
+    }, 0);
+  }, [learningUnitsWithDetails]);
+
+
   return (
     <Card>
       <CardHeader>
@@ -129,49 +167,51 @@ function CourseInformation({
                         </tr>
                     </tbody>
                 </table>
-                 {course.competencyMatrix && course.competencyMatrix.length > 0 && (
-                    <div>
-                        {course.competencyMatrix.map((comp, compIndex) => (
-                            <Accordion key={compIndex} type="single" collapsible className="w-full mt-2">
-                                <AccordionItem value={`comp-${compIndex}`} >
-                                    <AccordionTrigger className="text-base font-medium bg-muted/50 px-4 rounded-t-md">{comp.competency}</AccordionTrigger>
-                                    <AccordionContent className="p-4 border border-t-0 rounded-b-md">
-                                        <div className="space-y-4">
-                                            {comp.skills.map((skill, skillIndex) => (
-                                                <div key={skillIndex}>
-                                                    <h4 className="font-medium">{skill.skill}</h4>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        <strong>Descritores:</strong> {skill.descriptors}
-                                                    </p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </AccordionContent>
-                                </AccordionItem>
-                            </Accordion>
-                        ))}
-                     </div>
-                )}
             </div>
         </div>
+
+        <div>
+            <Table className="border">
+                 <TableHeader className="bg-gray-200 dark:bg-gray-700">
+                    <TableRow>
+                        <TableHead className="w-1/4 font-bold text-foreground">UNIDADE DE APRENDIZAGEM</TableHead>
+                        <TableHead className="w-1/4 font-bold text-foreground">HABILIDADES</TableHead>
+                        <TableHead className="w-[80px] font-bold text-foreground">CH</TableHead>
+                        <TableHead className="w-2/4 font-bold text-foreground">DESCRITORES</TableHead>
+                        <TableHead className="w-[80px] font-bold text-foreground">CH</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {learningUnitsWithDetails.map((unit, unitIndex) => (
+                        <React.Fragment key={unitIndex}>
+                            {unit.descritores.map((descritor, descritorIndex) => (
+                                <TableRow key={`${unitIndex}-${descritorIndex}`}>
+                                    {descritorIndex === 0 && (
+                                        <>
+                                            <TableCell rowSpan={unit.descritores.length} className="border-r align-top font-semibold">{unit.unitName}</TableCell>
+                                            <TableCell rowSpan={unit.descritores.length} className="border-r align-top whitespace-pre-wrap">{unit.habilidades}</TableCell>
+                                            <TableCell rowSpan={unit.descritores.length} className="border-r align-top text-center">{unit.chHabilidades}</TableCell>
+                                        </>
+                                    )}
+                                    <TableCell className="border-r">{descritor.text}</TableCell>
+                                    <TableCell className="text-center">{descritor.ch}</TableCell>
+                                </TableRow>
+                            ))}
+                             <TableRow className="bg-muted/30">
+                                <TableCell colSpan={5} className="h-2"></TableCell>
+                            </TableRow>
+                        </React.Fragment>
+                    ))}
+                    <TableRow className="bg-gray-200 dark:bg-gray-700 font-bold">
+                        <TableCell colSpan={2} className="text-right">TOTAL CH</TableCell>
+                        <TableCell className="text-center">{totalCH}H</TableCell>
+                        <TableCell></TableCell>
+                        <TableCell className="text-center">{totalCH}H</TableCell>
+                    </TableRow>
+                </TableBody>
+            </Table>
+        </div>
         
-        {course.learningUnits && course.learningUnits.length > 0 && (
-             <div>
-                <h2 className="text-center font-bold text-lg bg-gray-200 dark:bg-gray-700 py-2 rounded-t-lg border border-b-0">UNIDADES DE APRENDIZAGEM</h2>
-                <div className="border p-4">
-                    <Accordion type="multiple" className="w-full">
-                        {course.learningUnits.map((unit, index) => (
-                            <AccordionItem value={`unit-${index}`} key={index}>
-                                <AccordionTrigger>{unit.name}</AccordionTrigger>
-                                <AccordionContent>
-                                    <p className="text-muted-foreground whitespace-pre-wrap">{unit.content}</p>
-                                </AccordionContent>
-                            </AccordionItem>
-                        ))}
-                    </Accordion>
-                </div>
-            </div>
-        )}
 
         {course.thematicTree && course.thematicTree.length > 0 && (
              <div className="space-y-4">
