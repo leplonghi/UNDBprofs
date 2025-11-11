@@ -121,18 +121,16 @@ export default function DashboardPage() {
         <Card>
             <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="tutorial" className="border-b-0">
-                    <CardHeader>
-                        <div className="flex justify-between items-start">
-                            <div className="flex-grow">
-                                <CardTitle className="text-xl text-primary">{welcomeMessage}</CardTitle>
-                                <CardDescription>
-                                    Veja um resumo de suas atividades ou siga o guia rápido.
-                                </CardDescription>
-                            </div>
-                            <AccordionTrigger className="text-sm font-semibold p-2 -mr-2 -mt-1">
-                                Mostrar/Ocultar Tutorial
-                            </AccordionTrigger>
+                    <CardHeader className="flex-row items-start justify-between">
+                         <div>
+                            <CardTitle className="text-xl text-primary">{welcomeMessage}</CardTitle>
+                            <CardDescription>
+                                Veja um resumo de suas atividades ou siga o guia rápido.
+                            </CardDescription>
                         </div>
+                        <AccordionTrigger className="text-sm font-semibold p-2 -mr-2 -mt-1 ml-4 whitespace-nowrap">
+                            Mostrar/Ocultar Tutorial
+                        </AccordionTrigger>
                     </CardHeader>
                     <AccordionContent className="px-6 pb-4">
                         <TutorialCard />
