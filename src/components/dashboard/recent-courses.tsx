@@ -104,21 +104,33 @@ export function RecentCourses({ courses, classroomsByCourse, isLoading }: Recent
                     const semester = course.classroom?.semester || '';
                     const [year, semesterNumber] = semester.split('.');
                     return (
-                        <TableRow key={course.id} className={cn(!course.isActive && "text-muted-foreground")}>
+                        <TableRow
+                          key={course.id}
+                          className={cn(!course.isActive && 'text-muted-foreground')}
+                        >
                           <TableCell>
-                            <Link href={`/disciplinas/${course.id}`} className="font-medium hover:underline">
-                                {course.name}
+                            <Link
+                              href={`/disciplinas/${course.id}`}
+                              className="font-medium hover:underline"
+                            >
+                              {course.name}
                             </Link>
                           </TableCell>
                           <TableCell>
                             {year ? (
-                                <Badge variant={course.isActive ? "secondary" : "outline"}>{year}</Badge>
+                              <Badge variant={course.isActive ? 'secondary' : 'outline'}>
+                                {year}
+                              </Badge>
                             ) : (
-                                <span className="text-muted-foreground">N/A</span>
+                              <span className="text-muted-foreground">N/A</span>
                             )}
                           </TableCell>
                           <TableCell className="text-right">
-                              {semesterNumber ? `${semesterNumber}º` : <span className="text-muted-foreground">N/A</span>}
+                            {semesterNumber ? (
+                              `${semesterNumber}º`
+                            ) : (
+                              <span className="text-muted-foreground">N/A</span>
+                            )}
                           </TableCell>
                         </TableRow>
                     );
