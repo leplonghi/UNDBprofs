@@ -97,8 +97,8 @@ const prompt = ai.definePrompt({
   1.  **Extract Key Fields**: Identify and extract the following fields from the document.
       - courseName: The name of the discipline, which is located in the "UNIDADE CURRICULAR" field.
       - courseCode: The code of the discipline. If not present, leave it empty.
-      - syllabus: The "Ementa". Transcribe it exactly as it appears. It's a general summary of the course.
-      - objectives: The "Objetivos". **IMPORTANT**: This information is often found as a subsection *within* the "Ementa" field itself. Look for a sub-heading like "Objetivos:" or similar inside the Ementa text. If you find it, extract only that part for this field. If there is no separate "Objetivos" section, you MUST leave this field empty.
+      - syllabus: The "Ementa". Transcribe it exactly as it appears, word-for-word. It's a general summary of the course. **Crucially, if the "Ementa" section contains a sub-section titled "Objetivos", you must include that text as part of this 'syllabus' field.** Do not separate it.
+      - objectives: **IMPORTANT**: This field should ONLY be populated if there is a completely separate, top-level section in the document titled "Objetivos". If the objectives are listed inside the "Ementa" block, this 'objectives' field MUST be left empty, as the content will be part of the 'syllabus' field.
       - competencies: The general text block under the title "COMPETÊNCIAS". Transcribe it exactly as it appears.
       - workload: The "Carga Horária".
       - semester: The "Semestre".
