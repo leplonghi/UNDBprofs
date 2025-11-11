@@ -104,22 +104,28 @@ export function RecentCourses({ courses, classroomsByCourse, isLoading }: Recent
                 </TableCell>
               </TableRow>
             ) : (
-              recentCourses.map((course) => (
-                  <TableRow key={course.id} className={cn(!course.isActive && "text-muted-foreground")}>
-                    <TableCell>
-                      <Link href={`/disciplinas/${course.id}`} className="font-medium hover:underline">
-                          {course.name}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={course.isActive ? "secondary" : "outline"}>{course.code}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                        {course.classroom?.semester ?? <span className="text-muted-foreground">N/A</span>}
-                    </TableCell>
-                  </TableRow>
-                )
-              )
+              recentCourses.map((course) => {
+                  const year = course.classroom?.semester?.split('.')[0];
+                  return (
+                    <TableRow key={course.id} className={cn(!course.isActive && "text-muted-foreground")}>
+                      <TableCell>
+                        <Link href={`/disciplinas/${course.id}`} className="font-medium hover:underline">
+                            {course.name}
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        {year ? (
+                            <Badge variant={course.isActive ? "secondary" : "outline"}>{year}</Badge>
+                        ) : (
+                            <span className="text-muted-foreground">N/A</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                          {course.classroom?.semester ?? <span className="text-muted-foreground">N/A</span>}
+                      </TableCell>
+                    </TableRow>
+                  )
+                })
             )}
           </TableBody>
         </Table>
