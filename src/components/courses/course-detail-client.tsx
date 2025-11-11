@@ -18,14 +18,6 @@ import {
 } from '@/firebase';
 import type { Course, Classroom, ClassScheduleItem, LearningUnit, Competency } from '@/types';
 import { doc, collection, query } from 'firebase/firestore';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -162,31 +154,33 @@ function CourseInformation({
             </div>
         </div>
         
-        <div className="space-y-4 rounded-lg border p-4">
-            <h2 className="text-center font-bold text-lg bg-gray-200 dark:bg-gray-700 py-2 rounded-t-md -mx-4 -mt-4 mb-4">PLANO DE ENSINO</h2>
-            <div className="border">
-                <div className='p-2 border-b'>
-                    <span className="font-bold">CURSO:</span> ARQUITETURA E URBANISMO
-                </div>
-                 <div className="grid grid-cols-3 border-b">
-                    <div className="col-span-2 p-2 border-r"><span className="font-bold">UNIDADE CURRICULAR:</span> {course.name}</div>
-                    <div className="p-2"><span className="font-bold">CARGA HORÁRIA:</span> {classroom?.workload}</div>
-                </div>
-                <div className="grid grid-cols-3 border-b">
-                    <div className="col-span-2 p-2 border-r"><span className="font-bold">PROFESSOR:</span> {user?.displayName}</div>
-                    <div className="p-2"><span className="font-bold">SEMESTRE:</span> {classroom?.semester}</div>
-                </div>
-                <div className="grid grid-cols-2">
-                    <div className="p-2 border-r">
-                        <h3 className="font-bold text-center mb-2">EMENTA</h3>
-                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{course.syllabus}</p>
-                    </div>
-                    <div className="p-2">
-                        <h3 className="font-bold text-center mb-2">COMPETÊNCIAS</h3>
-                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{course.competencies}</p>
-                    </div>
-                </div>
-            </div>
+        <div className="space-y-0 rounded-lg border overflow-hidden">
+             <h2 className="text-center font-bold text-lg bg-gray-200 dark:bg-gray-700 py-2">PLANO DE ENSINO</h2>
+            <table className="w-full text-sm border-collapse">
+                <tbody>
+                    <tr className="border-b">
+                        <td className="p-2" colSpan={3}><span className="font-bold">CURSO:</span> ARQUITETURA E URBANISMO</td>
+                    </tr>
+                    <tr className="border-b">
+                        <td className="p-2 border-r w-8/12" colSpan={2}><span className="font-bold">UNIDADE CURRICULAR:</span> {course.name}</td>
+                        <td className="p-2 w-4/12"><span className="font-bold">CARGA HORÁRIA:</span> {classroom?.workload}</td>
+                    </tr>
+                    <tr className="border-b">
+                        <td className="p-2 border-r w-8/12" colSpan={2}><span className="font-bold">PROFESSOR:</span> {user?.displayName}</td>
+                        <td className="p-2 w-4/12"><span className="font-bold">SEMESTRE:</span> {classroom?.semester}</td>
+                    </tr>
+                    <tr>
+                        <td className="p-2 border-r w-1/2 align-top">
+                            <h3 className="font-bold text-center mb-2">EMENTA</h3>
+                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{course.syllabus}</p>
+                        </td>
+                        <td className="p-2 w-1/2 align-top" colSpan={2}>
+                             <h3 className="font-bold text-center mb-2">COMPETÊNCIAS</h3>
+                             <p className="text-sm text-muted-foreground whitespace-pre-wrap">{course.competencies}</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
         {groupedSchedule && groupedSchedule.length > 0 && (
@@ -261,46 +255,46 @@ function CourseInformation({
           <div>
             <h3 className="font-semibold mb-2">Bibliografia</h3>
             <div className="rounded-md border">
-              <Table>
-                <TableBody>
+              <table className="w-full">
+                <tbody className='text-sm'>
                   {course.bibliography.basic && (
-                    <TableRow>
-                      <TableCell className="w-[150px] font-medium text-muted-foreground bg-muted/50 align-top">
+                    <tr className='border-b'>
+                      <td className="w-[150px] p-2 font-medium text-muted-foreground bg-muted/50 align-top">
                         Básica
-                      </TableCell>
-                      <TableCell>
-                        <pre className="whitespace-pre-wrap font-sans text-sm">
+                      </td>
+                      <td className='p-2'>
+                        <pre className="whitespace-pre-wrap font-sans">
                           {course.bibliography.basic}
                         </pre>
-                      </TableCell>
-                    </TableRow>
+                      </td>
+                    </tr>
                   )}
                   {course.bibliography.complementary && (
-                    <TableRow>
-                      <TableCell className="w-[150px] font-medium text-muted-foreground bg-muted/50 align-top">
+                    <tr className='border-b'>
+                      <td className="w-[150px] p-2 font-medium text-muted-foreground bg-muted/50 align-top">
                         Complementar
-                      </TableCell>
-                      <TableCell>
-                        <pre className="whitespace-pre-wrap font-sans text-sm">
+                      </td>
+                      <td className='p-2'>
+                        <pre className="whitespace-pre-wrap font-sans">
                           {course.bibliography.complementary}
                         </pre>
-                      </TableCell>
-                    </TableRow>
+                      </td>
+                    </tr>
                   )}
                   {course.bibliography.recommended && (
-                    <TableRow>
-                      <TableCell className="w-[150px] font-medium text-muted-foreground bg-muted/50 align-top">
+                    <tr>
+                      <td className="w-[150px] p-2 font-medium text-muted-foreground bg-muted/50 align-top">
                         Recomendada
-                      </TableCell>
-                      <TableCell>
-                        <pre className="whitespace-pre-wrap font-sans text-sm">
+                      </td>
+                      <td className='p-2'>
+                        <pre className="whitespace-pre-wrap font-sans">
                           {course.bibliography.recommended}
                         </pre>
-                      </TableCell>
-                    </TableRow>
+                      </td>
+                    </tr>
                   )}
-                </TableBody>
-              </Table>
+                </tbody>
+              </table>
             </div>
           </div>
         )}
