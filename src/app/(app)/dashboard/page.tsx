@@ -98,9 +98,9 @@ export default function DashboardPage() {
   const isLoading = isLoadingCourses || isLoadingEvents;
   
   const welcomeMessage = useMemo(() => {
-      if (!user) return 'Bem-vindo!';
+      if (!user) return 'Boas-vindas!';
       const firstName = user.displayName?.split(' ')[0] || 'Professor(a)';
-      return `Bem-vindo(a) de volta, ${firstName}!`;
+      return `Boas-vindas, ${firstName}!`;
   }, [user]);
 
   return (
