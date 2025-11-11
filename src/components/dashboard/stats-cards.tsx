@@ -32,8 +32,9 @@ export function StatsCards({ totalDisciplinas, totalTurmas, totalAlunos, totalAt
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
             {Array.from({ length: 4 }).map((_, index) => (
                 <Card key={index}>
-                    <CardHeader>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <Skeleton className="h-4 w-2/3" />
+                        <Skeleton className="h-6 w-6 rounded-full" />
                     </CardHeader>
                     <CardContent>
                         <Skeleton className="h-7 w-1/3" />
@@ -51,20 +52,20 @@ export function StatsCards({ totalDisciplinas, totalTurmas, totalAlunos, totalAt
         const colorClass = iconMap[stat.title as keyof typeof iconMap].color;
         return (
           <Card key={stat.title} className="hover:shadow-lg transition-shadow duration-300">
-            <CardHeader className="pb-2">
-               <div className={cn("p-3 rounded-full w-fit", colorClass)}>
-                 <Icon className="h-6 w-6" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+               <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+               <div className={cn("p-2 rounded-md", colorClass)}>
+                 <Icon className="h-5 w-5" />
                </div>
             </CardHeader>
             <CardContent>
-                <p className="text-sm text-muted-foreground">{stat.title}</p>
-                <p className="text-2xl font-bold">
+                <div className="text-2xl font-bold">
                     {stat.value === null ? (
                         <span className="text-muted-foreground animate-pulse">...</span>
                     ) : (
                         stat.value
                     )}
-                </p>
+                </div>
             </CardContent>
           </Card>
         );
