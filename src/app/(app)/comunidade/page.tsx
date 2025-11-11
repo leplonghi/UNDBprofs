@@ -3,7 +3,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BrainCircuit, CalendarClock, PartyPopper, Coffee, Library, Handshake, Users2 } from 'lucide-react';
+import { BrainCircuit, CalendarClock, PartyPopper, Coffee, Library, Users2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useIdeas } from '@/hooks/use-ideas';
 import { IdeaCard } from '@/components/community/idea-card';
@@ -11,6 +11,8 @@ import { AddIdeaDialog } from '@/components/community/add-idea-dialog';
 import { IdeaDetailsSheet } from '@/components/community/idea-details-sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Idea } from '@/types';
+import { MaterialsTab } from '@/components/community/materials-tab';
+
 
 const IdeasClubTab = () => {
     const [isAddIdeaOpen, setIsAddIdeaOpen] = React.useState(false);
@@ -52,21 +54,6 @@ const IdeasClubTab = () => {
         </>
     );
 };
-
-const MaterialsTab = () => (
-  <Card>
-    <CardHeader>
-      <CardTitle>Boas Práticas & Materiais</CardTitle>
-      <CardDescription>Uma biblioteca colaborativa de materiais para enriquecer suas aulas.</CardDescription>
-    </CardHeader>
-    <CardContent className="space-y-4">
-        <Button>Compartilhar Material</Button>
-        <div className="border-2 border-dashed rounded-lg p-8 text-center text-muted-foreground">
-            <p>Em breve: Biblioteca de materiais, sugestões e busca avançada.</p>
-        </div>
-    </CardContent>
-  </Card>
-);
 
 const CoffeeChatTab = () => (
   <Card>
@@ -128,7 +115,7 @@ export default function CommunityPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="ideas" className="w-full">
+      <Tabs defaultValue="materials" className="w-full">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-5 h-auto">
           <TabsTrigger value="materials" className="flex flex-col sm:flex-row gap-2 py-2">
             <Library className="h-5 w-5" />

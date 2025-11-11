@@ -54,7 +54,7 @@ export function DocumentsTable() {
   const documentsQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return query(
-      collection(firestore, `professors/${user.uid}/documents`),
+      collection(firestore, `documents`),
       orderBy('createdAt', 'desc')
     );
   }, [user, firestore]);
@@ -82,7 +82,7 @@ export function DocumentsTable() {
     setIsDeleting(true);
     const docRef = doc(
       firestore,
-      `professors/${user.uid}/documents/${docToDelete.id}`
+      `documents/${docToDelete.id}`
     );
 
     try {
@@ -139,7 +139,7 @@ export function DocumentsTable() {
             documents.map((document) => (
               <TableRow key={document.id}>
                 <TableCell>
-                  {document.documentType === 'link' ? (
+                  {document.uploadType === 'link' ? (
                     <Link className="h-5 w-5 text-muted-foreground" />
                   ) : (
                     <File className="h-5 w-5 text-muted-foreground" />
@@ -156,9 +156,9 @@ export function DocumentsTable() {
                   </a>
                 </TableCell>
                 <TableCell>
-                  {document.courseId && coursesById[document.courseId] ? (
+                  {document.course && coursesById[document.course] ? (
                     <Badge variant="secondary">
-                      {coursesById[document.courseId]}
+                      {coursesById[document.course]}
                     </Badge>
                   ) : (
                     <span className="text-muted-foreground">N/A</span>

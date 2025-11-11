@@ -11,6 +11,7 @@
  * - /professors/{professorId}: Stores professor profiles, where professorId MUST match the authenticated user's UID.
  * - /professors/{professorId}/...: Subcollections for courses, classrooms, etc., owned by the professor.
  * - /students/{studentId}: Stores student profiles.
+ * - /documents/{documentId}: Stores community-shared documents.
  * - /ideas/{ideaId}, /communityEvents/{eventId}, etc.: Community module collections.
  *
  * Key Security Decisions:
@@ -89,14 +90,6 @@ service cloud.firestore {
     match /professors/{professorId}/academicEvents/{academicEventId} {
         allow read, write: if isOwner(professorId);
     }
-    
-    /**
-     * @description
-     * Documents subcollection for a professor.
-     */
-    match /professors/{professorId}/documents/{documentId} {
-      allow read, write: if isOwner(professorId);
-    }
 
     /**
      * @description
@@ -111,6 +104,15 @@ service cloud.firestore {
     // Community Module Rules
     // General principle: Read access for all professors, write access restricted to owners.
     // =================================================================
+
+    /**
+     * @description Documents collection (for community materials).
+     */
+    match /documents/{documentId} {
+      allow read: if isProfessor();
+      allow create: if isProfessor() && request.resource.data.professorId == request.auth.uid;
+      allow update, delete: if isProfessor() && resource.data.professorId == request.auth.uid;
+    }
 
     /**
      * @description Ideas collection.

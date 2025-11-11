@@ -140,7 +140,7 @@ export function AddDocumentDialog({
 
     const docCollectionRef = collection(
       firestore,
-      `professors/${user.uid}/documents`
+      `documents`
     );
 
     try {
@@ -181,14 +181,20 @@ export function AddDocumentDialog({
         });
       }
 
-      const documentData: Omit<DocumentType, 'id'> = {
+      const documentData = {
         professorId: user.uid,
-        courseId: courseId || null,
+        course: courseId || null,
         name: documentName,
         fileUrl,
-        documentType,
+        uploadType: documentType,
         ...fileMetadata,
         createdAt: new Date().toISOString(),
+        authorName: user.displayName,
+        description: "",
+        discipline: "",
+        documentType: "outro",
+        views: 0,
+        favorites: 0
       };
 
       await addDoc(docCollectionRef, documentData);

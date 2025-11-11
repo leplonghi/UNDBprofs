@@ -99,16 +99,25 @@ export interface ExtractedStudent {
     confidence: number;
 }
 
+export type DocumentType = 'aula expositiva' | 'atividade em grupo' | 'avaliação' | 'projeto' | 'estudo de caso' | 'extensão' | 'guia' | 'outro';
+
+
 export interface Document {
     id: string;
     professorId: string;
-    courseId?: string | null; // Can be unassociated
+    authorName: string;
+    course: string;
+    discipline: string;
+    documentType: DocumentType;
+    uploadType: 'file' | 'link';
     name: string;
+    description: string;
     fileUrl: string;
-    documentType: 'file' | 'link';
     fileType?: string; // e.g., 'application/pdf'
     fileName?: string; // e.g., 'aula-1.pdf'
     createdAt: string; // ISO 8601 string
+    views: number;
+    favorites: number;
 }
 
 export interface AcademicEvent {
