@@ -67,6 +67,7 @@ const formSchema = z.object({
   syllabus: z.string().optional(),
   competencies: z.string().optional(),
   workload: z.string().optional(),
+  year: z.string().optional(),
   semester: z.string().optional(),
   classType: z.enum(['Integradora', 'Modular']).optional(),
   competencyMatrix: z.array(competencySchema).optional(),
@@ -139,6 +140,7 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
       syllabus: '',
       competencies: '',
       workload: '',
+      year: '',
       semester: '',
       classType: 'Integradora',
       competencyMatrix: [],
@@ -164,6 +166,7 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
           recommended: '',
         },
         workload: data.workload,
+        year: data.year,
         semester: data.semester,
         classType: data.classType,
         classSchedule: data.classSchedule || [],
@@ -186,6 +189,7 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
           recommended: '',
         },
         workload: classroom.workload,
+        year: classroom.year,
         semester: classroom.semester,
         classType: classroom.classType,
         classSchedule: classroom.classSchedule || [],
@@ -228,6 +232,7 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
     };
 
     const updatedClassroomData: Partial<Classroom> = {
+      year: values.year,
       semester: values.semester,
       workload: values.workload,
       classType: values.classType,
@@ -377,7 +382,20 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
                             )}
                             />
                         </div>
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+                           <FormField
+                          control={form.control}
+                          name="year"
+                          render={({ field }) => (
+                              <FormItem>
+                              <FormLabel>Ano</FormLabel>
+                              <FormControl>
+                                  <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                              </FormItem>
+                          )}
+                          />
                           <FormField
                           control={form.control}
                           name="semester"

@@ -63,6 +63,7 @@ export interface Classroom {
   id: string;
   courseId: string;
   name: string;
+  year: string;
   semester: string;
   workload: string;
   classType: ClassType;
@@ -193,5 +194,3 @@ export interface ForumReply {
     text: string;
     createdAt: string; // ISO 8601
 }
-
-    

@@ -45,6 +45,7 @@ const formSchema = z.object({
   syllabus: z.string().optional(),
   competencies: z.string().optional(),
   workload: z.string().optional(),
+  year: z.string().optional(),
   semester: z.string().optional(),
   classType: z.enum(['Integradora', 'Modular']).optional(),
   competencyMatrix: z.array(competencySchema).optional(),
@@ -83,6 +84,7 @@ export function ImportForm() {
       syllabus: '',
       competencies: '',
       workload: '',
+      year: '',
       semester: '',
       classType: 'Integradora',
       competencyMatrix: [],
@@ -126,6 +128,7 @@ export function ImportForm() {
         syllabus: extractedData.syllabus,
         competencies: extractedData.competencies,
         workload: extractedData.workload,
+        year: extractedData.year,
         semester: extractedData.semester,
         competencyMatrix: extractedData.competencyMatrix || [],
         learningUnits: extractedData.learningUnits || [],
@@ -179,8 +182,9 @@ export function ImportForm() {
     const classroomData: Omit<Classroom, 'classSchedule'> & { classSchedule: ClassScheduleItem[] } = {
         id: classroomId,
         courseId: courseId,
-        name: `Turma de ${values.semester || 'Semestre indefinido'}`, // e.g., "Turma de 2025.1"
-        semester: values.semester || 'N/A',
+        name: `Turma de ${values.year || 'ano'}.${values.semester || 'semestre'}`, // e.g., "Turma de 2025.1"
+        year: values.year || '',
+        semester: values.semester || '',
         workload: values.workload || 'N/A',
         classType: classType,
         classSchedule: values.classSchedule ?? [],
@@ -413,7 +417,20 @@ export function ImportForm() {
                         <AccordionItem value="item-2" className="border rounded-lg">
                            <AccordionTrigger className="px-6 text-lg font-semibold">Dados da Turma e Cronograma</AccordionTrigger>
                            <AccordionContent className="px-6 pt-6 space-y-6">
-                                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+                                 <FormField
+                                    control={form.control}
+                                    name="year"
+                                    render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Ano</FormLabel>
+                                        <FormControl>
+                                        <Input {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                    )}
+                                />
                                 <FormField
                                     control={form.control}
                                     name="semester"
@@ -447,9 +464,6 @@ export function ImportForm() {
                                             {detectedClassType}
                                         </Badge>
                                     </div>
-                                    <p className='text-sm text-muted-foreground'>
-                                        A IA detectou este tipo e aplicará o preset de avaliação correspondente.
-                                    </p>
                                 </div>
                                 </div>
                                 <ClassScheduleEditor control={form.control} />

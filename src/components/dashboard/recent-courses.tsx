@@ -33,9 +33,12 @@ export function RecentCourses({ courses, classroomsByCourse, isLoading }: Recent
   const recentCourses = useMemo(() => {
     if (!courses) return [];
 
-    const isSemesterActive = (semester: string): boolean => {
-        if (!semester || !semester.includes('.')) return false;
-        const [year, sem] = semester.split('.').map(Number);
+    const isSemesterActive = (classroom: Classroom): boolean => {
+        if (!classroom || !classroom.year || !classroom.semester) return false;
+        
+        const year = parseInt(classroom.year, 10);
+        const sem = parseInt(classroom.semester, 10);
+
         if (isNaN(year) || isNaN(sem)) return false;
 
         const today = new Date();
@@ -50,8 +53,7 @@ export function RecentCourses({ courses, classroomsByCourse, isLoading }: Recent
     return courses
       .map(course => {
         const classroom = classroomsByCourse[course.id]?.[0];
-        const semester = classroom?.semester || '';
-        const isActive = isSemesterActive(semester);
+        const isActive = classroom ? isSemesterActive(classroom) : false;
         
         return {
           ...course,
@@ -62,7 +64,13 @@ export function RecentCourses({ courses, classroomsByCourse, isLoading }: Recent
       .sort((a, b) => {
         if (a.isActive && !b.isActive) return -1;
         if (!a.isActive && b.isActive) return 1;
-        return (b.classroom?.semester || '0').localeCompare(a.classroom?.semester || '0');
+        // Fallback sort by year then semester if available
+        const yearA = a.classroom?.year || '0';
+        const yearB = b.classroom?.year || '0';
+        const semA = a.classroom?.semester || '0';
+        const semB = b.classroom?.semester || '0';
+        if (yearA !== yearB) return yearB.localeCompare(yearA);
+        return semB.localeCompare(semA);
       })
       .slice(0, 5);
   }, [courses, classroomsByCourse]);
@@ -101,8 +109,8 @@ export function RecentCourses({ courses, classroomsByCourse, isLoading }: Recent
               </TableRow>
             ) : (
               recentCourses.map((course) => {
-                    const semester = course.classroom?.semester || '';
-                    const [year, semesterNumber] = semester.split('.');
+                    const year = course.classroom?.year;
+                    const semesterNumber = course.classroom?.semester;
                     return (
                         <TableRow
                           key={course.id}

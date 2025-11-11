@@ -42,7 +42,8 @@ const ImportCourseFromLessonPlanOutputSchema = z.object({
   syllabus: z.string().describe('The syllabus of the course (Ementa). Transcribe it exactly as it appears, including any "Objetivos" subsection within it.').optional(),
   competencies: z.string().describe('The general competencies of the course (Competências).').optional(),
   workload: z.string().describe('The workload of the course (Carga Horária).').optional(),
-  semester: z.string().describe('The semester of the course').optional(),
+  year: z.string().describe('The year of the course (e.g., 2025), extracted from the "SEMESTRE" field.').optional(),
+  semester: z.string().describe('The semester of the course (e.g., 1 or 2), extracted from the "SEMESTRE" field.').optional(),
   classType: z.enum(['Integradora', 'Modular']).describe('The type of the class, determined by analyzing the course content. Should be "Integradora" for project-based studio disciplines or "Modular" for others.').optional(),
   competencyMatrix: z.array(CompetencySchema).describe("The competency matrix, extracted from the table with columns 'UNIDADE DE APRENDIZAGEM', 'HABILIDADES', 'DESCRITORES'. Each item in this array corresponds to a row group in that table.").optional(),
   learningUnits: z.array(LearningUnitSchema).describe("The list of learning units (Unidades de Aprendizagem). These often correspond to the items in the 'UNIDADE DE APRENDIZAGEM' column in the main matrix.").optional(),
@@ -101,7 +102,9 @@ const prompt = ai.definePrompt({
       - syllabus: The "Ementa". Transcribe it exactly as it appears, word-for-word. It's a general summary of the course. **Crucially, if the "Ementa" section contains a sub-section titled "Objetivos", you must include that text as part of this 'syllabus' field.** Do not separate it.
       - competencies: The general text block under the title "COMPETÊNCIAS". Transcribe it exactly as it appears.
       - workload: The "Carga Horária".
-      - semester: The "Semestre".
+      - **CRITICAL**: From the "SEMESTRE" field (e.g., "2025.2"), extract the following:
+        - year: The year part (e.g., "2025").
+        - semester: The semester part (e.g., "2").
 
   2.  **Extract Competency Matrix and Learning Units (CRITICAL SECTION)**:
       - This is the most important part. Find the table or section that has columns like "UNIDADE DE APRENDIZAGEM", "HABILIDADES", "CH", and "DESCRITORES".
