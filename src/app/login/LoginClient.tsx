@@ -63,10 +63,10 @@ export default function LoginClient({ initialFrom }: LoginClientProps) {
 
         <div>
           <h1 className="text-2xl font-bold text-primary">
-            Bem-vindo ao UNDBProf
+            Bem-vindo ao UNDBProf!
           </h1>
           <p className="mt-2 text-muted-foreground">
-            Uma ferramenta de apoio criada por um professor, para professores. Não possui vínculo oficial com a UNDB.
+            Um app feito de professor para professor, pensado para organizar a rotina docente, reunir informações úteis e aproximar colegas em um só lugar. O UNDBProf não é um sistema oficial da UNDB e não substitui as plataformas institucionais — ele veio apenas para somar eficiência, praticidade e colaboração ao dia a dia acadêmico. ✨ Lembre-se: o acesso é exclusivo para contas @undb.edu.br.
           </p>
         </div>
 
