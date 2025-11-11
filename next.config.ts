@@ -21,9 +21,10 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   reactStrictMode: true,
   // Aumentar o tempo limite para ações do servidor para permitir a geração de vídeo
-  serverActions: {
-    bodySizeLimit: '4.5mb',
-    serverActionsBodySizeLimit: '4.5mb',
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '4.5mb',
+    },
   },
 };
 
