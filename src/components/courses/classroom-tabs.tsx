@@ -11,14 +11,56 @@ import { collection, query } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Users } from 'lucide-react';
+import { Users, Link, PlusCircle } from 'lucide-react';
 import { StudentUploadDialog } from '@/components/courses/student-upload-dialog';
 import { ClassroomStudentsTable } from '@/components/courses/classroom-students-table';
 import { StudentGroups } from '@/components/courses/student-groups';
 import { Badge } from '@/components/ui/badge';
 import { ClassAnalytics } from './class-analytics';
 import { ActivitySettings } from './activity-settings';
-import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../ui/card';
+
+function ResourcesTab() {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Documentos e Links</CardTitle>
+          <Button variant="outline" size="sm">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Adicionar
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <CardDescription>
+            Adicione links para avaliações, trabalhos, leituras e outros materiais importantes para a turma.
+          </CardDescription>
+          <div className="mt-4 border-2 border-dashed rounded-lg p-8 text-center text-muted-foreground">
+            <p>Nenhum documento adicionado.</p>
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Checks e Observações</CardTitle>
+          <Button variant="outline" size="sm">
+             <PlusCircle className="mr-2 h-4 w-4" />
+            Adicionar
+          </Button>
+        </CardHeader>
+        <CardContent>
+           <CardDescription>
+            Registre anotações rápidas, lembretes ou pontos de verificação importantes para esta turma.
+          </CardDescription>
+           <div className="mt-4 border-2 border-dashed rounded-lg p-8 text-center text-muted-foreground">
+            <p>Nenhuma observação registrada.</p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 
 export function ClassroomTabs({
   courseId,
@@ -88,9 +130,10 @@ export function ClassroomTabs({
       />
       <div className="flex flex-col gap-6">
         <Tabs defaultValue="students" className="w-full">
-           <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
+           <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 h-auto">
             <TabsTrigger value="students">Alunos</TabsTrigger>
             <TabsTrigger value="grades">Lançamento de Notas</TabsTrigger>
+            <TabsTrigger value="resources">Recursos</TabsTrigger>
             <TabsTrigger value="analytics">Análise da Turma</TabsTrigger>
             <TabsTrigger value="settings">Configurações</TabsTrigger>
           </TabsList>
@@ -118,6 +161,10 @@ export function ClassroomTabs({
               isLoading={isLoadingStudents}
               activities={activities}
             />
+          </TabsContent>
+
+          <TabsContent value="resources" className="mt-6">
+            <ResourcesTab />
           </TabsContent>
 
           <TabsContent value="analytics" className="mt-6">
