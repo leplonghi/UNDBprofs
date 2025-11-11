@@ -17,6 +17,8 @@ import { ClassroomStudentsTable } from '@/components/courses/classroom-students-
 import { StudentGroups } from '@/components/courses/student-groups';
 import { Badge } from '@/components/ui/badge';
 import { ClassAnalytics } from './class-analytics';
+import { ActivitySettings } from './activity-settings';
+import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 
 export function ClassroomTabs({
   courseId,
@@ -62,9 +64,15 @@ export function ClassroomTabs({
 
   if (!classroom) {
     return (
-      <div className="py-10 text-center text-muted-foreground">
-        Nenhuma turma encontrada para esta disciplina.
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Nenhuma Turma Encontrada</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">Não há nenhuma turma associada a esta disciplina. Você pode criar uma manualmente ou importar um plano de ensino para gerar uma automaticamente.</p>
+          <Button className="mt-4">Criar Turma Manualmente</Button>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -79,22 +87,12 @@ export function ClassroomTabs({
         courseId={courseId}
       />
       <div className="flex flex-col gap-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-bold">Turma: {classroom.name}</h2>
-            <div className="text-muted-foreground">
-              Semestre: {classroom.semester} | Carga Horária:{' '}
-              {classroom.workload} | Tipo:{' '}
-              <Badge variant="outline">{classroom.classType}</Badge>
-            </div>
-          </div>
-        </div>
-
         <Tabs defaultValue="students" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+           <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
             <TabsTrigger value="students">Alunos</TabsTrigger>
             <TabsTrigger value="grades">Lançamento de Notas</TabsTrigger>
             <TabsTrigger value="analytics">Análise da Turma</TabsTrigger>
+            <TabsTrigger value="settings">Configurações</TabsTrigger>
           </TabsList>
 
           <TabsContent value="students" className="mt-6">
@@ -128,6 +126,15 @@ export function ClassroomTabs({
               isLoading={isLoadingStudents}
               activities={activities}
             />
+          </TabsContent>
+
+          <TabsContent value="settings" className="mt-6">
+             <ActivitySettings
+                courseId={courseId}
+                classroomId={classroom.id}
+                activities={activities}
+                classType={classroom.classType}
+             />
           </TabsContent>
         </Tabs>
       </div>
