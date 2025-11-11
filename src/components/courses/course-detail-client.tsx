@@ -395,5 +395,3 @@ export function CourseDetailClient({ courseId }: { courseId: string }) {
     </div>
   );
 }
-
-    
