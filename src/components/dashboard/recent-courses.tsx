@@ -22,7 +22,6 @@ import { Skeleton } from '../ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useMemo } from 'react';
 
-
 interface RecentCoursesProps {
     courses: Course[];
     classroomsByCourse: Record<string, Classroom[]>;
