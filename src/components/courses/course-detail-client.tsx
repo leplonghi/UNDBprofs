@@ -33,6 +33,7 @@ import { Edit, ArrowLeft } from 'lucide-react';
 import { ClassroomTabs } from '@/components/courses/classroom-tabs';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+import { format, parseISO } from 'date-fns';
 
 function CourseDetailsSkeleton() {
   return (
@@ -303,16 +304,21 @@ function CourseInformation({
                       </TableRow>
                   </TableHeader>
                   <TableBody>
-                      {classroom.classSchedule.map((item, index) => (
-                          <TableRow key={index}>
-                              <TableCell className="w-[150px]">{item.date}</TableCell>
-                              <TableCell>{item.type}</TableCell>
-                              <TableCell>{item.topic}</TableCell>
-                              <TableCell className="whitespace-pre-wrap">{item.content}</TableCell>
-                              <TableCell className="whitespace-pre-wrap">{item.activity}</TableCell>
-                              <TableCell>{item.location}</TableCell>
-                          </TableRow>
-                      ))}
+                      {classroom.classSchedule.map((item, index) => {
+                          const dateIsValid = item.date && !isNaN(parseISO(item.date).getTime());
+                          return (
+                            <TableRow key={index}>
+                                <TableCell className="w-[150px]">
+                                    {dateIsValid ? format(parseISO(item.date), 'dd/MM/yyyy') : 'N/A'}
+                                </TableCell>
+                                <TableCell>{item.type}</TableCell>
+                                <TableCell>{item.topic}</TableCell>
+                                <TableCell className="whitespace-pre-wrap">{item.content}</TableCell>
+                                <TableCell className="whitespace-pre-wrap">{item.activity}</TableCell>
+                                <TableCell>{item.location}</TableCell>
+                            </TableRow>
+                          )
+                      })}
                   </TableBody>
               </Table>
             </div>
