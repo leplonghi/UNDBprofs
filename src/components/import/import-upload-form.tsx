@@ -31,11 +31,7 @@ export function ImportUploadForm({
     }
   };
 
-  const handleFileClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileDrop = (event: React.DragEvent<HTMLDivElement>) => {
+  const handleFileDrop = (event: React.DragEvent<HTMLLabelElement>) => {
     event.preventDefault();
     const droppedFile = event.dataTransfer.files?.[0];
     if (droppedFile) {
@@ -43,7 +39,7 @@ export function ImportUploadForm({
     }
   };
 
-  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+  const handleDragOver = (event: React.DragEvent<HTMLLabelElement>) => {
     event.preventDefault();
   };
 
@@ -100,9 +96,9 @@ export function ImportUploadForm({
 
   return (
     <div className="p-6 space-y-4">
-      <div
+      <label
+        htmlFor="pdf-upload"
         className="flex flex-col items-center justify-center w-full p-8 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary transition-colors"
-        onClick={handleFileClick}
         onDrop={handleFileDrop}
         onDragOver={handleDragOver}
       >
@@ -112,14 +108,15 @@ export function ImportUploadForm({
             ? `Arquivo selecionado: ${file.name}`
             : 'Arraste e solte um PDF aqui, ou clique para selecionar'}
         </p>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".pdf"
-          className="hidden"
-          onChange={handleFileChange}
-        />
-      </div>
+      </label>
+      <input
+        id="pdf-upload"
+        ref={fileInputRef}
+        type="file"
+        accept=".pdf"
+        className="hidden"
+        onChange={handleFileChange}
+      />
       <Button
         onClick={handleExtraction}
         disabled={isExtracting || !file}
