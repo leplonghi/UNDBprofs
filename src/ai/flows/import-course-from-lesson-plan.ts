@@ -23,11 +23,13 @@ export type ImportCourseFromLessonPlanInput = z.infer<
 
 const CompetencySchema = z.object({
     competency: z.string().describe("The name/title of the competency."),
+    ch: z.string().describe("The workload (Carga Horária) for this competency, e.g., '20h'.").optional(),
     skills: z.array(z.object({
         skill: z.string().describe("The name/title of the skill."),
-        descriptors: z.string().describe("A comma-separated list of descriptors for the skill.")
+        descriptors: z.string().describe("A multi-line string of descriptors for the skill, with each descriptor on a new line. Each descriptor might end with its own workload, like '(4h)'. Preserve these details.")
     })).describe("The list of skills associated with the competency.")
 });
+
 
 const LearningUnitSchema = z.object({
     name: z.string().describe("The name of the learning unit (e.g., 'UA 1')."),
@@ -102,12 +104,14 @@ const prompt = ai.definePrompt({
       - semester: The "Semestre".
 
   2.  **Extract Competency Matrix (Matriz de Competências)**:
-      - This is a CRITICAL section. Find the table or section labeled "Matriz de Competências". This matrix contains the general "Ementa" and "Competências" fields, but also a more detailed breakdown.
-      - For each "Competência" in the matrix (the individual competency items, not the general text block), extract its name.
-      - For each "Habilidade" associated with that competency, extract its name.
-      - For each "Habilidade", extract the "Descritores" associated with it. This is often a list. Combine them into a single comma-separated string.
-      - Structure this into the 'competencyMatrix' array. If this section is not present, return an empty array.
-  
+      - This is a CRITICAL section. Find the table or section labeled "Matriz de Competências". This table has columns like "UNIDADE DE APRENDIZAGEM", "HABILIDADES", "CH", and "DESCRITORES".
+      - You are to construct the 'competencyMatrix' array. Each item in this array corresponds to one "Unidade de Aprendizagem".
+      - For each row group corresponding to a "Unidade de Aprendizagem":
+        - The `competency` field should be the text from the "HABILIDADES" column.
+        - The `ch` field should be the text from the "CH" column next to "HABILIDADES".
+        - The `skills` array should be populated from the "DESCRITORES" column. In the PDF, "DESCRITORES" is often treated as a sub-column of "HABILIDADES". For the `skills.skill` field, you can use the main "HABILIDADE" text or a summarized version.
+        - **CRITICAL for DESCRIPTORS**: The `skills.descriptors` field MUST contain the full, multi-line text from the "DESCRITORES" column. You must preserve the line breaks. Each line in the "DESCRITORES" column often ends with its own workload (e.g., "(4h)"). You MUST include this workload information verbatim in the `descriptors` string. Do NOT parse it out. Just transcribe the full text block.
+
   3.  **Extract Learning Units (Unidades de Aprendizagem - This is the main table)**:
       - This is a separate task from extracting the class schedule. Find the section detailing the "Unidades de Aprendizagem" and their content descriptions.
       - For each unit (e.g., "UA 1", "UA 2"), extract its 'name' and its 'content' (the description of the unit).
