@@ -123,7 +123,7 @@ export default function DashboardPage() {
             isLoading={isLoading || isLoadingStats}
           />
 
-          <div className="grid grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
              <RecentCourses courses={courses || []} classroomsByCourse={classroomsByCourse} isLoading={isLoadingCourses || isLoadingStats} />
              <UpcomingEvents events={academicEvents} courses={courses} isLoading={isLoadingEvents || isLoadingCourses} />
           </div>
