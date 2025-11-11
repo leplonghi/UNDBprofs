@@ -94,7 +94,7 @@ function CourseInformation({
         
         return {
             unitName: unit.name,
-            habilidades: competency?.competency || '',
+            habilidades: competency?.competency || 'Habilidade não extraída',
             chHabilidades: `${chHabilidades}h`,
             descritores: descritoresComCH,
         };
@@ -120,6 +120,7 @@ function CourseInformation({
             </CardDescription>
           </div>
           <Button
+            variant="default"
             onClick={() => router.push(`/disciplinas/${course.id}/editar`)}
           >
             <Edit className="mr-2 h-4 w-4" />
@@ -149,7 +150,7 @@ function CourseInformation({
         </div>
 
         <div>
-            <h2 className="text-center font-bold text-lg bg-gray-200 dark:bg-gray-700 py-2 rounded-t-lg border border-b-0">MATRIZ DE COMPETÊNCIAS</h2>
+             <h2 className="text-center font-bold text-lg bg-gray-200 dark:bg-gray-700 py-2 rounded-t-lg border border-b-0">MATRIZ DE COMPETÊNCIAS</h2>
             <div className="border p-4 space-y-4">
                  <table className="w-full text-sm border-collapse">
                     <tbody>
@@ -174,9 +175,9 @@ function CourseInformation({
                     <TableRow>
                         <TableHead className="w-1/4 font-bold text-foreground">UNIDADE DE APRENDIZAGEM</TableHead>
                         <TableHead className="w-1/4 font-bold text-foreground">HABILIDADES</TableHead>
-                        <TableHead className="w-[80px] font-bold text-foreground">CH</TableHead>
+                        <TableHead className="w-[80px] font-bold text-foreground text-center">CH</TableHead>
                         <TableHead className="w-2/4 font-bold text-foreground">DESCRITORES</TableHead>
-                        <TableHead className="w-[80px] font-bold text-foreground">CH</TableHead>
+                        <TableHead className="w-[80px] font-bold text-foreground text-center">CH</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -185,7 +186,7 @@ function CourseInformation({
                         return (
                             <React.Fragment key={unitIndex}>
                                 {totalRowsForUnit > 0 ? Array.from({ length: totalRowsForUnit }).map((_, descritorIndex) => (
-                                    <TableRow key={`${unitIndex}-${descritorIndex}`}>
+                                    <TableRow key={`${unitIndex}-${descritorIndex}`} className={unitIndex % 2 === 0 ? '' : 'bg-muted/30'}>
                                         {descritorIndex === 0 && (
                                             <>
                                                 <TableCell rowSpan={totalRowsForUnit} className="border-r align-top font-semibold">{unit.unitName}</TableCell>
@@ -205,9 +206,6 @@ function CourseInformation({
                                         )}
                                     </TableRow>
                                 )) : null}
-                                <TableRow className="bg-muted/30">
-                                    <TableCell colSpan={5} className="h-2 p-0"></TableCell>
-                                </TableRow>
                             </React.Fragment>
                         )
                     })}
@@ -297,7 +295,7 @@ function CourseInformation({
               <Table>
                   <TableHeader>
                       <TableRow>
-                          <TableHead className="w-[120px]">Data</TableHead>
+                          <TableHead className="w-[150px]">Data</TableHead>
                           <TableHead>Tipo</TableHead>
                           <TableHead>Tópico</TableHead>
                           <TableHead>Conteúdo</TableHead>
@@ -308,7 +306,7 @@ function CourseInformation({
                   <TableBody>
                       {classroom.classSchedule.map((item, index) => (
                           <TableRow key={index}>
-                              <TableCell className="w-[120px]">{item.date}</TableCell>
+                              <TableCell className="w-[150px]">{item.date}</TableCell>
                               <TableCell>{item.type}</TableCell>
                               <TableCell>{item.topic}</TableCell>
                               <TableCell className="whitespace-pre-wrap">{item.content}</TableCell>

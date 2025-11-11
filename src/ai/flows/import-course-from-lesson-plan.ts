@@ -33,7 +33,7 @@ const CompetencySchema = z.object({
 
 const LearningUnitSchema = z.object({
     name: z.string().describe("The name of the learning unit (e.g., 'UA 1 - Teoria e Método')."),
-    content: z.string().describe("The content/description of the learning unit."),
+    content: z.string().describe("The content/description of the learning unit, extracted from the 'HABILIDADES' column. This corresponds to the `competency` field in the CompetencyMatrix for the same Learning Unit."),
 });
 
 const ImportCourseFromLessonPlanOutputSchema = z.object({
@@ -107,7 +107,7 @@ const prompt = ai.definePrompt({
       - This is the most important part. Find the table or section that has columns like "UNIDADE DE APRENDIZAGEM", "HABILIDADES", "CH", and "DESCRITORES".
       - You will populate **two** arrays from this table: \`learningUnits\` and \`competencyMatrix\`.
       - For each main row in this table (e.g., "I - Teoria e Método", "II - Levantamento e Diagnóstico"):
-        - **For \`learningUnits\`**: Create an object with \`name\` (the full text from "UNIDADE DE APRENDIZAGEM") and \`content\` (the full text from "HABILIDADES").
+        - **For \`learningUnits\`**: Create an object with \`name\` (the full text from "UNIDADE DE APRENDIZAGEM") and \`content\` (the full text from the "HABILIDADES" column).
         - **For \`competencyMatrix\`**: This is more detailed. For that same row:
           - The \`competency\` field is the full text from the "HABILIDADES" column.
           - The \`ch\` field is the text from the "CH" column right next to "HABILIDADES".
