@@ -225,7 +225,6 @@ function CourseInformation({
                                                      {group.competency?.skills?.map((skill, skillIdx) => (
                                                         <li key={skillIdx}>
                                                             {skill.skill}
-                                                            <p className="text-xs text-muted-foreground pl-2">{skill.descriptors}</p>
                                                         </li>
                                                     ))}
                                                 </ul>
