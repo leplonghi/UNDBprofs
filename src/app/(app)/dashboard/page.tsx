@@ -102,11 +102,19 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-6">
       
         <Card>
-            <CardHeader>
-                <CardTitle className="text-xl text-primary">{welcomeMessage}</CardTitle>
-                <CardDescription>
-                    Veja um resumo de suas atividades ou siga o guia rápido abaixo.
-                </CardDescription>
+             <CardHeader>
+                <div className="flex justify-between items-start">
+                    <div>
+                        <CardTitle className="text-xl text-primary">{welcomeMessage}</CardTitle>
+                        <CardDescription>
+                            Veja um resumo de suas atividades ou siga o guia rápido.
+                        </CardDescription>
+                    </div>
+                    <div className="text-right">
+                         <h3 className="font-semibold">Passo a passo, para não se confundir prof!</h3>
+                         <p className="text-sm text-muted-foreground">Tutorial</p>
+                    </div>
+                </div>
             </CardHeader>
             <CardContent>
                 <TutorialCard />
