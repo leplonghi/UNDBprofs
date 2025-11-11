@@ -77,6 +77,7 @@ function CourseInformation({
 
     const scheduleByUnitName: Record<string, ClassScheduleItem[]> = {};
     for (const item of classroom.classSchedule) {
+        // Find the unit whose name is a prefix of the item's topic
         const matchingUnit = course.learningUnits.find(unit => item.topic.startsWith(unit.name));
         const key = matchingUnit ? matchingUnit.name : item.topic.trim();
         if (!scheduleByUnitName[key]) {
@@ -169,6 +170,7 @@ function CourseInformation({
         
         {groupedSchedule && groupedSchedule.length > 0 && (
           <div className="border rounded-lg overflow-hidden">
+            <h2 className="text-center font-bold text-lg bg-gray-200 dark:bg-gray-700 py-2 border-b">CRONOGRAMA DE AULAS</h2>
             <table className="w-full text-sm">
               <thead className="bg-gray-200 dark:bg-gray-700 font-bold">
                 <tr>
@@ -189,7 +191,7 @@ function CourseInformation({
                         const isFirstRowOfGroup = itemIndex === 0;
 
                         return (
-                          <tr key={item ? item.content : `empty-${itemIndex}`} className="border-b">
+                          <tr key={item ? item.content + itemIndex : `empty-${itemIndex}`} className="border-b">
                             {isFirstRowOfGroup && (
                               <>
                                 <td className="p-2 border-r align-top" rowSpan={rowCount}>
