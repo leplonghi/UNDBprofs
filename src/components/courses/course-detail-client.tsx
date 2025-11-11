@@ -16,7 +16,7 @@ import {
   useMemoFirebase,
   useCollection,
 } from '@/firebase';
-import type { Course, Classroom, ClassScheduleItem, Activity, LearningUnit, Competency } from '@/types';
+import type { Course, Classroom, ClassScheduleItem, LearningUnit, Competency } from '@/types';
 import { doc, collection, query } from 'firebase/firestore';
 import {
   Table,
@@ -145,7 +145,22 @@ function CourseInformation({
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-8">
+
+        <div className="space-y-6 text-center">
+            <div>
+                <h2 className="font-bold tracking-wider">VISÃO DA UNDB</h2>
+                <p className="text-sm text-muted-foreground max-w-2xl mx-auto mt-1">
+                    Ser uma instituição nacionalmente reconhecida pela sua excelência em todas as suas áreas de atuação.
+                </p>
+            </div>
+            <div>
+                <h2 className="font-bold tracking-wider">MISSÃO DA UNDB</h2>
+                <p className="text-sm text-muted-foreground max-w-3xl mx-auto mt-1">
+                    Promover o conhecimento alicerçado em princípios éticos, científicos e tecnológicos, através de metodologias de vanguarda, visando à formação e ao aperfeiçoamento humano de profissionais comprometidos com o processo de desenvolvimento e mudança nos seus campos de atuação.
+                </p>
+            </div>
+        </div>
         
         <div className="space-y-4 rounded-lg border p-4">
             <h2 className="text-center font-bold text-lg bg-gray-200 dark:bg-gray-700 py-2 rounded-t-md">PLANO DE ENSINO</h2>
@@ -369,7 +384,7 @@ export function CourseDetailClient({ courseId }: { courseId: string }) {
         </div>
       </div>
 
-      <Tabs defaultValue="classroom" className="w-full">
+      <Tabs defaultValue="info" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="info">Plano de Ensino</TabsTrigger>
           <TabsTrigger value="classroom">Gerenciamento da Turma</TabsTrigger>
