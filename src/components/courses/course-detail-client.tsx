@@ -184,12 +184,6 @@ function CourseInformation({
                     <div className="p-2">
                         <h3 className="font-bold text-center mb-2">COMPETÊNCIAS</h3>
                         <p className="text-sm text-muted-foreground whitespace-pre-wrap">{course.competencies}</p>
-                         {course.objectives && (
-                            <div className="mt-4">
-                                <h4 className="font-bold">Objetivos:</h4>
-                                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{course.objectives}</p>
-                            </div>
-                        )}
                     </div>
                 </div>
             </div>
