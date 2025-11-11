@@ -64,10 +64,10 @@ export default function LoginClient({ initialFrom }: LoginClientProps) {
 
             <div className='space-y-4'>
               <h1 className="text-2xl font-bold text-primary">
-                  Bem-vindo ao UNDBProf!
+                  Boas-vindas ao UNDBProf!
               </h1>
               <p className="text-muted-foreground">
-                  Seu assistente para organizar a rotina docente e colaborar com colegas.
+                  Um app de professor para professor, feito para somar eficiência, praticidade e colaboração ao seu dia a dia.
               </p>
                <div className="mt-4 rounded-md border bg-accent/50 p-3 text-sm font-medium text-accent-foreground">
                 O acesso é exclusivo para contas @undb.edu.br.
