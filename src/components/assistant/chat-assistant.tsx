@@ -8,6 +8,13 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { collection, query } from 'firebase/firestore';
 import type { Course, AcademicEvent } from '@/types';
 import { assistantFlow, type AssistantMessage } from '@/ai/flows/assistant-flow';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+
 
 const suggestionPrompts = [
   "Minhas disciplinas",
@@ -81,12 +88,22 @@ export function ChatAssistant() {
 
   if (!isOpen) {
     return (
-      <Button
-        className="fixed bottom-4 right-4 md:bottom-6 md:right-6 h-16 w-16 rounded-full shadow-lg"
-        onClick={() => setIsOpen(true)}
-      >
-        <MessageSquare className="h-8 w-8" />
-      </Button>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              className="fixed bottom-4 right-4 md:bottom-6 md:right-6 h-16 w-16 rounded-full shadow-lg animate-pulse"
+              onClick={() => setIsOpen(true)}
+              size="icon"
+            >
+              <Bot className="h-8 w-8" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Assistente Docente</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     );
   }
 
