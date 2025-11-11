@@ -6,12 +6,12 @@ import {
   useMemoFirebase,
   useCollection,
 } from '@/firebase';
-import type { Classroom, ClassroomStudent, Activity } from '@/types';
-import { collection, query } from 'firebase/firestore';
+import type { Classroom, ClassroomStudent, Activity, Document } from '@/types';
+import { collection, query, where } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Users, Link, PlusCircle } from 'lucide-react';
+import { Users, Link, PlusCircle, FileText, ExternalLink } from 'lucide-react';
 import { StudentUploadDialog } from '@/components/courses/student-upload-dialog';
 import { ClassroomStudentsTable } from '@/components/courses/classroom-students-table';
 import { StudentGroups } from '@/components/courses/student-groups';
@@ -19,14 +19,32 @@ import { Badge } from '@/components/ui/badge';
 import { ClassAnalytics } from './class-analytics';
 import { ActivitySettings } from './activity-settings';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../ui/card';
+import { AddDocumentDialog } from '../documents/add-document-dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 
-function ResourcesTab() {
+function ResourcesTab({ courseId }: { courseId: string }) {
+    const [isAddOpen, setIsAddOpen] = React.useState(false);
+    const { user } = useUser();
+    const firestore = useFirestore();
+
+    const documentsQuery = useMemoFirebase(() => {
+        if (!user || !firestore) return null;
+        return query(
+            collection(firestore, 'documents'),
+            where('professorId', '==', user.uid),
+            where('course', '==', courseId)
+        );
+    }, [user, firestore, courseId]);
+
+    const { data: documents, isLoading } = useCollection<Document>(documentsQuery);
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <>
+      <AddDocumentDialog isOpen={isAddOpen} onOpenChange={setIsAddOpen} />
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Documentos e Links</CardTitle>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => setIsAddOpen(true)}>
             <PlusCircle className="mr-2 h-4 w-4" />
             Adicionar
           </Button>
@@ -35,29 +53,42 @@ function ResourcesTab() {
           <CardDescription>
             Adicione links para avaliações, trabalhos, leituras e outros materiais importantes para a turma.
           </CardDescription>
-          <div className="mt-4 border-2 border-dashed rounded-lg p-8 text-center text-muted-foreground">
-            <p>Nenhum documento adicionado.</p>
-          </div>
+            {isLoading ? (
+                <Skeleton className="h-40 w-full mt-4" />
+            ) : !documents || documents.length === 0 ? (
+                 <div className="mt-4 border-2 border-dashed rounded-lg p-8 text-center text-muted-foreground">
+                    <p>Nenhum documento adicionado para esta disciplina.</p>
+                </div>
+            ) : (
+                <div className="mt-4 rounded-md border">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Nome</TableHead>
+                                <TableHead>Tipo</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {documents.map(doc => (
+                                <TableRow key={doc.id}>
+                                    <TableCell className="font-medium">
+                                        <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:underline">
+                                            {doc.uploadType === 'link' ? <ExternalLink className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+                                            {doc.name}
+                                        </a>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge variant="secondary" className="capitalize">{doc.documentType}</Badge>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
+            )}
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Checks e Observações</CardTitle>
-          <Button variant="outline" size="sm">
-             <PlusCircle className="mr-2 h-4 w-4" />
-            Adicionar
-          </Button>
-        </CardHeader>
-        <CardContent>
-           <CardDescription>
-            Registre anotações rápidas, lembretes ou pontos de verificação importantes para esta turma.
-          </CardDescription>
-           <div className="mt-4 border-2 border-dashed rounded-lg p-8 text-center text-muted-foreground">
-            <p>Nenhuma observação registrada.</p>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    </>
   );
 }
 
@@ -164,7 +195,7 @@ export function ClassroomTabs({
           </TabsContent>
 
           <TabsContent value="resources" className="mt-6">
-            <ResourcesTab />
+            <ResourcesTab courseId={courseId} />
           </TabsContent>
 
           <TabsContent value="analytics" className="mt-6">
