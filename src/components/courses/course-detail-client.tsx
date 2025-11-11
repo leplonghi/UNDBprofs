@@ -76,7 +76,6 @@ function CourseInformation({
       return [];
     }
 
-    // Map schedule items by their topic for quick lookup
     const scheduleByTopic = (classroom.classSchedule || []).reduce((acc, item) => {
         const key = item.topic.trim();
         if (!acc[key]) {
@@ -86,7 +85,6 @@ function CourseInformation({
         return acc;
     }, {} as Record<string, ClassScheduleItem[]>);
     
-    // Calculate total workload for each unit from the schedule
     const unitWorkloads = Object.entries(scheduleByTopic).reduce((acc, [topic, items]) => {
         const totalHours = items.reduce((sum, item) => {
             const hours = parseInt(item.activity.match(/(\d+)h/)?.[1] || '0');
@@ -96,7 +94,6 @@ function CourseInformation({
         return acc;
     }, {} as Record<string, string>);
     
-    // Assuming a 1-to-1 mapping between learningUnits and competencyMatrix items by order
     return course.learningUnits.map((unit, index) => {
       const competency = course.competencyMatrix![index];
       const scheduleItems = scheduleByTopic[unit.name.trim()] || [];
@@ -202,17 +199,17 @@ function CourseInformation({
                                     <tr key={itemIndex} className="border-b">
                                         {itemIndex === 0 && (
                                             <>
-                                                <td className="p-2 border-r align-top" rowSpan={group.scheduleItems.length}>
+                                                <td className="p-2 border-r align-top" rowSpan={group.scheduleItems.length || 1}>
                                                     {group.unit.name}
                                                 </td>
-                                                <td className="p-2 border-r align-top" rowSpan={group.scheduleItems.length}>
+                                                <td className="p-2 border-r align-top" rowSpan={group.scheduleItems.length || 1}>
                                                     <ul className="list-disc pl-4 space-y-1">
                                                         {group.competency?.skills?.map((skill, skillIdx) => (
                                                           <li key={skillIdx}>{skill.skill}</li>
                                                         ))}
                                                     </ul>
                                                 </td>
-                                                <td className="p-2 border-r align-top text-center" rowSpan={group.scheduleItems.length}>
+                                                <td className="p-2 border-r align-top text-center" rowSpan={group.scheduleItems.length || 1}>
                                                     {group.unitWorkload}
                                                 </td>
                                             </>

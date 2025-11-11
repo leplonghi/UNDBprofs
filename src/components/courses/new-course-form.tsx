@@ -106,7 +106,6 @@ export default function NewCourseForm() {
       name: values.name,
       code: values.code,
       syllabus: values.syllabus,
-      objectives: '', // Removed from form, default to empty
       competencies: values.competencies || '',
       learningUnits: values.learningUnits || [],
       competencyMatrix: values.competencyMatrix || [],
