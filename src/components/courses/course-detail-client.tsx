@@ -120,7 +120,6 @@ function CourseInformation({
             </CardDescription>
           </div>
           <Button
-            variant="outline"
             onClick={() => router.push(`/disciplinas/${course.id}/editar`)}
           >
             <Edit className="mr-2 h-4 w-4" />
