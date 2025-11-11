@@ -17,7 +17,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, Save } from 'lucide-react';
+import { Loader2, ArrowLeft, Save, FileScan } from 'lucide-react';
 import {
   useFirestore,
   useUser,
@@ -29,6 +29,7 @@ import { doc, writeBatch, query, collection } from 'firebase/firestore';
 import type {
   Course,
   Classroom,
+  ImportCourseFromLessonPlanOutput
 } from '@/types';
 import { ClassScheduleEditor } from '@/components/import/ClassScheduleEditor';
 import { Badge } from '../ui/badge';
@@ -36,7 +37,15 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../ui
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
-
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { ReImportUploadForm } from '../import/re-import-upload-form';
 
 const competencySchema = z.object({
     competency: z.string(),
@@ -92,6 +101,7 @@ type FormData = z.infer<typeof formSchema>;
 
 export function EditCourseForm({ courseId }: { courseId: string }) {
   const [isSaving, setIsSaving] = useState(false);
+  const [isReImportOpen, setIsReImportOpen] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
   const firestore = useFirestore();
@@ -138,9 +148,30 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
     },
   });
 
+  const resetFormWithData = (data: Partial<FormData>) => {
+     form.reset({
+        courseName: data.courseName,
+        courseCode: data.courseCode,
+        syllabus: data.syllabus,
+        competencies: data.competencies,
+        competencyMatrix: data.competencyMatrix || [],
+        learningUnits: data.learningUnits || [],
+        thematicTree: data.thematicTree || [],
+        bibliography: data.bibliography || {
+          basic: '',
+          complementary: '',
+          recommended: '',
+        },
+        workload: data.workload,
+        semester: data.semester,
+        classType: data.classType,
+        classSchedule: data.classSchedule || [],
+      });
+  }
+
   useEffect(() => {
     if (course && classroom) {
-      form.reset({
+      resetFormWithData({
         courseName: course.name,
         courseCode: course.code,
         syllabus: course.syllabus,
@@ -159,7 +190,7 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
         classSchedule: classroom.classSchedule || [],
       });
     }
-  }, [course, classroom, form]);
+  }, [course, classroom]); // `form` dependency removed to prevent reset loop
 
   async function onSubmit(values: FormData) {
     if (!user || !firestore || !course || !classroom) {
@@ -226,6 +257,15 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
     }
   }
 
+  const handleExtractionComplete = (data: ImportCourseFromLessonPlanOutput) => {
+    resetFormWithData(data);
+    setIsReImportOpen(false);
+    toast({
+        title: "Dados Repreenchidos!",
+        description: "O formulário foi atualizado com os dados do novo PDF. Revise e salve."
+    })
+  };
+
   const detectedClassType = form.watch('classType');
   const competencyMatrix = form.watch('competencyMatrix');
   const learningUnits = form.watch('learningUnits');
@@ -273,6 +313,26 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
                     <h1 className="text-2xl font-bold text-primary">Editar Plano de Ensino</h1>
                     <p className="text-muted-foreground">Modifique as informações da disciplina e da turma abaixo.</p>
                 </div>
+                <Dialog open={isReImportOpen} onOpenChange={setIsReImportOpen}>
+                    <DialogTrigger asChild>
+                         <Button variant="outline">
+                            <FileScan className="mr-2 h-4 w-4" />
+                            Re-importar com IA
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                         <DialogHeader>
+                            <DialogTitle>Re-importar Plano de Ensino</DialogTitle>
+                            <DialogDescription>
+                                Envie um novo arquivo PDF. Os dados extraídos pela IA irão preencher o formulário de edição para sua revisão.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <ReImportUploadForm
+                            user={user}
+                            onExtractionComplete={handleExtractionComplete}
+                        />
+                    </DialogContent>
+                </Dialog>
                  {!isMobile && (
                     <Button onClick={form.handleSubmit(onSubmit)} disabled={isSaving}>
                         {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
