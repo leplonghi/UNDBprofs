@@ -23,7 +23,7 @@ export interface AddMaterialData {
 }
 
 export function useMaterials() {
-  const { user } } from useUser();
+  const { user } = useUser();
   const firestore = useFirestore();
   const storage = getStorage();
   const { toast } = useToast();
