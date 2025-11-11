@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useRef, useTransition, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -17,7 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,30 +27,15 @@ import {
   useCollection,
   useMemoFirebase,
 } from '@/firebase';
-import {
-  getStorage,
-  ref,
-  uploadBytesResumable,
-  getDownloadURL,
-} from 'firebase/storage';
-import { doc, collection, addDoc } from 'firebase/firestore';
-import { v4 as uuidv4 } from 'uuid';
-import {
-  Loader2,
-  UploadCloud,
-  Link2,
-} from 'lucide-react';
-import type { Course, Document as DocumentType } from '@/types';
-import { Progress } from '../ui/progress';
+import { collection, addDoc } from 'firebase/firestore';
+import { Loader2, Link2 } from 'lucide-react';
+import type { Course } from '@/types';
 
 interface AddDocumentDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   courseId?: string | null;
 }
-
-const MAX_FILE_SIZE_MB = 1;
-const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
 export function AddDocumentDialog({
   isOpen,
@@ -62,15 +46,10 @@ export function AddDocumentDialog({
   const firestore = useFirestore();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
 
   const [documentName, setDocumentName] = useState('');
-  const [documentType, setDocumentType] = useState<'file' | 'link'>('file');
-  const [file, setFile] = useState<File | null>(null);
   const [link, setLink] = useState('');
   const [courseId, setCourseId] = useState<string | null>(null);
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const coursesQuery = useMemoFirebase(
     () =>
@@ -88,15 +67,9 @@ export function AddDocumentDialog({
 
   const resetState = () => {
     setIsProcessing(false);
-    setUploadProgress(0);
     setDocumentName('');
-    setDocumentType('file');
-    setFile(null);
     setLink('');
     setCourseId(preselectedCourseId || null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
   };
 
   const handleOpenChange = (open: boolean) => {
@@ -104,26 +77,6 @@ export function AddDocumentDialog({
       resetState();
     }
     onOpenChange(open);
-  };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = event.target.files?.[0];
-    if (selectedFile) {
-        if (selectedFile.size > MAX_FILE_SIZE_BYTES) {
-            toast({
-                variant: 'destructive',
-                title: 'Arquivo muito grande',
-                description: `O arquivo excede o limite de ${MAX_FILE_SIZE_MB}MB. Por favor, use a opção "Link Externo".`,
-            });
-            // Clear the file input
-            if (fileInputRef.current) {
-                fileInputRef.current.value = '';
-            }
-            setFile(null);
-        } else {
-            setFile(selectedFile);
-        }
-    }
   };
 
   const handleSubmit = async () => {
@@ -135,74 +88,29 @@ export function AddDocumentDialog({
       toast({ variant: 'destructive', title: 'O nome do documento é obrigatório.' });
       return;
     }
-    if (documentType === 'file' && !file) {
-      toast({ variant: 'destructive', title: 'Nenhum arquivo selecionado.' });
-      return;
-    }
-    if (documentType === 'link' && !link) {
+    if (!link) {
       toast({ variant: 'destructive', title: 'O link é obrigatório.' });
       return;
     }
 
     setIsProcessing(true);
 
-    const docCollectionRef = collection(
-      firestore,
-      `documents`
-    );
+    const docCollectionRef = collection(firestore, 'documents');
 
     try {
-      let fileUrl = '';
-      let fileMetadata: Partial<DocumentType> = {};
-
-      if (documentType === 'link') {
-        fileUrl = link;
-      } else if (file) {
-        const storage = getStorage();
-        const storageRef = ref(
-          storage,
-          `documents/${user.uid}/${uuidv4()}-${file.name}`
-        );
-        const uploadTask = uploadBytesResumable(storageRef, file);
-
-        await new Promise<void>((resolve, reject) => {
-          uploadTask.on(
-            'state_changed',
-            (snapshot) => {
-              const progress =
-                (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-              setUploadProgress(progress);
-            },
-            (error) => {
-              console.error('Upload failed:', error);
-              reject(error);
-            },
-            async () => {
-              fileUrl = await getDownloadURL(uploadTask.snapshot.ref);
-              fileMetadata = {
-                fileName: file.name,
-                fileType: file.type,
-              };
-              resolve();
-            }
-          );
-        });
-      }
-
       const documentData = {
         professorId: user.uid,
         course: courseId || null,
         name: documentName,
-        fileUrl,
-        uploadType: documentType,
-        ...fileMetadata,
+        fileUrl: link,
+        uploadType: 'link',
         createdAt: new Date().toISOString(),
         authorName: user.displayName,
         description: "",
         discipline: "",
         documentType: "outro",
         views: 0,
-        favorites: 0
+        favorites: 0,
       };
 
       await addDoc(docCollectionRef, documentData);
@@ -228,10 +136,9 @@ export function AddDocumentDialog({
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Adicionar Novo Documento</DialogTitle>
+          <DialogTitle>Adicionar Novo Link</DialogTitle>
           <DialogDescription>
-            Envie um arquivo ou cole um link externo para compartilhar com suas
-            turmas.
+            Adicione um link para um documento externo, vídeo ou outro material.
           </DialogDescription>
         </DialogHeader>
 
@@ -249,100 +156,42 @@ export function AddDocumentDialog({
 
           {!preselectedCourseId && (
             <div className="space-y-2">
-                <Label>Associar à Disciplina (Opcional)</Label>
-                <Select
+              <Label>Associar à Disciplina (Opcional)</Label>
+              <Select
                 onValueChange={(value) => setCourseId(value)}
                 disabled={isLoadingCourses || isProcessing}
-                >
+              >
                 <SelectTrigger>
-                    <SelectValue placeholder="Selecione uma disciplina..." />
+                  <SelectValue placeholder="Selecione uma disciplina..." />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="none">Nenhuma</SelectItem>
-                    {courses?.map((course) => (
+                  <SelectItem value="none">Nenhuma</SelectItem>
+                  {courses?.map((course) => (
                     <SelectItem key={course.id} value={course.id}>
-                        {course.name} ({course.code})
+                      {course.name} ({course.code})
                     </SelectItem>
-                    ))}
+                  ))}
                 </SelectContent>
-                </Select>
+              </Select>
             </div>
           )}
 
-          <RadioGroup
-            defaultValue="file"
-            className="grid grid-cols-2 gap-4"
-            value={documentType}
-            onValueChange={(value: 'file' | 'link') => setDocumentType(value)}
-          >
-            <div>
-              <RadioGroupItem
-                value="file"
-                id="type-file"
-                className="peer sr-only"
-                disabled={isProcessing}
-              />
-              <Label
-                htmlFor="type-file"
-                className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-              >
-                <UploadCloud className="mb-2 h-6 w-6" />
-                Upload de Arquivo
-              </Label>
+          <div className="space-y-2 pt-2">
+            <Label htmlFor="doc-link">URL do Link</Label>
+            <div className="flex items-center">
+                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted h-10">
+                    <Link2 className="h-5 w-5 text-muted-foreground" />
+                </span>
+                <Input
+                    id="doc-link"
+                    value={link}
+                    onChange={(e) => setLink(e.target.value)}
+                    placeholder="https://..."
+                    disabled={isProcessing}
+                    className="rounded-l-none"
+                />
             </div>
-
-            <div>
-              <RadioGroupItem
-                value="link"
-                id="type-link"
-                className="peer sr-only"
-                disabled={isProcessing}
-              />
-              <Label
-                htmlFor="type-link"
-                className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-              >
-                <Link2 className="mb-2 h-6 w-6" />
-                Link Externo
-              </Label>
-            </div>
-          </RadioGroup>
-
-          {documentType === 'file' ? (
-            <div className="space-y-2 pt-2">
-              <Label>Arquivo</Label>
-              <div
-                className="flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <UploadCloud className="w-10 h-10 text-muted-foreground" />
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {file ? file.name : 'Clique para selecionar um arquivo'}
-                </p>
-              </div>
-              <Input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                onChange={handleFileChange}
-                disabled={isProcessing}
-              />
-              {isProcessing && uploadProgress > 0 && (
-                <Progress value={uploadProgress} className="w-full" />
-              )}
-            </div>
-          ) : (
-            <div className="space-y-2 pt-2">
-              <Label htmlFor="doc-link">URL do Link</Label>
-              <Input
-                id="doc-link"
-                value={link}
-                onChange={(e) => setLink(e.target.value)}
-                placeholder="https://..."
-                disabled={isProcessing}
-              />
-            </div>
-          )}
+          </div>
         </div>
 
         <DialogFooter>
@@ -355,7 +204,7 @@ export function AddDocumentDialog({
           </Button>
           <Button onClick={handleSubmit} disabled={isProcessing}>
             {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Salvar Documento
+            Salvar Link
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -2,14 +2,11 @@
 
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import {
-  collection, query, orderBy, addDoc, serverTimestamp
+  collection, query, orderBy, addDoc
 } from 'firebase/firestore';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import type { Document, DocumentType } from '@/types';
 import { useToast } from './use-toast';
 import { useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
-
 
 export interface AddMaterialData {
   name: string;
@@ -17,22 +14,19 @@ export interface AddMaterialData {
   course: string;
   discipline: string;
   documentType: DocumentType;
-  uploadType: 'file' | 'link';
-  file?: File | null;
-  link?: string;
+  uploadType: 'link';
+  link: string;
 }
 
 export function useMaterials() {
   const { user } = useUser();
   const firestore = useFirestore();
-  const storage = getStorage();
   const { toast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadProgress, setUploadProgress] = useState(0); // Kept for now, but unused
 
   const materialsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    // Note: The collection is named 'documents' in Firestore from previous setup
     return query(collection(firestore, 'documents'), orderBy('createdAt', 'desc'));
   }, [firestore]);
 
@@ -48,33 +42,8 @@ export function useMaterials() {
     setUploadProgress(0);
 
     try {
-      let fileUrl = '';
-      let fileMetadata: Partial<Document> = {};
-
-      if (data.uploadType === 'link' && data.link) {
-        fileUrl = data.link;
-      } else if (data.uploadType === 'file' && data.file) {
-        const file = data.file;
-        const storageRef = ref(storage, `materials/${user.uid}/${uuidv4()}-${file.name}`);
-        const uploadTask = uploadBytesResumable(storageRef, file);
-
-        await new Promise<void>((resolve, reject) => {
-          uploadTask.on(
-            'state_changed',
-            (snapshot) => {
-              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-              setUploadProgress(progress);
-            },
-            (error) => reject(error),
-            async () => {
-              fileUrl = await getDownloadURL(uploadTask.snapshot.ref);
-              fileMetadata = { fileName: file.name, fileType: file.type };
-              resolve();
-            }
-          );
-        });
-      } else {
-        throw new Error("Dados inválidos para upload.");
+      if (data.uploadType !== 'link' || !data.link) {
+        throw new Error("Dados inválidos. Apenas links são permitidos.");
       }
 
       const docRef = collection(firestore, 'documents');
@@ -84,9 +53,8 @@ export function useMaterials() {
         course: data.course,
         discipline: data.discipline,
         documentType: data.documentType,
-        uploadType: data.uploadType,
-        fileUrl,
-        ...fileMetadata,
+        uploadType: 'link',
+        fileUrl: data.link,
         professorId: user.uid,
         authorName: user.displayName || 'Anônimo',
         createdAt: new Date().toISOString(),

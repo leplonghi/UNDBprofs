@@ -110,12 +110,10 @@ export interface Document {
     course: string;
     discipline: string;
     documentType: DocumentType;
-    uploadType: 'file' | 'link';
+    uploadType: 'link';
     name: string;
     description: string;
     fileUrl: string;
-    fileType?: string; // e.g., 'application/pdf'
-    fileName?: string; // e.g., 'aula-1.pdf'
     createdAt: string; // ISO 8601 string
     views: number;
     favorites: number;
