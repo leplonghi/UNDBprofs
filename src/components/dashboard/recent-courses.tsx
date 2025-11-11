@@ -101,6 +101,7 @@ export function RecentCourses({ courses, classroomsByCourse, isLoading }: Recent
             <TableRow>
               <TableHead>Disciplina</TableHead>
               <TableHead>Ano</TableHead>
+              <TableHead>Semestre</TableHead>
               <TableHead className="text-right">Status</TableHead>
             </TableRow>
           </TableHeader>
@@ -108,14 +109,14 @@ export function RecentCourses({ courses, classroomsByCourse, isLoading }: Recent
             {isLoading ? (
                 Array.from({length: 3}).map((_, i) => (
                     <TableRow key={i}>
-                        <TableCell colSpan={3}>
+                        <TableCell colSpan={4}>
                             <Skeleton className="h-8 w-full" />
                         </TableCell>
                     </TableRow>
                 ))
             ) : recentCourses.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="h-24 text-center">
+                <TableCell colSpan={4} className="h-24 text-center">
                   Nenhuma disciplina recente.
                 </TableCell>
               </TableRow>
@@ -145,6 +146,9 @@ export function RecentCourses({ courses, classroomsByCourse, isLoading }: Recent
                               <span className="text-muted-foreground">N/A</span>
                             )}
                           </TableCell>
+                          <TableCell>
+                            {semesterNumber ? `${semesterNumber}º` : 'N/A'}
+                           </TableCell>
                           <TableCell className="text-right">
                              <Badge variant="outline" className={cn(statusStyles[course.status])}>
                                 {course.status}
