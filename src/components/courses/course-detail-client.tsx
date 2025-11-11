@@ -201,12 +201,7 @@ function CourseInformation({
                                                         <td className="p-2 border-r align-top" rowSpan={rowCount}>
                                                             <ul className="list-disc pl-4 space-y-1">
                                                                 {group.competency?.skills?.map((skill, skillIdx) => (
-                                                                <li key={skillIdx}>
-                                                                    {skill.skill}
-                                                                    <p className="text-xs text-muted-foreground pl-2">
-                                                                        {skill.descriptors}
-                                                                    </p>
-                                                                </li>
+                                                                <li key={skillIdx}>{skill.skill}</li>
                                                                 ))}
                                                             </ul>
                                                         </td>
@@ -225,12 +220,7 @@ function CourseInformation({
                                             <td className="p-2 border-r align-top">
                                                 <ul className="list-disc pl-4 space-y-1">
                                                      {group.competency?.skills?.map((skill, skillIdx) => (
-                                                        <li key={skillIdx}>
-                                                            {skill.skill}
-                                                            <p className="text-xs text-muted-foreground pl-2">
-                                                                {skill.descriptors}
-                                                            </p>
-                                                        </li>
+                                                        <li key={skillIdx}>{skill.skill}</li>
                                                     ))}
                                                 </ul>
                                             </td>
