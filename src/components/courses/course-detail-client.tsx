@@ -16,7 +16,7 @@ import {
   useMemoFirebase,
   useCollection,
 } from '@/firebase';
-import type { Course, Classroom, ClassScheduleItem, LearningUnit, Competency } from '@/types';
+import type { Course, Classroom, ClassScheduleItem } from '@/types';
 import { doc, collection, query } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -47,10 +47,10 @@ function CourseDetailsSkeleton() {
 }
 
 interface GroupedScheduleItem {
-    unit: LearningUnit;
-    competency: Competency;
-    unitWorkload: string;
-    scheduleItems: ClassScheduleItem[];
+  unit: { name: string; content: string };
+  competency: { competency: string; skills: { skill: string; descriptors: string }[] };
+  unitWorkload: string;
+  scheduleItems: ClassScheduleItem[];
 }
 
 const thematicTreeColors = [
@@ -69,56 +69,46 @@ function CourseInformation({
   classroom: Classroom | undefined;
 }) {
   const router = useRouter();
-  
   const { user } = useUser();
 
+  const getWorkload = (text: string) => {
+     const hoursMatch = text.match(/(\d+)\s*h/);
+     return hoursMatch ? parseInt(hoursMatch[1], 10) : 0;
+  }
+
   const groupedSchedule = useMemo(() => {
-    if (!course.learningUnits || !course.competencyMatrix || !classroom?.classSchedule) {
-      return [];
+    if (!course.learningUnits || !course.competencyMatrix || !classroom) {
+        return [];
     }
 
-    const scheduleByTopic = (classroom.classSchedule || []).reduce((acc, item) => {
+    const scheduleByUnitName: Record<string, ClassScheduleItem[]> = (classroom.classSchedule || []).reduce((acc, item) => {
         const key = item.topic.trim();
-        if (!acc[key]) {
-            acc[key] = [];
-        }
+        if (!acc[key]) acc[key] = [];
         acc[key].push(item);
         return acc;
     }, {} as Record<string, ClassScheduleItem[]>);
-
-    const unitWorkloads = Object.entries(scheduleByTopic).reduce((acc, [topic, items]) => {
-        const totalHours = items.reduce((sum, item) => {
-            const hoursMatch = item.activity.match(/(\d+)h/);
-            const hours = hoursMatch ? parseInt(hoursMatch[1], 10) : 0;
-            return sum + hours;
-        }, 0);
-        acc[topic] = `${totalHours}h`;
-        return acc;
-    }, {} as Record<string, string>);
     
     return course.learningUnits.map((unit, index) => {
-      const competency = course.competencyMatrix?.[index] || { competency: '', skills: [] };
-      const scheduleItems = scheduleByTopic[unit.name.trim()] || [];
-      return {
-        unit,
-        competency,
-        unitWorkload: unitWorkloads[unit.name.trim()] || '0h',
-        scheduleItems,
-      };
+        const competency = course.competencyMatrix?.[index] || { competency: 'N/A', skills: [] };
+        const scheduleItems = scheduleByUnitName[unit.name] || [];
+        const unitWorkload = scheduleItems.reduce((sum, item) => sum + getWorkload(item.activity), 0);
+
+        return {
+            unit,
+            competency,
+            scheduleItems,
+            unitWorkload: `${unitWorkload}h`
+        };
     });
 
-  }, [course, classroom?.classSchedule]);
+  }, [course, classroom]);
+
 
   const totalCH = useMemo(() => {
-    const total = groupedSchedule.reduce((sum, group) => {
-        const groupTotal = group.scheduleItems.reduce((groupSum, item) => {
-             const hoursMatch = item.activity.match(/(\d+h)/);
-             return groupSum + (hoursMatch ? parseInt(hoursMatch[1], 10) : 0);
-        }, 0);
-        return sum + groupTotal;
-    }, 0);
+    if (!classroom?.classSchedule) return '0H';
+    const total = classroom.classSchedule.reduce((sum, item) => sum + getWorkload(item.activity), 0);
     return `${total}H`;
-  }, [groupedSchedule]);
+  }, [classroom?.classSchedule]);
 
 
   return (
@@ -186,20 +176,21 @@ function CourseInformation({
                 <table className="w-full text-sm">
                     <thead className="bg-gray-200 dark:bg-gray-700 font-bold">
                         <tr>
-                            <th className="p-2 border-r w-1/6">UNIDADE DE APRENDIZAGEM</th>
-                            <th className="p-2 border-r w-2/6">HABILIDADES</th>
+                            <th className="p-2 border-r w-1/6 text-left">UNIDADE DE APRENDIZAGEM</th>
+                            <th className="p-2 border-r w-2/6 text-left">HABILIDADES</th>
                             <th className="p-2 border-r w-[80px]">CH</th>
-                            <th className="p-2 border-r w-2/6">DESCRITORES</th>
+                            <th className="p-2 border-r w-2/6 text-left">DESCRITORES</th>
                             <th className="p-2 w-[80px]">CH</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {groupedSchedule.map((group) => {
-                             const rowCount = group.scheduleItems.length || 1;
+                        {groupedSchedule.map((group, groupIndex) => {
+                             const rowCount = Math.max(1, group.scheduleItems.length);
                              return (
-                                <React.Fragment key={group.unit.name}>
-                                    {group.scheduleItems.length > 0 ? (
-                                        group.scheduleItems.map((item, itemIndex) => (
+                                <React.Fragment key={groupIndex}>
+                                    {Array.from({ length: rowCount }).map((_, itemIndex) => {
+                                        const item = group.scheduleItems[itemIndex];
+                                        return (
                                             <tr key={itemIndex} className="border-b">
                                                 {itemIndex === 0 && (
                                                     <>
@@ -220,28 +211,20 @@ function CourseInformation({
                                                         </td>
                                                     </>
                                                 )}
-                                                <td className="p-2 border-r align-top">{item.content}</td>
-                                                <td className="p-2 text-center align-top">{item.activity.match(/(\d+h)/)?.[0]}</td>
+                                                
+                                                {item ? (
+                                                    <>
+                                                        <td className="p-2 border-r align-top">{item.content}</td>
+                                                        <td className="p-2 text-center align-top">{item.activity.match(/(\d+h)/)?.[0] || ''}</td>
+                                                    </>
+                                                ) : (
+                                                    <td className="p-2 border-r align-top text-muted-foreground" colSpan={2}>
+                                                        {group.competency.skills.map(s => s.descriptors).join('; ')}
+                                                    </td>
+                                                )}
                                             </tr>
-                                        ))
-                                    ) : (
-                                        <tr className="border-b">
-                                            <td className="p-2 border-r align-top">{group.unit.name}</td>
-                                            <td className="p-2 border-r align-top">
-                                                <ul className="list-disc pl-4 space-y-1">
-                                                     {group.competency?.skills?.map((skill, skillIdx) => (
-                                                        <li key={skillIdx}>
-                                                            {skill.skill}
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </td>
-                                            <td className="p-2 border-r align-top text-center">{group.unitWorkload}</td>
-                                            <td className="p-2 border-r align-top text-muted-foreground" colSpan={2}>
-                                                {group.competency?.skills?.map(s => s.descriptors).join('; ')}
-                                            </td>
-                                        </tr>
-                                    )}
+                                        )
+                                    })}
                                 </React.Fragment>
                             )
                         })}
