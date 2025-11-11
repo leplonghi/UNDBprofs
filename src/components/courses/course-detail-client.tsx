@@ -104,7 +104,7 @@ function CourseInformation({
   const totalCH = useMemo(() => {
     const total = groupedSchedule.reduce((sum, group) => {
         const groupTotal = group.scheduleItems.reduce((groupSum, item) => {
-             const hoursMatch = item.activity.match(/(\d+)h/);
+             const hoursMatch = item.activity.match(/(\d+h)/);
              return groupSum + (hoursMatch ? parseInt(hoursMatch[1], 10) : 0);
         }, 0);
         return sum + groupTotal;
@@ -170,27 +170,6 @@ function CourseInformation({
                         </tr>
                     </tbody>
                 </table>
-                {course.competencyMatrix && course.competencyMatrix.length > 0 && (
-                    <Accordion type="multiple" className="w-full" defaultValue={['comp-0']}>
-                        {course.competencyMatrix.map((comp, compIndex) => (
-                            <AccordionItem key={compIndex} value={`comp-${compIndex}`} className="border-b last:border-b-0">
-                                <AccordionTrigger className="text-base font-medium px-4">{comp.competency}</AccordionTrigger>
-                                <AccordionContent className="p-4 bg-muted/20">
-                                    <div className="space-y-4">
-                                        {comp.skills.map((skill, skillIndex) => (
-                                            <div key={skillIndex}>
-                                                <h4 className="font-medium text-primary">{skill.skill}</h4>
-                                                <p className="text-sm text-muted-foreground">
-                                                    <strong>Descritores:</strong> {skill.descriptors}
-                                                </p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </AccordionContent>
-                            </AccordionItem>
-                        ))}
-                    </Accordion>
-                )}
             </div>
         </div>
 
@@ -222,7 +201,12 @@ function CourseInformation({
                                                         <td className="p-2 border-r align-top" rowSpan={rowCount}>
                                                             <ul className="list-disc pl-4 space-y-1">
                                                                 {group.competency?.skills?.map((skill, skillIdx) => (
-                                                                <li key={skillIdx}>{skill.skill}</li>
+                                                                <li key={skillIdx}>
+                                                                    {skill.skill}
+                                                                    <p className="text-xs text-muted-foreground pl-2">
+                                                                        {skill.descriptors}
+                                                                    </p>
+                                                                </li>
                                                                 ))}
                                                             </ul>
                                                         </td>
@@ -240,8 +224,13 @@ function CourseInformation({
                                             <td className="p-2 border-r align-top">{group.unit.name}</td>
                                             <td className="p-2 border-r align-top">
                                                 <ul className="list-disc pl-4 space-y-1">
-                                                    {group.competency?.skills?.map((skill, skillIdx) => (
-                                                        <li key={skillIdx}>{skill.skill}</li>
+                                                     {group.competency?.skills?.map((skill, skillIdx) => (
+                                                        <li key={skillIdx}>
+                                                            {skill.skill}
+                                                            <p className="text-xs text-muted-foreground pl-2">
+                                                                {skill.descriptors}
+                                                            </p>
+                                                        </li>
                                                     ))}
                                                 </ul>
                                             </td>
