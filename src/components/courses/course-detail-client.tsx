@@ -90,15 +90,18 @@ function CourseInformation({
       'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800',
       'bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-800',
   ];
+  
+  const { user } = useUser();
+
 
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Plano de Ensino e Cronograma</CardTitle>
+            <CardTitle>Visualização do Plano de Ensino</CardTitle>
             <CardDescription>
-              Detalhes, estrutura e cronograma da disciplina.
+              Dados extraídos do documento PDF.
             </CardDescription>
           </div>
           <Button
@@ -112,53 +115,73 @@ function CourseInformation({
       </CardHeader>
       <CardContent className="space-y-6">
         
-        {(course.syllabus || course.objectives || course.competencies || (course.competencyMatrix && course.competencyMatrix.length > 0)) && (
-             <div>
-                <h3 className="font-semibold mb-2">Estrutura Pedagógica</h3>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-lg border p-4">
-                    <div>
-                        <h4 className="font-medium text-center mb-2">EMENTA</h4>
+        {/* PDF Replica Section */}
+        <div className="space-y-4 rounded-lg border p-4">
+            <h2 className="text-center font-bold text-lg bg-gray-200 dark:bg-gray-700 py-2 rounded-t-md">PLANO DE ENSINO</h2>
+            <div className="border">
+                <div className='p-2 border-b'>
+                    <span className="font-bold">CURSO:</span> ARQUITETURA E URBANISMO
+                </div>
+                 <div className="grid grid-cols-3 border-b">
+                    <div className="col-span-2 p-2 border-r"><span className="font-bold">UNIDADE CURRICULAR:</span> {course.name}</div>
+                    <div className="p-2"><span className="font-bold">CARGA HORÁRIA:</span> {classroom?.workload}</div>
+                </div>
+                <div className="grid grid-cols-3">
+                    <div className="col-span-2 p-2 border-r"><span className="font-bold">PROFESSOR:</span> {user?.displayName}</div>
+                    <div className="p-2"><span className="font-bold">SEMESTRE:</span> {classroom?.semester}</div>
+                </div>
+            </div>
+
+            <h2 className="text-center font-bold text-lg bg-gray-200 dark:bg-gray-700 py-2 mt-4">MATRIZ DE COMPETÊNCIAS</h2>
+             <div className="border">
+                <div className="grid grid-cols-2">
+                    <div className="p-2 border-r">
+                        <h3 className="font-bold text-center mb-2">EMENTA</h3>
                         <p className="text-sm text-muted-foreground whitespace-pre-wrap">{course.syllabus}</p>
                     </div>
-                     <div>
-                        <h4 className="font-medium text-center mb-2">OBJETIVOS</h4>
-                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{course.objectives}</p>
-                    </div>
-                     <div className='md:col-span-2'>
-                        <h4 className="font-medium text-center mb-2">COMPETÊNCIAS GERAIS</h4>
+                    <div className="p-2">
+                        <h3 className="font-bold text-center mb-2">COMPETÊNCIAS</h3>
                         <p className="text-sm text-muted-foreground whitespace-pre-wrap">{course.competencies}</p>
+                         {course.objectives && (
+                            <div className="mt-4">
+                                <h4 className="font-bold">Objetivos:</h4>
+                                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{course.objectives}</p>
+                            </div>
+                        )}
                     </div>
                 </div>
-
-                {course.competencyMatrix && course.competencyMatrix.length > 0 && (
-                    <Accordion type="multiple" className="w-full border rounded-md px-4 mt-4">
-                         <AccordionItem value="comp-matrix" className="border-b-0">
-                            <AccordionTrigger className="text-base font-semibold">Matriz de Competências Detalhada</AccordionTrigger>
-                            <AccordionContent>
-                                {course.competencyMatrix.map((comp, compIndex) => (
-                                    <Accordion key={compIndex} type="multiple" className="w-full mt-2">
-                                        <AccordionItem value={`comp-${compIndex}`} >
-                                            <AccordionTrigger className="text-base font-medium bg-muted/50 px-4 rounded-t-md">{comp.competency}</AccordionTrigger>
-                                            <AccordionContent className="p-4 border border-t-0 rounded-b-md">
-                                                <div className="space-y-4">
-                                                    {comp.skills.map((skill, skillIndex) => (
-                                                        <div key={skillIndex}>
-                                                            <h4 className="font-medium">{skill.skill}</h4>
-                                                            <p className="text-sm text-muted-foreground">
-                                                                <strong>Descritores:</strong> {skill.descriptors}
-                                                            </p>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </AccordionContent>
-                                        </AccordionItem>
-                                    </Accordion>
-                                ))}
-                            </AccordionContent>
-                        </AccordionItem>
-                    </Accordion>
-                )}
             </div>
+        </div>
+
+        {/* End of PDF Replica Section */}
+
+        {(course.competencyMatrix && course.competencyMatrix.length > 0) && (
+            <Accordion type="multiple" className="w-full border rounded-lg px-4">
+                 <AccordionItem value="comp-matrix" className="border-b-0">
+                    <AccordionTrigger className="text-base font-semibold">Matriz de Competências Detalhada</AccordionTrigger>
+                    <AccordionContent>
+                        {course.competencyMatrix.map((comp, compIndex) => (
+                            <Accordion key={compIndex} type="multiple" className="w-full mt-2">
+                                <AccordionItem value={`comp-${compIndex}`} >
+                                    <AccordionTrigger className="text-base font-medium bg-muted/50 px-4 rounded-t-md">{comp.competency}</AccordionTrigger>
+                                    <AccordionContent className="p-4 border border-t-0 rounded-b-md">
+                                        <div className="space-y-4">
+                                            {comp.skills.map((skill, skillIndex) => (
+                                                <div key={skillIndex}>
+                                                    <h4 className="font-medium">{skill.skill}</h4>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        <strong>Descritores:</strong> {skill.descriptors}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            </Accordion>
+                        ))}
+                    </AccordionContent>
+                </AccordionItem>
+            </Accordion>
         )}
 
         {course.learningUnits && course.learningUnits.length > 0 && (
@@ -196,7 +219,7 @@ function CourseInformation({
             </div>
           </div>
         )}
-        {course.bibliography && (
+        {course.bibliography && (course.bibliography.basic || course.bibliography.complementary || course.bibliography.recommended) && (
           <div>
             <h3 className="font-semibold mb-2">Bibliografia</h3>
             <div className="rounded-md border">
@@ -381,5 +404,3 @@ export function CourseDetailClient({ courseId }: { courseId: string }) {
     </div>
   );
 }
-
-    
