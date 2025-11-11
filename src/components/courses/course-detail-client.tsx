@@ -169,26 +169,24 @@ function CourseInformation({
                     </tr>
                 </tbody>
             </table>
-            <table className="w-full text-sm border-collapse">
-                 <tbody>
-                    <tr className="border-t">
-                        <td className="p-2 w-1/2 align-top border-r">
-                            <h3 className="font-bold text-center mb-2">EMENTA</h3>
-                            <p className="text-muted-foreground whitespace-pre-wrap">{course.syllabus}</p>
-                        </td>
-                        <td className="p-2 w-1/2 align-top">
-                             <h3 className="font-bold text-center mb-2">COMPETÊNCIAS</h3>
-                            <p className="text-muted-foreground whitespace-pre-wrap">{course.competencies}</p>
-                        </td>
-                    </tr>
-                 </tbody>
-            </table>
         </div>
 
         {course.competencyMatrix && course.competencyMatrix.length > 0 && (
           <div>
             <h3 className="font-semibold text-xl mb-4 text-center bg-gray-200 dark:bg-gray-700 p-2 rounded-t-lg">MATRIZ DE COMPETÊNCIAS E HABILIDADES</h3>
-             <Accordion type="multiple" className="w-full border" defaultValue={['comp-0']}>
+             <Accordion type="multiple" className="w-full border" defaultValue={['ementa', 'competencias-gerais', 'comp-0']}>
+                 <AccordionItem value="ementa" className="border-b">
+                    <AccordionTrigger className="text-base font-medium px-4">EMENTA</AccordionTrigger>
+                    <AccordionContent className="p-4 bg-muted/20">
+                        <p className="text-muted-foreground whitespace-pre-wrap">{course.syllabus}</p>
+                    </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="competencias-gerais" className="border-b">
+                    <AccordionTrigger className="text-base font-medium px-4">COMPETÊNCIAS</AccordionTrigger>
+                    <AccordionContent className="p-4 bg-muted/20">
+                         <p className="text-muted-foreground whitespace-pre-wrap">{course.competencies}</p>
+                    </AccordionContent>
+                </AccordionItem>
                 {course.competencyMatrix.map((comp, compIndex) => (
                     <AccordionItem key={compIndex} value={`comp-${compIndex}`} className="border-b last:border-b-0">
                         <AccordionTrigger className="text-base font-medium px-4">{comp.competency}</AccordionTrigger>
@@ -248,6 +246,26 @@ function CourseInformation({
                                         <td className="p-2 text-center align-top">{item.activity.match(/(\d+h)/)?.[0]}</td>
                                     </tr>
                                 ))}
+                                {group.scheduleItems.length === 0 && (
+                                     <tr className="border-b">
+                                        <td className="p-2 border-r align-top">
+                                            {group.unit.name}
+                                        </td>
+                                        <td className="p-2 border-r align-top">
+                                            <ul className="list-disc pl-4 space-y-1">
+                                                {group.competency?.skills?.map((skill, skillIdx) => (
+                                                    <li key={skillIdx}>{skill.skill}</li>
+                                                ))}
+                                            </ul>
+                                        </td>
+                                        <td className="p-2 border-r align-top text-center">
+                                            {group.unitWorkload}
+                                        </td>
+                                        <td className="p-2 border-r align-top text-center text-muted-foreground" colSpan={2}>
+                                            Nenhuma aula agendada para esta unidade.
+                                        </td>
+                                    </tr>
+                                )}
                             </React.Fragment>
                         ))}
                         <tr className="bg-gray-200 dark:bg-gray-700 font-bold">
