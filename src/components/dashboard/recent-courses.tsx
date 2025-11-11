@@ -84,7 +84,7 @@ export function RecentCourses({ courses, classroomsByCourse, isLoading }: Recent
           <TableHeader>
             <TableRow>
               <TableHead>Disciplina</TableHead>
-              <TableHead>Código</TableHead>
+              <TableHead>Ano</TableHead>
               <TableHead className="text-right">Semestre</TableHead>
             </TableRow>
           </TableHeader>
