@@ -62,7 +62,7 @@ const ImportCourseFromLessonPlanOutputSchema = z.object({
   classSchedule: z
     .array(
       z.object({
-        date: z.string().describe('The date of the class (format: YYYY-MM-DD). If not present, this should be an empty string.'),
+        date: z.string().describe('The date of the class (format: YYYY-MM-dd). If not present, this should be an empty string.'),
         type: z.string().describe('The type of class (e.g., TEÓRICA, PRÁTICA, FERIADO). This corresponds to the HABILIDADES column in the document.'),
         topic: z.string().describe('The main topic or unit (e.g., I - Teoria e Método). This corresponds to the UNIDADE DE APRENDIZAGEM column.'),
         content: z.string().describe('The content or topic of the class. This corresponds to the DESCRITORES column.'),

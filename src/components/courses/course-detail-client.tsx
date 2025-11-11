@@ -143,7 +143,7 @@ function CourseInformation({
             <div>
                 <h2 className="font-bold tracking-wider">VISÃO DA UNDB</h2>
                 <p className="text-sm text-muted-foreground max-w-2xl mx-auto mt-1">
-                    Ser uma instituição nacionalmente reconhecida pela sua excelência em todas as suas áreas de atuação.
+                    Ser uma instituição nacionalmente reconhecida pela sua excelência em todas as sua áreas de atuação.
                 </p>
             </div>
             <div>
