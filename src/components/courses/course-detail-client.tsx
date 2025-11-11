@@ -180,6 +180,47 @@ function CourseInformation({
             </table>
         </div>
 
+        {course.competencyMatrix && course.competencyMatrix.length > 0 && (
+          <div>
+            <h3 className="font-semibold text-xl mb-4">Matriz de Competências</h3>
+             {course.competencyMatrix.map((comp, compIndex) => (
+                <Accordion key={compIndex} type="multiple" className="w-full mt-2">
+                    <AccordionItem value={`comp-${compIndex}`} >
+                        <AccordionTrigger className="text-base font-medium bg-muted/50 px-4 rounded-t-md">{comp.competency}</AccordionTrigger>
+                        <AccordionContent className="p-4 border border-t-0 rounded-b-md">
+                            <div className="space-y-4">
+                                {comp.skills.map((skill, skillIndex) => (
+                                    <div key={skillIndex}>
+                                        <h4 className="font-medium">{skill.skill}</h4>
+                                        <p className="text-sm text-muted-foreground">
+                                            <strong>Descritores:</strong> {skill.descriptors}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
+                </Accordion>
+            ))}
+          </div>
+        )}
+
+        {course.learningUnits && course.learningUnits.length > 0 && (
+            <div>
+                 <h3 className="font-semibold text-xl mb-4">Unidades de Aprendizagem</h3>
+                 <Accordion type="multiple" className="w-full">
+                    {course.learningUnits.map((unit, index) => (
+                        <AccordionItem value={`unit-${index}`} key={index}>
+                            <AccordionTrigger className="text-base font-medium">{unit.name}</AccordionTrigger>
+                            <AccordionContent>
+                                <p className="text-muted-foreground whitespace-pre-wrap">{unit.content}</p>
+                            </AccordionContent>
+                        </AccordionItem>
+                    ))}
+                </Accordion>
+            </div>
+        )}
+
         {groupedSchedule && groupedSchedule.length > 0 && (
              <div className="border rounded-lg overflow-hidden">
                 <table className="w-full text-sm">
@@ -231,7 +272,7 @@ function CourseInformation({
 
         {course.thematicTree && course.thematicTree.length > 0 && (
           <div>
-            <h3 className="font-semibold">Árvore Temática</h3>
+            <h3 className="font-semibold text-xl mb-4">Árvore Temática</h3>
             <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {course.thematicTree.map((item, index) => (
                 <Card key={index} className={cn(thematicTreeColors[index % thematicTreeColors.length])}>
@@ -250,7 +291,7 @@ function CourseInformation({
         )}
         {course.bibliography && (course.bibliography.basic || course.bibliography.complementary || course.bibliography.recommended) && (
           <div>
-            <h3 className="font-semibold mb-2">Bibliografia</h3>
+            <h3 className="font-semibold text-xl mb-4">Bibliografia</h3>
             <div className="rounded-md border">
               <table className="w-full">
                 <tbody className='text-sm'>
