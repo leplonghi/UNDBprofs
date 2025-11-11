@@ -6,6 +6,9 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 export const metadata: Metadata = {
   title: 'UNDBProf',
   description: 'Sistema digital de apoio aos professores da UNDB.',
+  icons: {
+    icon: 'https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/public%2Ffavicon.png?alt=media&token=c1f4e1f7-53c8-472b-86b4-21952d7658f8',
+  },
 };
 
 export default function RootLayout({
