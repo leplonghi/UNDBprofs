@@ -129,15 +129,21 @@ const parseCSV = (file: File): Promise<ParsedStudent[]> => {
                 const students = rows.map((row, index) => {
                     const columns = row.split(delimiter).map(c => c.trim().replace(/["']/g, ''));
 
+                    const email = columns[emailIndex] || '';
+
                     // Filter by role if the column exists
                     if (roleIndex > -1 && columns[roleIndex]?.toLowerCase() !== 'estudante') {
+                        return null;
+                    }
+                    
+                    // Filter out professors based on email domain
+                    if (email.endsWith('@undb.edu.br')) {
                         return null;
                     }
 
                     const firstName = nameIndex > -1 ? (columns[nameIndex] || '') : '';
                     const lastName = lastNameIndex > -1 ? (columns[lastNameIndex] || '') : '';
                     const name = `${firstName} ${lastName}`.trim();
-                    const email = columns[emailIndex] || '';
                     const registrationId = registrationIdIndex > -1 ? (columns[registrationIdIndex] || '') : undefined;
                     
                     if (name && email && emailRegex.test(email)) {
