@@ -244,7 +244,7 @@ export function ImportForm() {
                     
                     <Accordion type="multiple" defaultValue={['item-1', 'item-2']} className="w-full space-y-4">
                         <AccordionItem value="item-1" className="border rounded-lg">
-                           <AccordionTrigger className="px-6 text-lg font-semibold">Dados da Disciplina</AccordionTrigger>
+                           <AccordionTrigger className="px-6 text-lg font-semibold">Dados da Disciplina e Matriz de Competências</AccordionTrigger>
                            <AccordionContent className="px-6 pt-6 space-y-6">
                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <FormField
@@ -306,7 +306,7 @@ export function ImportForm() {
                                 {competencyMatrix && competencyMatrix.length > 0 && (
                                     <Accordion type="multiple" className="w-full">
                                         <AccordionItem value="comp-matrix" className="border rounded-md px-4">
-                                            <AccordionTrigger className="text-base font-semibold">Matriz de Competências Detalhada</AccordionTrigger>
+                                            <AccordionTrigger className="text-base font-semibold">Competências Específicas</AccordionTrigger>
                                             <AccordionContent className="pt-4">
                                                 {competencyMatrix.map((comp, compIndex) => (
                                                     <Accordion key={compIndex} type="multiple" className="w-full mt-2">
