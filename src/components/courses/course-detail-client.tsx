@@ -46,13 +46,6 @@ function CourseDetailsSkeleton() {
   );
 }
 
-interface GroupedScheduleItem {
-  unit: { name: string; content: string };
-  competency: { competency: string; skills: { skill: string; descriptors: string }[] };
-  unitWorkload: string;
-  scheduleItems: ClassScheduleItem[];
-}
-
 const thematicTreeColors = [
     'bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-800',
     'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800',
@@ -72,35 +65,38 @@ function CourseInformation({
   const { user } = useUser();
 
   const getWorkload = (text: string) => {
+     if (!text) return 0;
      const hoursMatch = text.match(/(\d+)\s*h/);
      return hoursMatch ? parseInt(hoursMatch[1], 10) : 0;
   }
-
+  
   const groupedSchedule = useMemo(() => {
-    if (!course.learningUnits || !course.competencyMatrix || !classroom) {
-        return [];
+    if (!course.learningUnits || !course.competencyMatrix || !classroom?.classSchedule) {
+      return [];
     }
 
-    const scheduleByUnitName: Record<string, ClassScheduleItem[]> = (classroom.classSchedule || []).reduce((acc, item) => {
-        const key = item.topic.trim();
-        if (!acc[key]) acc[key] = [];
-        acc[key].push(item);
-        return acc;
-    }, {} as Record<string, ClassScheduleItem[]>);
+    const scheduleByUnitName: Record<string, ClassScheduleItem[]> = {};
+    for (const item of classroom.classSchedule) {
+        const matchingUnit = course.learningUnits.find(unit => item.topic.startsWith(unit.name));
+        const key = matchingUnit ? matchingUnit.name : item.topic.trim();
+        if (!scheduleByUnitName[key]) {
+            scheduleByUnitName[key] = [];
+        }
+        scheduleByUnitName[key].push(item);
+    }
     
     return course.learningUnits.map((unit, index) => {
-        const competency = course.competencyMatrix?.[index] || { competency: 'N/A', skills: [] };
-        const scheduleItems = scheduleByUnitName[unit.name] || [];
-        const unitWorkload = scheduleItems.reduce((sum, item) => sum + getWorkload(item.activity), 0);
-
-        return {
-            unit,
-            competency,
-            scheduleItems,
-            unitWorkload: `${unitWorkload}h`
-        };
+      const competency = course.competencyMatrix?.[index] || { competency: 'N/A', skills: [] };
+      const scheduleItems = scheduleByUnitName[unit.name] || [];
+      const unitWorkload = scheduleItems.reduce((sum, item) => sum + getWorkload(item.activity), 0);
+      
+      return {
+        unit,
+        competency,
+        scheduleItems,
+        unitWorkload: `${unitWorkload}h`
+      };
     });
-
   }, [course, classroom]);
 
 
@@ -170,71 +166,73 @@ function CourseInformation({
                 </table>
             </div>
         </div>
-
+        
         {groupedSchedule && groupedSchedule.length > 0 && (
-             <div className="border rounded-lg overflow-hidden">
-                <table className="w-full text-sm">
-                    <thead className="bg-gray-200 dark:bg-gray-700 font-bold">
-                        <tr>
-                            <th className="p-2 border-r w-1/6 text-left">UNIDADE DE APRENDIZAGEM</th>
-                            <th className="p-2 border-r w-2/6 text-left">HABILIDADES</th>
-                            <th className="p-2 border-r w-[80px]">CH</th>
-                            <th className="p-2 border-r w-2/6 text-left">DESCRITORES</th>
-                            <th className="p-2 w-[80px]">CH</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {groupedSchedule.map((group, groupIndex) => {
-                             const rowCount = Math.max(1, group.scheduleItems.length);
-                             return (
-                                <React.Fragment key={groupIndex}>
-                                    {Array.from({ length: rowCount }).map((_, itemIndex) => {
-                                        const item = group.scheduleItems[itemIndex];
-                                        return (
-                                            <tr key={itemIndex} className="border-b">
-                                                {itemIndex === 0 && (
-                                                    <>
-                                                        <td className="p-2 border-r align-top" rowSpan={rowCount}>
-                                                            {group.unit.name}
-                                                        </td>
-                                                        <td className="p-2 border-r align-top" rowSpan={rowCount}>
-                                                            <ul className="list-disc pl-4 space-y-1">
-                                                                {group.competency?.skills?.map((skill, skillIdx) => (
-                                                                    <li key={skillIdx}>
-                                                                        {skill.skill}
-                                                                    </li>
-                                                                ))}
-                                                            </ul>
-                                                        </td>
-                                                        <td className="p-2 border-r align-top text-center" rowSpan={rowCount}>
-                                                            {group.unitWorkload}
-                                                        </td>
-                                                    </>
-                                                )}
-                                                
-                                                {item ? (
-                                                    <>
-                                                        <td className="p-2 border-r align-top">{item.content}</td>
-                                                        <td className="p-2 text-center align-top">{item.activity.match(/(\d+h)/)?.[0] || ''}</td>
-                                                    </>
-                                                ) : (
-                                                    <td className="p-2 border-r align-top text-muted-foreground" colSpan={2}>
-                                                        {group.competency.skills.map(s => s.descriptors).join('; ')}
-                                                    </td>
-                                                )}
-                                            </tr>
-                                        )
-                                    })}
-                                </React.Fragment>
-                            )
-                        })}
-                        <tr className="bg-gray-200 dark:bg-gray-700 font-bold">
-                            <td colSpan={4} className="p-2 text-right border-r">TOTAL CH</td>
-                            <td className="p-2 text-center">{totalCH}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+          <div className="border rounded-lg overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-200 dark:bg-gray-700 font-bold">
+                <tr>
+                  <th className="p-2 border-r w-1/6 text-left">UNIDADE DE APRENDIZAGEM</th>
+                  <th className="p-2 border-r w-2/6 text-left">HABILIDADES</th>
+                  <th className="p-2 border-r w-[80px]">CH</th>
+                  <th className="p-2 border-r w-2/6 text-left">DESCRITORES</th>
+                  <th className="p-2 w-[80px]">CH</th>
+                </tr>
+              </thead>
+              <tbody>
+                {groupedSchedule.map((group, groupIndex) => {
+                  const rowCount = Math.max(1, group.scheduleItems.length);
+                  return (
+                    <React.Fragment key={`group-${groupIndex}`}>
+                      {Array.from({ length: rowCount }).map((_, itemIndex) => {
+                        const item = group.scheduleItems[itemIndex];
+                        const isFirstRowOfGroup = itemIndex === 0;
+
+                        return (
+                          <tr key={item ? item.content : `empty-${itemIndex}`} className="border-b">
+                            {isFirstRowOfGroup && (
+                              <>
+                                <td className="p-2 border-r align-top" rowSpan={rowCount}>
+                                  {group.unit.name}
+                                </td>
+                                <td className="p-2 border-r align-top" rowSpan={rowCount}>
+                                  <ul className="list-disc pl-4 space-y-1">
+                                    {group.competency?.skills?.map((skill, skillIdx) => (
+                                      <li key={skillIdx}>{skill.skill}</li>
+                                    ))}
+                                  </ul>
+                                </td>
+                                <td className="p-2 border-r align-top text-center" rowSpan={rowCount}>
+                                  {group.unitWorkload}
+                                </td>
+                              </>
+                            )}
+                            
+                            {item ? (
+                              <>
+                                <td className="p-2 border-r align-top">{item.content}</td>
+                                <td className="p-2 text-center align-top">
+                                  {getWorkload(item.activity) > 0 ? `${getWorkload(item.activity)}h` : ''}
+                                </td>
+                              </>
+                            ) : (
+                              <td className="p-2 border-r align-top text-muted-foreground" colSpan={2}>
+                                {group.competency.skills.map(s => s.descriptors).join('; ')}
+                              </td>
+                            )}
+                          </tr>
+                        );
+                      })}
+                    </React.Fragment>
+                  );
+                })}
+                <tr className="bg-gray-200 dark:bg-gray-700 font-bold">
+                  <td colSpan={4} className="p-2 text-right border-r">TOTAL CH</td>
+                  <td className="p-2 text-center">{totalCH}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         )}
         
         {course.thematicTree && course.thematicTree.length > 0 && (
