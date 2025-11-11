@@ -114,8 +114,8 @@ function CourseInformation({
 
         <div>
             <h2 className="text-center font-bold text-lg bg-gray-200 dark:bg-gray-700 py-2 rounded-t-lg border border-b-0">MATRIZ DE COMPETÊNCIAS</h2>
-            <div className="border">
-                 <table className="w-full text-sm">
+            <div className="border p-4 space-y-4">
+                 <table className="w-full text-sm border-collapse">
                     <tbody>
                         <tr className='border-b'>
                             <td className="p-2 w-1/2 border-r align-top">
@@ -129,8 +129,49 @@ function CourseInformation({
                         </tr>
                     </tbody>
                 </table>
+                 {course.competencyMatrix && course.competencyMatrix.length > 0 && (
+                    <div>
+                        {course.competencyMatrix.map((comp, compIndex) => (
+                            <Accordion key={compIndex} type="single" collapsible className="w-full mt-2">
+                                <AccordionItem value={`comp-${compIndex}`} >
+                                    <AccordionTrigger className="text-base font-medium bg-muted/50 px-4 rounded-t-md">{comp.competency}</AccordionTrigger>
+                                    <AccordionContent className="p-4 border border-t-0 rounded-b-md">
+                                        <div className="space-y-4">
+                                            {comp.skills.map((skill, skillIndex) => (
+                                                <div key={skillIndex}>
+                                                    <h4 className="font-medium">{skill.skill}</h4>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        <strong>Descritores:</strong> {skill.descriptors}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            </Accordion>
+                        ))}
+                     </div>
+                )}
             </div>
         </div>
+        
+        {course.learningUnits && course.learningUnits.length > 0 && (
+             <div>
+                <h2 className="text-center font-bold text-lg bg-gray-200 dark:bg-gray-700 py-2 rounded-t-lg border border-b-0">UNIDADES DE APRENDIZAGEM</h2>
+                <div className="border p-4">
+                    <Accordion type="multiple" className="w-full">
+                        {course.learningUnits.map((unit, index) => (
+                            <AccordionItem value={`unit-${index}`} key={index}>
+                                <AccordionTrigger>{unit.name}</AccordionTrigger>
+                                <AccordionContent>
+                                    <p className="text-muted-foreground whitespace-pre-wrap">{unit.content}</p>
+                                </AccordionContent>
+                            </AccordionItem>
+                        ))}
+                    </Accordion>
+                </div>
+            </div>
+        )}
 
         {course.thematicTree && course.thematicTree.length > 0 && (
              <div className="space-y-4">
