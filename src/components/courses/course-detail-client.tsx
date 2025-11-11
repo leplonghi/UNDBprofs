@@ -80,18 +80,17 @@ function CourseInformation({
         const skills = competency?.skills || [];
         
         let chHabilidades = 0;
-        const descritoresComCH = skills.flatMap(skill => {
-            const lines = skill.descriptors.split('\n');
-            return lines.map(line => {
+        const descritoresComCH = skills.flatMap(skill => 
+            (skill.descriptors || '').split('\n').map(line => {
                 const match = line.match(/\s\((\d+)h\)$/);
                 const ch = match ? parseInt(match[1], 10) : 0;
                 chHabilidades += ch;
                 return {
-                    text: match ? line.replace(match[0], '') : line,
+                    text: match ? line.replace(match[0], '').trim() : line.trim(),
                     ch: ch > 0 ? `${ch}h` : ''
                 };
-            });
-        });
+            }).filter(d => d.text) // Filter out empty lines
+        );
         
         return {
             unitName: unit.name,
@@ -182,35 +181,37 @@ function CourseInformation({
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {learningUnitsWithDetails.map((unit, unitIndex) => (
-                        <React.Fragment key={unitIndex}>
-                            {unit.descritores.length > 0 ? unit.descritores.map((descritor, descritorIndex) => (
-                                <TableRow key={`${unitIndex}-${descritorIndex}`}>
-                                    {descritorIndex === 0 && (
-                                        <>
-                                            <TableCell rowSpan={unit.descritores.length} className="border-r align-top font-semibold">{unit.unitName}</TableCell>
-                                            <TableCell rowSpan={unit.descritores.length} className="border-r align-top whitespace-pre-wrap">{unit.habilidades}</TableCell>
-                                            <TableCell rowSpan={unit.descritores.length} className="border-r align-top text-center">{unit.chHabilidades}</TableCell>
-                                        </>
-                                    )}
-                                    <TableCell className="border-r">{descritor.text}</TableCell>
-                                    <TableCell className="text-center">{descritor.ch}</TableCell>
+                    {learningUnitsWithDetails.map((unit, unitIndex) => {
+                        const totalRowsForUnit = unit.descritores.length > 0 ? unit.descritores.length : 1;
+                        return (
+                            <React.Fragment key={unitIndex}>
+                                {totalRowsForUnit > 0 ? Array.from({ length: totalRowsForUnit }).map((_, descritorIndex) => (
+                                    <TableRow key={`${unitIndex}-${descritorIndex}`}>
+                                        {descritorIndex === 0 && (
+                                            <>
+                                                <TableCell rowSpan={totalRowsForUnit} className="border-r align-top font-semibold">{unit.unitName}</TableCell>
+                                                <TableCell rowSpan={totalRowsForUnit} className="border-r align-top whitespace-pre-wrap">{unit.habilidades}</TableCell>
+                                                <TableCell rowSpan={totalRowsForUnit} className="border-r align-top text-center">{unit.chHabilidades}</TableCell>
+                                            </>
+                                        )}
+                                        {unit.descritores.length > 0 ? (
+                                            <>
+                                                <TableCell className="border-r">{unit.descritores[descritorIndex].text}</TableCell>
+                                                <TableCell className="text-center">{unit.descritores[descritorIndex].ch}</TableCell>
+                                            </>
+                                        ) : (
+                                            <TableCell className="p-2 border-r align-top text-center text-muted-foreground" colSpan={2}>
+                                                Nenhum descritor para esta unidade.
+                                            </TableCell>
+                                        )}
+                                    </TableRow>
+                                )) : null}
+                                <TableRow className="bg-muted/30">
+                                    <TableCell colSpan={5} className="h-2 p-0"></TableCell>
                                 </TableRow>
-                            )) : (
-                                <TableRow key={`${unitIndex}-no-desc`}>
-                                     <TableCell className="border-r align-top font-semibold">{unit.unitName}</TableCell>
-                                     <TableCell className="border-r align-top whitespace-pre-wrap">{unit.habilidades}</TableCell>
-                                     <TableCell className="border-r align-top text-center">{unit.chHabilidades}</TableCell>
-                                     <TableCell className="p-2 border-r align-top text-center text-muted-foreground" colSpan={2}>
-                                        Nenhum descritor para esta unidade.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                             <TableRow className="bg-muted/30">
-                                <TableCell colSpan={5} className="h-2"></TableCell>
-                            </TableRow>
-                        </React.Fragment>
-                    ))}
+                            </React.Fragment>
+                        )
+                    })}
                     <TableRow className="bg-gray-200 dark:bg-gray-700 font-bold">
                         <TableCell colSpan={2} className="text-right">TOTAL CH</TableCell>
                         <TableCell className="text-center">{totalCH}H</TableCell>
@@ -293,30 +294,32 @@ function CourseInformation({
         {classroom?.classSchedule && classroom.classSchedule.length > 0 && (
           <div className="border rounded-lg overflow-hidden">
             <h2 className="text-center font-bold text-lg bg-gray-200 dark:bg-gray-700 py-2 border-b">CRONOGRAMA DE AULAS</h2>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead className="w-[120px]">Data</TableHead>
-                        <TableHead>Tipo</TableHead>
-                        <TableHead>Tópico</TableHead>
-                        <TableHead>Conteúdo</TableHead>
-                        <TableHead>Atividade</TableHead>
-                        <TableHead>Local</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {classroom.classSchedule.map((item, index) => (
-                        <TableRow key={index}>
-                            <TableCell className="w-[120px]">{item.date}</TableCell>
-                            <TableCell>{item.type}</TableCell>
-                            <TableCell>{item.topic}</TableCell>
-                            <TableCell className="whitespace-pre-wrap">{item.content}</TableCell>
-                            <TableCell className="whitespace-pre-wrap">{item.activity}</TableCell>
-                            <TableCell>{item.location}</TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+            <div className="overflow-x-auto">
+              <Table>
+                  <TableHeader>
+                      <TableRow>
+                          <TableHead className="w-[120px]">Data</TableHead>
+                          <TableHead>Tipo</TableHead>
+                          <TableHead>Tópico</TableHead>
+                          <TableHead>Conteúdo</TableHead>
+                          <TableHead>Atividade</TableHead>
+                          <TableHead>Local</TableHead>
+                      </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                      {classroom.classSchedule.map((item, index) => (
+                          <TableRow key={index}>
+                              <TableCell className="w-[120px]">{item.date}</TableCell>
+                              <TableCell>{item.type}</TableCell>
+                              <TableCell>{item.topic}</TableCell>
+                              <TableCell className="whitespace-pre-wrap">{item.content}</TableCell>
+                              <TableCell className="whitespace-pre-wrap">{item.activity}</TableCell>
+                              <TableCell>{item.location}</TableCell>
+                          </TableRow>
+                      ))}
+                  </TableBody>
+              </Table>
+            </div>
           </div>
         )}
 
