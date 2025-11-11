@@ -77,7 +77,7 @@ function CourseInformation({
         acc[key].push(item);
         return acc;
     }, {} as Record<string, ClassScheduleItem[]>);
-    
+
     const unitWorkloads = Object.entries(scheduleByTopic).reduce((acc, [topic, items]) => {
         const totalHours = items.reduce((sum, item) => {
             const hoursMatch = item.activity.match(/(\d+)h/);
@@ -89,7 +89,7 @@ function CourseInformation({
     }, {} as Record<string, string>);
     
     return course.learningUnits.map((unit, index) => {
-      const competency = course.competencyMatrix[index] || { competency: '', skills: [] };
+      const competency = course.competencyMatrix?.[index] || { competency: '', skills: [] };
       const scheduleItems = scheduleByTopic[unit.name.trim()] || [];
       return {
         unit,
@@ -395,3 +395,5 @@ export function CourseDetailClient({ courseId }: { courseId: string }) {
     </div>
   );
 }
+
+    
