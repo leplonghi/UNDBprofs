@@ -395,82 +395,76 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
                     </CardContent>
                 </Card>
 
-                <Accordion type="multiple" className="w-full">
-                    <AccordionItem value="item-1" className="border rounded-lg">
-                        <AccordionTrigger className="px-6 text-lg font-semibold">Estruturas Detalhadas (Opcional)</AccordionTrigger>
-                        <AccordionContent className="px-6 pt-4 space-y-6">
-                            {competencyMatrix && competencyMatrix.length > 0 && (
-                               <Accordion type="multiple" className="w-full">
-                                    <AccordionItem value="comp-matrix-inner">
-                                        <AccordionTrigger className="text-base font-semibold">Matriz de Competências</AccordionTrigger>
-                                        <AccordionContent className='pt-4'>
-                                            {competencyMatrix.map((comp, compIndex) => (
-                                                <Accordion key={compIndex} type="multiple" className="w-full mt-2">
-                                                    <AccordionItem value={`comp-${compIndex}`} >
-                                                        <AccordionTrigger className="text-base font-medium bg-muted/50 px-4 rounded-t-md">{comp.competency}</AccordionTrigger>
-                                                        <AccordionContent className="p-4 border border-t-0 rounded-b-md">
-                                                            <div className="space-y-4">
-                                                                {comp.skills.map((skill, skillIndex) => (
-                                                                    <div key={skillIndex}>
-                                                                        <h4 className="font-medium">{skill.skill}</h4>
-                                                                        <p className="text-sm text-muted-foreground">
-                                                                            <strong>Descritores:</strong> {skill.descriptors}
-                                                                        </p>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        </AccordionContent>
-                                                    </AccordionItem>
-                                                </Accordion>
-                                            ))}
+                {competencyMatrix && competencyMatrix.length > 0 && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Matriz de Competências</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {competencyMatrix.map((comp, compIndex) => (
+                                <Accordion key={compIndex} type="multiple" className="w-full mt-2">
+                                    <AccordionItem value={`comp-${compIndex}`} >
+                                        <AccordionTrigger className="text-base font-medium bg-muted/50 px-4 rounded-t-md">{comp.competency}</AccordionTrigger>
+                                        <AccordionContent className="p-4 border border-t-0 rounded-b-md">
+                                            <div className="space-y-4">
+                                                {comp.skills.map((skill, skillIndex) => (
+                                                    <div key={skillIndex}>
+                                                        <h4 className="font-medium">{skill.skill}</h4>
+                                                        <p className="text-sm text-muted-foreground">
+                                                            <strong>Descritores:</strong> {skill.descriptors}
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </AccordionContent>
                                     </AccordionItem>
                                 </Accordion>
-                            )}
+                            ))}
+                        </CardContent>
+                    </Card>
+                )}
 
-                             {learningUnits && learningUnits.length > 0 && (
-                                <FormItem>
-                                    <Accordion type="multiple" className="w-full">
-                                        <AccordionItem value="learning-units-inner">
-                                            <AccordionTrigger className="text-base font-semibold">Unidades de Aprendizagem</AccordionTrigger>
-                                            <AccordionContent className='pt-4'>
-                                                {learningUnits.map((unit, index) => (
-                                                    <AccordionItem value={`unit-${index}`} key={index}>
-                                                        <AccordionTrigger>{unit.name}</AccordionTrigger>
-                                                        <AccordionContent>
-                                                            <p className="text-muted-foreground whitespace-pre-wrap">{unit.content}</p>
-                                                        </AccordionContent>
-                                                    </AccordionItem>
-                                                ))}
-                                            </AccordionContent>
-                                        </AccordionItem>
-                                    </Accordion>
-                                </FormItem>
-                            )}
+                {learningUnits && learningUnits.length > 0 && (
+                     <Card>
+                        <CardHeader>
+                            <CardTitle>Unidades de Aprendizagem</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                             <Accordion type="multiple" className="w-full">
+                                {learningUnits.map((unit, index) => (
+                                    <AccordionItem value={`unit-${index}`} key={index}>
+                                        <AccordionTrigger>{unit.name}</AccordionTrigger>
+                                        <AccordionContent>
+                                            <p className="text-muted-foreground whitespace-pre-wrap">{unit.content}</p>
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                ))}
+                            </Accordion>
+                        </CardContent>
+                    </Card>
+                )}
 
-                            {thematicTree && thematicTree.length > 0 && (
-                                <div>
-                                    <h3 className="font-semibold mb-2">Árvore Temática</h3>
-                                    <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {thematicTree.map((item, index) => (
-                                        <Card key={index} className={cn(thematicTreeColors[index % thematicTreeColors.length])}>
-                                        <CardHeader>
-                                            <CardTitle className='text-lg'>{item.name}</CardTitle>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <p className="text-sm text-muted-foreground">
-                                            {item.description}
-                                            </p>
-                                        </CardContent>
-                                        </Card>
-                                    ))}
-                                    </div>
-                                </div>
-                            )}
-
-                        </AccordionContent>
-                    </AccordionItem>
-                </Accordion>
+                {thematicTree && thematicTree.length > 0 && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Árvore Temática</CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {thematicTree.map((item, index) => (
+                                <Card key={index} className={cn(thematicTreeColors[index % thematicTreeColors.length])}>
+                                <CardHeader>
+                                    <CardTitle className='text-lg'>{item.name}</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-sm text-muted-foreground">
+                                    {item.description}
+                                    </p>
+                                </CardContent>
+                                </Card>
+                            ))}
+                        </CardContent>
+                    </Card>
+                )}
 
                 <Card>
                     <CardHeader>
