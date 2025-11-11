@@ -163,7 +163,7 @@ function CourseInformation({
         </div>
         
         <div className="space-y-4 rounded-lg border p-4">
-            <h2 className="text-center font-bold text-lg bg-gray-200 dark:bg-gray-700 py-2 rounded-t-md">PLANO DE ENSINO</h2>
+            <h2 className="text-center font-bold text-lg bg-gray-200 dark:bg-gray-700 py-2 rounded-t-md -mx-4 -mt-4 mb-4">PLANO DE ENSINO</h2>
             <div className="border">
                 <div className='p-2 border-b'>
                     <span className="font-bold">CURSO:</span> ARQUITETURA E URBANISMO
@@ -172,14 +172,10 @@ function CourseInformation({
                     <div className="col-span-2 p-2 border-r"><span className="font-bold">UNIDADE CURRICULAR:</span> {course.name}</div>
                     <div className="p-2"><span className="font-bold">CARGA HORÁRIA:</span> {classroom?.workload}</div>
                 </div>
-                <div className="grid grid-cols-3">
+                <div className="grid grid-cols-3 border-b">
                     <div className="col-span-2 p-2 border-r"><span className="font-bold">PROFESSOR:</span> {user?.displayName}</div>
                     <div className="p-2"><span className="font-bold">SEMESTRE:</span> {classroom?.semester}</div>
                 </div>
-            </div>
-
-            <h2 className="text-center font-bold text-lg bg-gray-200 dark:bg-gray-700 py-2 mt-4">MATRIZ DE COMPETÊNCIAS</h2>
-             <div className="border">
                 <div className="grid grid-cols-2">
                     <div className="p-2 border-r">
                         <h3 className="font-bold text-center mb-2">EMENTA</h3>
