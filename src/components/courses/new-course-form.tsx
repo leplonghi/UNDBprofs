@@ -36,7 +36,6 @@ const formSchema = z.object({
   name: z.string().min(1, 'Nome da disciplina é obrigatório.'),
   code: z.string().min(1, 'Código é obrigatório.'),
   syllabus: z.string().min(1, 'Ementa é obrigatória.'),
-  objectives: z.string().optional(),
   competencies: z.string().optional(),
   bibliography_basic: z.string().optional(),
   bibliography_complementary: z.string().optional(),
@@ -71,7 +70,6 @@ export default function NewCourseForm() {
       name: '',
       code: '',
       syllabus: '',
-      objectives: '',
       competencies: '',
       bibliography_basic: '',
       bibliography_complementary: '',
@@ -108,7 +106,7 @@ export default function NewCourseForm() {
       name: values.name,
       code: values.code,
       syllabus: values.syllabus,
-      objectives: values.objectives || '',
+      objectives: '', // Removed from form, default to empty
       competencies: values.competencies || '',
       learningUnits: values.learningUnits || [],
       competencyMatrix: values.competencyMatrix || [],
@@ -188,34 +186,19 @@ export default function NewCourseForm() {
                 />
             </div>
 
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <FormField
-                control={form.control}
-                name="syllabus"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Ementa</FormLabel>
-                    <FormControl>
-                        <Textarea rows={5} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-                <FormField
-                control={form.control}
-                name="objectives"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Objetivos (Opcional)</FormLabel>
-                    <FormControl>
-                        <Textarea rows={5} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-            </div>
+            <FormField
+            control={form.control}
+            name="syllabus"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Ementa</FormLabel>
+                <FormControl>
+                    <Textarea rows={5} {...field} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
 
             <FormField
                 control={form.control}
