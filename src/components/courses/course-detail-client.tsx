@@ -307,7 +307,7 @@ function CourseInformation({
                 <TableBody>
                     {classroom.classSchedule.map((item, index) => (
                         <TableRow key={index}>
-                            <TableCell>{item.date}</TableCell>
+                            <TableCell className="w-[120px]">{item.date}</TableCell>
                             <TableCell>{item.type}</TableCell>
                             <TableCell>{item.topic}</TableCell>
                             <TableCell className="whitespace-pre-wrap">{item.content}</TableCell>
