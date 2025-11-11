@@ -8,6 +8,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   useDoc,
@@ -63,50 +71,6 @@ function CourseInformation({
 }) {
   const router = useRouter();
   const { user } = useUser();
-
-  const getWorkload = (text: string) => {
-     if (!text) return 0;
-     const hoursMatch = text.match(/(\d+)\s*h/);
-     return hoursMatch ? parseInt(hoursMatch[1], 10) : 0;
-  }
-  
-  const groupedSchedule = useMemo(() => {
-    if (!course.learningUnits || !course.competencyMatrix || !classroom?.classSchedule) {
-      return [];
-    }
-
-    const scheduleByUnitName: Record<string, ClassScheduleItem[]> = {};
-    for (const item of classroom.classSchedule) {
-        // Find the unit whose name is a prefix of the item's topic
-        const matchingUnit = course.learningUnits.find(unit => item.topic.startsWith(unit.name));
-        const key = matchingUnit ? matchingUnit.name : item.topic.trim();
-        if (!scheduleByUnitName[key]) {
-            scheduleByUnitName[key] = [];
-        }
-        scheduleByUnitName[key].push(item);
-    }
-    
-    return course.learningUnits.map((unit, index) => {
-      const competency = course.competencyMatrix?.[index] || { competency: 'N/A', skills: [] };
-      const scheduleItems = scheduleByUnitName[unit.name] || [];
-      const unitWorkload = scheduleItems.reduce((sum, item) => sum + getWorkload(item.activity), 0);
-      
-      return {
-        unit,
-        competency,
-        scheduleItems,
-        unitWorkload: `${unitWorkload}h`
-      };
-    });
-  }, [course, classroom]);
-
-
-  const totalCH = useMemo(() => {
-    if (!classroom?.classSchedule) return '0H';
-    const total = classroom.classSchedule.reduce((sum, item) => sum + getWorkload(item.activity), 0);
-    return `${total}H`;
-  }, [classroom?.classSchedule]);
-
 
   return (
     <Card>
@@ -167,73 +131,34 @@ function CourseInformation({
                 </table>
             </div>
         </div>
-        
-        {groupedSchedule && groupedSchedule.length > 0 && (
+
+        {classroom?.classSchedule && classroom.classSchedule.length > 0 && (
           <div className="border rounded-lg overflow-hidden">
             <h2 className="text-center font-bold text-lg bg-gray-200 dark:bg-gray-700 py-2 border-b">CRONOGRAMA DE AULAS</h2>
-            <table className="w-full text-sm">
-              <thead className="bg-gray-200 dark:bg-gray-700 font-bold">
-                <tr>
-                  <th className="p-2 border-r w-1/6 text-left">UNIDADE DE APRENDIZAGEM</th>
-                  <th className="p-2 border-r w-2/6 text-left">HABILIDADES</th>
-                  <th className="p-2 border-r w-[80px]">CH</th>
-                  <th className="p-2 border-r w-2/6 text-left">DESCRITORES</th>
-                  <th className="p-2 w-[80px]">CH</th>
-                </tr>
-              </thead>
-              <tbody>
-                {groupedSchedule.map((group, groupIndex) => {
-                  const rowCount = Math.max(1, group.scheduleItems.length);
-                  return (
-                    <React.Fragment key={`group-${groupIndex}`}>
-                      {Array.from({ length: rowCount }).map((_, itemIndex) => {
-                        const item = group.scheduleItems[itemIndex];
-                        const isFirstRowOfGroup = itemIndex === 0;
-
-                        return (
-                          <tr key={item ? item.content + itemIndex : `empty-${itemIndex}`} className="border-b">
-                            {isFirstRowOfGroup && (
-                              <>
-                                <td className="p-2 border-r align-top" rowSpan={rowCount}>
-                                  {group.unit.name}
-                                </td>
-                                <td className="p-2 border-r align-top" rowSpan={rowCount}>
-                                  <ul className="list-disc pl-4 space-y-1">
-                                    {group.competency?.skills?.map((skill, skillIdx) => (
-                                      <li key={skillIdx}>{skill.skill}</li>
-                                    ))}
-                                  </ul>
-                                </td>
-                                <td className="p-2 border-r align-top text-center" rowSpan={rowCount}>
-                                  {group.unitWorkload}
-                                </td>
-                              </>
-                            )}
-                            
-                            {item ? (
-                              <>
-                                <td className="p-2 border-r align-top">{item.content}</td>
-                                <td className="p-2 text-center align-top">
-                                  {getWorkload(item.activity) > 0 ? `${getWorkload(item.activity)}h` : ''}
-                                </td>
-                              </>
-                            ) : (
-                              <td className="p-2 border-r align-top text-muted-foreground" colSpan={2}>
-                                {group.competency.skills.map(s => s.descriptors).join('; ')}
-                              </td>
-                            )}
-                          </tr>
-                        );
-                      })}
-                    </React.Fragment>
-                  );
-                })}
-                <tr className="bg-gray-200 dark:bg-gray-700 font-bold">
-                  <td colSpan={4} className="p-2 text-right border-r">TOTAL CH</td>
-                  <td className="p-2 text-center">{totalCH}</td>
-                </tr>
-              </tbody>
-            </table>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Data</TableHead>
+                        <TableHead>Tipo</TableHead>
+                        <TableHead>Tópico</TableHead>
+                        <TableHead>Conteúdo</TableHead>
+                        <TableHead>Atividade</TableHead>
+                        <TableHead>Local</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {classroom.classSchedule.map((item, index) => (
+                        <TableRow key={index}>
+                            <TableCell>{item.date}</TableCell>
+                            <TableCell>{item.type}</TableCell>
+                            <TableCell>{item.topic}</TableCell>
+                            <TableCell className="whitespace-pre-wrap">{item.content}</TableCell>
+                            <TableCell className="whitespace-pre-wrap">{item.activity}</TableCell>
+                            <TableCell>{item.location}</TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
           </div>
         )}
         
