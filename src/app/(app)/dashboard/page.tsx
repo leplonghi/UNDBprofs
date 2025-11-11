@@ -106,9 +106,9 @@ export default function DashboardPage() {
   const isLoading = isLoadingCourses || isLoadingEvents;
   
   const welcomeMessage = useMemo(() => {
-      if (!user) return 'Boas-vindas!';
+      if (!user) return 'Olá!';
       const firstName = user.displayName?.split(' ')[0] || 'Professor(a)';
-      return `Boas-vindas, ${firstName}!`;
+      return `Olá, ${firstName}!`;
   }, [user]);
   
   const openAssistant = () => {
@@ -122,22 +122,20 @@ export default function DashboardPage() {
             <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="tutorial" className="border-b-0">
                     <CardHeader>
-                        <div className="flex justify-between items-center">
-                            <div>
+                        <div className="flex justify-between items-start">
+                            <div className="flex-grow">
                                 <CardTitle className="text-xl text-primary">{welcomeMessage}</CardTitle>
                                 <CardDescription>
                                     Veja um resumo de suas atividades ou siga o guia rápido.
                                 </CardDescription>
                             </div>
-                            <AccordionTrigger className="text-sm font-semibold p-2 -mr-2">
+                            <AccordionTrigger className="text-sm font-semibold p-2 -mr-2 -mt-1">
                                 Mostrar/Ocultar Tutorial
                             </AccordionTrigger>
                         </div>
                     </CardHeader>
-                    <AccordionContent>
-                        <CardContent className="pt-2">
-                          <TutorialCard />
-                        </CardContent>
+                    <AccordionContent className="px-6 pb-4">
+                        <TutorialCard />
                     </AccordionContent>
                 </AccordionItem>
             </Accordion>
