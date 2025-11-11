@@ -15,11 +15,17 @@ import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore } from '@/firebase';
 import { doc, setDoc, writeBatch } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
-import { Loader2, UploadCloud, FileScan, FileText } from 'lucide-react';
+import { Loader2, UploadCloud, FileScan, FileText, HelpCircle } from 'lucide-react';
 import type { Student, ClassroomStudent, ExtractedStudent } from '@/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { extractStudentsFromDocument } from '@/ai/flows/extract-students-from-document';
 import { StudentReviewTable } from './student-review-table';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 
 
 interface StudentUploadDialogProps {
@@ -295,6 +301,25 @@ const handleAIExtraction = () => {
                      <p className="text-sm text-muted-foreground">
                         Envie um arquivo CSV com as colunas "Nome", "Sobrenome" (opcional), "E-mail" e "Matrícula" (opcional).
                     </p>
+
+                    <Accordion type="single" collapsible>
+                        <AccordionItem value="item-1">
+                            <AccordionTrigger className="text-sm text-muted-foreground">
+                                <HelpCircle className="mr-2 h-4 w-4" />
+                                Onde encontrar o arquivo CSV?
+                            </AccordionTrigger>
+                            <AccordionContent>
+                                <ol className="list-decimal space-y-2 pl-6 text-sm text-muted-foreground">
+                                    <li>Acesse o <a href="https://classroom.google.com/" target="_blank" rel="noopener noreferrer" className="text-primary underline">UNDB Classroom</a>.</li>
+                                    <li>Escolha a disciplina desejada.</li>
+                                    <li>Vá para a aba <strong>Pessoas</strong>.</li>
+                                    <li>No final da lista de alunos, clique em "mostrar todos os alunos".</li>
+                                    <li>No menu suspenso "Com usuários selecionados...", escolha a opção <strong>"Baixar dados da tabela como CSV"</strong>.</li>
+                                </ol>
+                            </AccordionContent>
+                        </AccordionItem>
+                    </Accordion>
+
                     <div 
                         className="flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary"
                         onClick={() => fileInputRef.current?.click()}
