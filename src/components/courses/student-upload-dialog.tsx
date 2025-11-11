@@ -117,6 +117,7 @@ const parseCSV = (file: File): Promise<ParsedStudent[]> => {
                 const lastNameIndex = headers.findIndex(h => h === 'sobrenome' || h === 'last name');
                 const emailIndex = headers.findIndex(h => h.includes('email') || h.includes('e-mail'));
                 const registrationIdIndex = headers.findIndex(h => h.includes('matrícula') || h.includes('matricula') || h.includes('id'));
+                const roleIndex = headers.findIndex(h => h === 'papéis' || h === 'papeis' || h === 'roles' || h === 'role');
                 
                 if (emailIndex === -1) {
                     return reject(new Error("A coluna 'E-mail' é obrigatória no arquivo CSV."));
@@ -127,6 +128,11 @@ const parseCSV = (file: File): Promise<ParsedStudent[]> => {
                 
                 const students = rows.map((row, index) => {
                     const columns = row.split(delimiter).map(c => c.trim().replace(/["']/g, ''));
+
+                    // Filter by role if the column exists
+                    if (roleIndex > -1 && columns[roleIndex]?.toLowerCase() !== 'estudante') {
+                        return null;
+                    }
 
                     const firstName = nameIndex > -1 ? (columns[nameIndex] || '') : '';
                     const lastName = lastNameIndex > -1 ? (columns[lastNameIndex] || '') : '';
