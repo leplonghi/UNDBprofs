@@ -15,7 +15,7 @@ export function TutorialCard() {
     <Accordion type="single" collapsible className="w-full">
         <AccordionItem value="tutorial" className="border-b-0">
             <AccordionTrigger className="text-base font-semibold hover:no-underline pt-0">
-                Não sabe por onde começar? Veja o Guia Rápido
+                Passo a passo, para não se confundir prof!
             </AccordionTrigger>
             <AccordionContent className="pt-2">
                 <ul className="list-decimal pl-5 space-y-3 text-sm text-muted-foreground">
