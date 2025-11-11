@@ -157,7 +157,7 @@ export default function DashboardPage() {
               </div>
               <Button onClick={openAssistant}>
                 <Bot className="mr-2 h-4 w-4" />
-                Conversar com o UNDBBot
+                Conversar com o UNDBot
               </Button>
             </CardHeader>
           </Card>

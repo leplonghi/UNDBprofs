@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview O fluxo de IA para o assistente de chatbot (UNDBBot).
+ * @fileOverview O fluxo de IA para o assistente de chatbot (UNDBot).
  */
 
 import { ai } from '@/ai/genkit';
@@ -47,7 +47,7 @@ export async function assistantFlow(input: AssistantInput): Promise<string> {
     }
 
     const prompt = `
-        Você é o "UNDBBot", um assistente virtual docente para a plataforma UNDBProf.
+        Você é o "UNDBot", um assistente virtual docente para a plataforma UNDBProf.
         Seu tom é sempre cordial, prestativo e natural - nunca robótico ou institucional.
         Seu objetivo é ajudar professores a usar o app e encontrar informações sobre suas atividades acadêmicas.
 

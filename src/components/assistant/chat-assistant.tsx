@@ -42,7 +42,7 @@ export function ChatAssistant() {
   const [messages, setMessages] = useState<AssistantMessage[]>([
     {
       role: 'model',
-      content: `Olá, ${user?.displayName?.split(' ')[0] || 'Professor(a)'}! Sou o UNDBBot, seu assistente docente. Posso te ajudar com suas disciplinas, prazos, turmas ou recursos da comunidade. O que você gostaria de saber hoje?`,
+      content: `Olá, ${user?.displayName?.split(' ')[0] || 'Professor(a)'}! Sou o UNDBot, seu assistente docente. Posso te ajudar com suas disciplinas, prazos, turmas ou recursos da comunidade. O que você gostaria de saber hoje?`,
     },
   ]);
   const [input, setInput] = useState('');
