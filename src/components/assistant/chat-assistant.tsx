@@ -15,6 +15,17 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 
+export const assistantEventEmitter = {
+  _listeners: new Set<(action: 'open') => void>(),
+  subscribe(listener: (action: 'open') => void) {
+    this._listeners.add(listener);
+    return () => this._listeners.delete(listener);
+  },
+  emit(action: 'open') {
+    this._listeners.forEach(listener => listener(action));
+  },
+};
+
 
 const suggestionPrompts = [
   "Minhas disciplinas",
@@ -54,6 +65,15 @@ export function ChatAssistant() {
   useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+  
+  useEffect(() => {
+    const unsubscribe = assistantEventEmitter.subscribe((action) => {
+      if (action === 'open') {
+        setIsOpen(true);
+      }
+    });
+    return unsubscribe;
+  }, []);
 
   const handleSend = async (prompt?: string) => {
     const currentInput = prompt || input;

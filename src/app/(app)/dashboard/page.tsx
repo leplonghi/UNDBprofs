@@ -15,6 +15,10 @@ import { RecentCourses } from '@/components/dashboard/recent-courses';
 import { UpcomingEvents } from '@/components/dashboard/upcoming-events';
 import { TutorialCard } from '@/components/dashboard/tutorial-tab';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { assistantEventEmitter } from '@/components/assistant/chat-assistant';
+import { Button } from '@/components/ui/button';
+import { Bot } from 'lucide-react';
+
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -105,6 +109,10 @@ export default function DashboardPage() {
       const firstName = user.displayName?.split(' ')[0] || 'Professor(a)';
       return `Boas-vindas, ${firstName}!`;
   }, [user]);
+  
+  const openAssistant = () => {
+    assistantEventEmitter.emit('open');
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -138,6 +146,19 @@ export default function DashboardPage() {
             totalAtividades={totalAtividades}
             isLoading={isLoading || isLoadingStats}
           />
+          
+          <Card className="animated-gradient-background">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Assistente Docente</CardTitle>
+                <CardDescription>Precisa de ajuda? Tire suas dúvidas sobre o app, suas disciplinas e prazos.</CardDescription>
+              </div>
+              <Button onClick={openAssistant}>
+                <Bot className="mr-2 h-4 w-4" />
+                Conversar com o UNDBBot
+              </Button>
+            </CardHeader>
+          </Card>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
              <RecentCourses courses={courses || []} classroomsByCourse={classroomsByCourse} isLoading={isLoadingCourses || isLoadingStats} />
