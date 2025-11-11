@@ -37,8 +37,8 @@ const LearningUnitSchema = z.object({
 const ImportCourseFromLessonPlanOutputSchema = z.object({
   courseName: z.string().describe('The name of the course, extracted from the "UNIDADE CURRICULAR" field.').optional(),
   courseCode: z.string().describe('The code of the course.').optional(),
-  syllabus: z.string().describe('The syllabus of the course (Ementa).').optional(),
-  objectives: z.string().describe('The objectives of the course (Objetivos). Transcribe it exactly as it appears.').optional(),
+  syllabus: z.string().describe('The syllabus of the course (Ementa). Transcribe it exactly as it appears. This field often contains the objectives within it.').optional(),
+  objectives: z.string().describe('The objectives of the course (Objetivos). This is often a subsection within the "Ementa". If it is not a separate field, extract it from the "Ementa" or leave it empty.').optional(),
   competencies: z.string().describe('The general competencies of the course (Competências).').optional(),
   workload: z.string().describe('The workload of the course (Carga Horária).').optional(),
   semester: z.string().describe('The semester of the course').optional(),
@@ -97,8 +97,8 @@ const prompt = ai.definePrompt({
   1.  **Extract Key Fields**: Identify and extract the following fields from the document.
       - courseName: The name of the discipline, which is located in the "UNIDADE CURRICULAR" field.
       - courseCode: The code of the discipline. If not present, leave it empty.
-      - syllabus: The "Ementa". Transcribe it exactly as it appears.
-      - objectives: The "Objetivos". Transcribe it exactly as it appears.
+      - syllabus: The "Ementa". Transcribe it exactly as it appears. It's a general summary of the course.
+      - objectives: The "Objetivos". **IMPORTANT**: This information is often found as a subsection *within* the "Ementa" field itself. Look for a sub-heading like "Objetivos:" or similar inside the Ementa text. If you find it, extract only that part for this field. If there is no separate "Objetivos" section, you MUST leave this field empty.
       - competencies: The general text block under the title "COMPETÊNCIAS". Transcribe it exactly as it appears.
       - workload: The "Carga Horária".
       - semester: The "Semestre".

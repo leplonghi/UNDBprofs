@@ -207,7 +207,7 @@ export default function NewCourseForm() {
                 name="objectives"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Objetivos</FormLabel>
+                    <FormLabel>Objetivos (Opcional)</FormLabel>
                     <FormControl>
                         <Textarea rows={5} {...field} />
                     </FormControl>
@@ -222,7 +222,7 @@ export default function NewCourseForm() {
                 name="competencies"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Competências Gerais</FormLabel>
+                    <FormLabel>Competências Gerais (Opcional)</FormLabel>
                     <FormControl>
                     <Textarea rows={5} {...field} />
                     </FormControl>
