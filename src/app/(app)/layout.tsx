@@ -3,6 +3,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import Header from '@/components/layout/header';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { ChatAssistant } from '@/components/assistant/chat-assistant';
 
 export default function AppLayout({
   children,
@@ -21,6 +22,7 @@ export default function AppLayout({
               <BottomNav />
             </div>
           </div>
+          <ChatAssistant />
       </ThemeProvider>
     </FirebaseClientProvider>
   );
