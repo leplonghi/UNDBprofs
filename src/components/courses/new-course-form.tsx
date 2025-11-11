@@ -35,14 +35,14 @@ const learningUnitSchema = z.object({
 const formSchema = z.object({
   name: z.string().min(1, 'Nome da disciplina é obrigatório.'),
   code: z.string().min(1, 'Código é obrigatório.'),
+  semester: z.string().min(1, "Semestre é obrigatório (ex: 2025.2)"),
+  workload: z.string().min(1, "Carga horária é obrigatória"),
+  classType: z.enum(['Integradora', 'Modular']).default('Modular'),
   syllabus: z.string().min(1, 'Ementa é obrigatória.'),
   competencies: z.string().optional(),
   bibliography_basic: z.string().optional(),
   bibliography_complementary: z.string().optional(),
   bibliography_recommended: z.string().optional(),
-  semester: z.string().min(1, "Semestre é obrigatório (ex: 2025.2)"),
-  workload: z.string().min(1, "Carga horária é obrigatória"),
-  classType: z.enum(['Integradora', 'Modular']).default('Modular'),
   competencyMatrix: z.array(competencySchema).optional(),
   learningUnits: z.array(learningUnitSchema).optional(),
   thematicTree: z.array(z.object({ name: z.string(), description: z.string() })).optional(),
@@ -69,14 +69,14 @@ export default function NewCourseForm() {
     defaultValues: {
       name: '',
       code: '',
+      semester: '2025.2',
+      workload: '80h',
+      classType: 'Modular',
       syllabus: '',
       competencies: '',
       bibliography_basic: '',
       bibliography_complementary: '',
       bibliography_recommended: '',
-      semester: '2025.2',
-      workload: '80h',
-      classType: 'Modular',
       competencyMatrix: [],
       learningUnits: [],
       thematicTree: [],
@@ -185,6 +185,52 @@ export default function NewCourseForm() {
                 />
             </div>
 
+            <div className="space-y-4 rounded-lg border p-4">
+                <h3 className="font-semibold text-lg">Dados da Turma Padrão</h3>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <FormField
+                        control={form.control}
+                        name="semester"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Semestre</FormLabel>
+                            <FormControl>
+                            <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="workload"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Carga Horária</FormLabel>
+                            <FormControl>
+                            <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="classType"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Tipo da Turma</FormLabel>
+                            {/* Adicionar um seletor aqui seria o ideal */}
+                            <FormControl>
+                            <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                </div>
+            </div>
+
             <FormField
             control={form.control}
             name="syllabus"
@@ -272,56 +318,14 @@ export default function NewCourseForm() {
                             />
                         </AccordionContent>
                     </AccordionItem>
+                     <AccordionItem value="item-3" className="border rounded-md px-4">
+                        <AccordionTrigger className="font-semibold">Cronograma de Aulas (Opcional)</AccordionTrigger>
+                        <AccordionContent className="pt-4 space-y-4">
+                            <ClassScheduleEditor control={form.control} />
+                        </AccordionContent>
+                    </AccordionItem>
                 </Accordion>
             
-                <div className="space-y-4 rounded-lg border p-4">
-                    <h3 className="font-semibold text-lg">Dados da Turma Padrão</h3>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                        <FormField
-                            control={form.control}
-                            name="semester"
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Semestre</FormLabel>
-                                <FormControl>
-                                <Input {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="workload"
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Carga Horária</FormLabel>
-                                <FormControl>
-                                <Input {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="classType"
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Tipo da Turma</FormLabel>
-                                {/* Adicionar um seletor aqui seria o ideal */}
-                                <FormControl>
-                                <Input {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
-                    </div>
-                    <ClassScheduleEditor control={form.control} />
-                </div>
-
-
             <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
