@@ -132,36 +132,6 @@ function CourseInformation({
             </div>
         </div>
 
-        {classroom?.classSchedule && classroom.classSchedule.length > 0 && (
-          <div className="border rounded-lg overflow-hidden">
-            <h2 className="text-center font-bold text-lg bg-gray-200 dark:bg-gray-700 py-2 border-b">CRONOGRAMA DE AULAS</h2>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Data</TableHead>
-                        <TableHead>Tipo</TableHead>
-                        <TableHead>Tópico</TableHead>
-                        <TableHead>Conteúdo</TableHead>
-                        <TableHead>Atividade</TableHead>
-                        <TableHead>Local</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {classroom.classSchedule.map((item, index) => (
-                        <TableRow key={index}>
-                            <TableCell>{item.date}</TableCell>
-                            <TableCell>{item.type}</TableCell>
-                            <TableCell>{item.topic}</TableCell>
-                            <TableCell className="whitespace-pre-wrap">{item.content}</TableCell>
-                            <TableCell className="whitespace-pre-wrap">{item.activity}</TableCell>
-                            <TableCell>{item.location}</TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-          </div>
-        )}
-        
         {course.thematicTree && course.thematicTree.length > 0 && (
              <div className="space-y-4">
                 <h3 className="font-semibold text-xl">Árvore Temática</h3>
@@ -230,6 +200,36 @@ function CourseInformation({
           </div>
         )}
        
+        {classroom?.classSchedule && classroom.classSchedule.length > 0 && (
+          <div className="border rounded-lg overflow-hidden">
+            <h2 className="text-center font-bold text-lg bg-gray-200 dark:bg-gray-700 py-2 border-b">CRONOGRAMA DE AULAS</h2>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Data</TableHead>
+                        <TableHead>Tipo</TableHead>
+                        <TableHead>Tópico</TableHead>
+                        <TableHead>Conteúdo</TableHead>
+                        <TableHead>Atividade</TableHead>
+                        <TableHead>Local</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {classroom.classSchedule.map((item, index) => (
+                        <TableRow key={index}>
+                            <TableCell>{item.date}</TableCell>
+                            <TableCell>{item.type}</TableCell>
+                            <TableCell>{item.topic}</TableCell>
+                            <TableCell className="whitespace-pre-wrap">{item.content}</TableCell>
+                            <TableCell className="whitespace-pre-wrap">{item.activity}</TableCell>
+                            <TableCell>{item.location}</TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+          </div>
+        )}
+
       </CardContent>
     </Card>
   );
