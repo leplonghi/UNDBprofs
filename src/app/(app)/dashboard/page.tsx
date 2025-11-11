@@ -12,7 +12,6 @@ import { collection, query, getDocs } from 'firebase/firestore';
 import type { Course, AcademicEvent, Classroom } from '@/types';
 import { StatsCards } from '@/components/dashboard/stats-cards';
 import { RecentCourses } from '@/components/dashboard/recent-courses';
-import { OverviewChart } from '@/components/dashboard/overview-chart';
 import { UpcomingEvents } from '@/components/dashboard/upcoming-events';
 import { TutorialCard } from '@/components/dashboard/tutorial-tab';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -25,7 +24,6 @@ export default function DashboardPage() {
   const [classroomsCount, setClassroomsCount] = useState<number | null>(null);
   const [studentsCount, setStudentsCount] = useState<number | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
-  const [studentsPerCourse, setStudentsPerCourse] = useState<{ name: string; students: number }[]>([]);
   const [classroomsByCourse, setClassroomsByCourse] = useState<Record<string, Classroom[]>>({});
 
   const coursesQuery = useMemoFirebase(
@@ -56,7 +54,6 @@ export default function DashboardPage() {
       
       let totalClassrooms = 0;
       let totalStudents = 0;
-      const studentsPerCourseData: { name: string; students: number }[] = [];
       const classroomsByCourseData: Record<string, Classroom[]> = {};
 
       for (const course of courses) {
@@ -79,13 +76,11 @@ export default function DashboardPage() {
           courseStudentCount += studentsSnapshot.size;
         }
         totalStudents += courseStudentCount;
-        studentsPerCourseData.push({ name: course.code, students: courseStudentCount });
       }
       
       setClassroomsByCourse(classroomsByCourseData);
       setClassroomsCount(totalClassrooms);
       setStudentsCount(totalStudents);
-      setStudentsPerCourse(studentsPerCourseData);
       setIsLoadingStats(false);
     }
 
@@ -128,14 +123,9 @@ export default function DashboardPage() {
             isLoading={isLoading || isLoadingStats}
           />
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-            <div className="lg:col-span-3 space-y-6">
-              <RecentCourses courses={courses || []} classroomsByCourse={classroomsByCourse} isLoading={isLoadingCourses || isLoadingStats} />
-              <UpcomingEvents events={academicEvents} courses={courses} isLoading={isLoadingEvents || isLoadingCourses} />
-            </div>
-            <div className="lg:col-span-2">
-              <OverviewChart data={studentsPerCourse} isLoading={isLoadingStats} />
-            </div>
+          <div className="grid grid-cols-1 gap-6">
+             <RecentCourses courses={courses || []} classroomsByCourse={classroomsByCourse} isLoading={isLoadingCourses || isLoadingStats} />
+             <UpcomingEvents events={academicEvents} courses={courses} isLoading={isLoadingEvents || isLoadingCourses} />
           </div>
         </div>
     </div>
