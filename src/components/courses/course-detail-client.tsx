@@ -184,7 +184,7 @@ function CourseInformation({
                 <TableBody>
                     {learningUnitsWithDetails.map((unit, unitIndex) => (
                         <React.Fragment key={unitIndex}>
-                            {unit.descritores.map((descritor, descritorIndex) => (
+                            {unit.descritores.length > 0 ? unit.descritores.map((descritor, descritorIndex) => (
                                 <TableRow key={`${unitIndex}-${descritorIndex}`}>
                                     {descritorIndex === 0 && (
                                         <>
@@ -196,7 +196,16 @@ function CourseInformation({
                                     <TableCell className="border-r">{descritor.text}</TableCell>
                                     <TableCell className="text-center">{descritor.ch}</TableCell>
                                 </TableRow>
-                            ))}
+                            )) : (
+                                <TableRow key={`${unitIndex}-no-desc`}>
+                                     <TableCell className="border-r align-top font-semibold">{unit.unitName}</TableCell>
+                                     <TableCell className="border-r align-top whitespace-pre-wrap">{unit.habilidades}</TableCell>
+                                     <TableCell className="border-r align-top text-center">{unit.chHabilidades}</TableCell>
+                                     <TableCell className="p-2 border-r align-top text-center text-muted-foreground" colSpan={2}>
+                                        Nenhum descritor para esta unidade.
+                                    </TableCell>
+                                </TableRow>
+                            )}
                              <TableRow className="bg-muted/30">
                                 <TableCell colSpan={5} className="h-2"></TableCell>
                             </TableRow>
@@ -287,7 +296,7 @@ function CourseInformation({
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Data</TableHead>
+                        <TableHead className="w-[120px]">Data</TableHead>
                         <TableHead>Tipo</TableHead>
                         <TableHead>Tópico</TableHead>
                         <TableHead>Conteúdo</TableHead>
