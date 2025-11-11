@@ -57,30 +57,33 @@ export default function LoginClient({ initialFrom }: LoginClientProps) {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-background p-6">
-      <div className="flex w-full max-w-sm flex-col items-center gap-8 text-center">
-        <AppLogo />
+    <main className="flex min-h-screen flex-col items-center justify-center p-6 animated-gradient-background">
+      <div className="w-full max-w-md rounded-xl border bg-background/80 p-8 shadow-2xl backdrop-blur-lg">
+        <div className="flex w-full flex-col items-center gap-8 text-center">
+            <AppLogo />
 
-        <div>
-          <h1 className="text-2xl font-bold text-primary">
-            Bem-vindo ao UNDBProf!
-          </h1>
-          <p className="mt-2 text-muted-foreground">
-            Um app feito de professor para professor, pensado para organizar a rotina docente, reunir informações úteis e aproximar colegas em um só lugar. O UNDBProf não é um sistema oficial da UNDB e não substitui as plataformas institucionais — ele veio apenas para somar eficiência, praticidade e colaboração ao dia a dia acadêmico. ✨ Lembre-se: o acesso é exclusivo para contas @undb.edu.br.
-          </p>
+            <div>
+            <h1 className="text-2xl font-bold text-primary">
+                Bem-vindo ao UNDBProf!
+            </h1>
+            <p className="mt-2 text-muted-foreground">
+                Seu assistente para organizar a rotina docente e colaborar com colegas.
+                O acesso é exclusivo para contas @undb.edu.br.
+            </p>
+            </div>
+
+            <Button
+            onClick={doLogin}
+            disabled={busy || !auth}
+            size="lg"
+            className="w-full"
+            >
+            {busy ? (
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            ) : null}
+            {busy ? 'Entrando…' : 'Entrar com Google'}
+            </Button>
         </div>
-
-        <Button
-          onClick={doLogin}
-          disabled={busy || !auth}
-          size="lg"
-          className="w-full"
-        >
-          {busy ? (
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-          ) : null}
-          {busy ? 'Entrando…' : 'Entrar com Google'}
-        </Button>
       </div>
     </main>
   );
