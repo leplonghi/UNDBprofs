@@ -203,7 +203,6 @@ function CourseInformation({
                                                                 {group.competency?.skills?.map((skill, skillIdx) => (
                                                                     <li key={skillIdx}>
                                                                         {skill.skill}
-                                                                        <p className="text-xs text-muted-foreground pl-2">{skill.descriptors}</p>
                                                                     </li>
                                                                 ))}
                                                             </ul>
@@ -230,8 +229,8 @@ function CourseInformation({
                                                 </ul>
                                             </td>
                                             <td className="p-2 border-r align-top text-center">{group.unitWorkload}</td>
-                                            <td className="p-2 border-r align-top text-center text-muted-foreground" colSpan={2}>
-                                                Nenhuma aula agendada para esta unidade.
+                                            <td className="p-2 border-r align-top text-muted-foreground" colSpan={2}>
+                                                {group.competency?.skills?.map(s => s.descriptors).join('; ') || 'N/A'}
                                             </td>
                                         </tr>
                                     )}
