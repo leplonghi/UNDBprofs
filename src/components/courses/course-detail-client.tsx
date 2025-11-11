@@ -169,26 +169,28 @@ function CourseInformation({
                     </tr>
                 </tbody>
             </table>
+            <table className="w-full text-sm border-collapse">
+                 <tbody>
+                    <tr className="border-t">
+                        <td className="p-2 w-1/2 align-top border-r">
+                            <h3 className="font-bold text-center mb-2">EMENTA</h3>
+                            <p className="text-muted-foreground whitespace-pre-wrap">{course.syllabus}</p>
+                        </td>
+                        <td className="p-2 w-1/2 align-top">
+                             <h3 className="font-bold text-center mb-2">COMPETÊNCIAS</h3>
+                            <p className="text-muted-foreground whitespace-pre-wrap">{course.competencies}</p>
+                        </td>
+                    </tr>
+                 </tbody>
+            </table>
         </div>
 
         {course.competencyMatrix && course.competencyMatrix.length > 0 && (
           <div>
-            <h3 className="font-semibold text-xl mb-4 text-center bg-gray-200 dark:bg-gray-700 p-2 rounded-t-lg">MATRIZ DE COMPETÊNCIAS</h3>
-             <Accordion type="multiple" className="w-full" defaultValue={['ementa', 'competencias-gerais', 'comp-0']}>
-                <AccordionItem value="ementa" className='border rounded-b-none'>
-                    <AccordionTrigger className='text-base font-semibold px-4'>Ementa</AccordionTrigger>
-                    <AccordionContent className='p-4'>
-                        <p className="text-muted-foreground whitespace-pre-wrap">{course.syllabus}</p>
-                    </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="competencias-gerais" className='border-x'>
-                    <AccordionTrigger className='text-base font-semibold px-4'>Competências Gerais</AccordionTrigger>
-                    <AccordionContent className='p-4'>
-                        <p className="text-muted-foreground whitespace-pre-wrap">{course.competencies}</p>
-                    </AccordionContent>
-                </AccordionItem>
+            <h3 className="font-semibold text-xl mb-4 text-center bg-gray-200 dark:bg-gray-700 p-2 rounded-t-lg">MATRIZ DE COMPETÊNCIAS E HABILIDADES</h3>
+             <Accordion type="multiple" className="w-full border" defaultValue={['comp-0']}>
                 {course.competencyMatrix.map((comp, compIndex) => (
-                    <AccordionItem key={compIndex} value={`comp-${compIndex}`} className="border-x border-b rounded-t-none">
+                    <AccordionItem key={compIndex} value={`comp-${compIndex}`} className="border-b last:border-b-0">
                         <AccordionTrigger className="text-base font-medium px-4">{comp.competency}</AccordionTrigger>
                         <AccordionContent className="p-4 bg-muted/20">
                             <div className="space-y-4">
@@ -208,22 +210,6 @@ function CourseInformation({
           </div>
         )}
 
-        {course.learningUnits && course.learningUnits.length > 0 && (
-            <div>
-                 <h3 className="font-semibold text-xl mb-4">Unidades de Aprendizagem</h3>
-                 <Accordion type="multiple" className="w-full">
-                    {course.learningUnits.map((unit, index) => (
-                        <AccordionItem value={`unit-${index}`} key={index}>
-                            <AccordionTrigger className="text-base font-medium">{unit.name}</AccordionTrigger>
-                            <AccordionContent>
-                                <p className="text-muted-foreground whitespace-pre-wrap">{unit.content}</p>
-                            </AccordionContent>
-                        </AccordionItem>
-                    ))}
-                </Accordion>
-            </div>
-        )}
-
         {groupedSchedule && groupedSchedule.length > 0 && (
              <div className="border rounded-lg overflow-hidden">
                 <table className="w-full text-sm">
@@ -237,8 +223,8 @@ function CourseInformation({
                         </tr>
                     </thead>
                     <tbody>
-                        {groupedSchedule.map((group, groupIndex) => (
-                            <React.Fragment key={groupIndex}>
+                        {groupedSchedule.map((group) => (
+                            <React.Fragment key={group.unit.name}>
                                 {group.scheduleItems.map((item, itemIndex) => (
                                     <tr key={itemIndex} className="border-b">
                                         {itemIndex === 0 && (

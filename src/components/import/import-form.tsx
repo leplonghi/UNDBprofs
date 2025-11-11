@@ -304,50 +304,42 @@ export function ImportForm() {
                                 />
 
                                 {competencyMatrix && competencyMatrix.length > 0 && (
-                                    <Accordion type="multiple" className="w-full">
-                                        <AccordionItem value="comp-matrix" className="border rounded-md px-4">
-                                            <AccordionTrigger className="text-base font-semibold">Competências Específicas</AccordionTrigger>
-                                            <AccordionContent className="pt-4">
-                                                {competencyMatrix.map((comp, compIndex) => (
-                                                    <Accordion key={compIndex} type="multiple" className="w-full mt-2">
-                                                        <AccordionItem value={`comp-${compIndex}`} >
-                                                            <AccordionTrigger className="text-base font-medium bg-muted/50 px-4 rounded-t-md">{comp.competency}</AccordionTrigger>
-                                                            <AccordionContent className="p-4 border border-t-0 rounded-b-md">
-                                                                <div className="space-y-4">
-                                                                    {comp.skills.map((skill, skillIndex) => (
-                                                                        <div key={skillIndex}>
-                                                                            <h4 className="font-medium">{skill.skill}</h4>
-                                                                            <p className="text-sm text-muted-foreground">
-                                                                                <strong>Descritores:</strong> {skill.descriptors}
-                                                                            </p>
-                                                                        </div>
-                                                                    ))}
+                                    <div>
+                                        <h3 className="text-lg font-semibold mb-2">Competências Específicas</h3>
+                                        {competencyMatrix.map((comp, compIndex) => (
+                                            <Accordion key={compIndex} type="multiple" className="w-full mt-2">
+                                                <AccordionItem value={`comp-${compIndex}`} >
+                                                    <AccordionTrigger className="text-base font-medium bg-muted/50 px-4 rounded-t-md">{comp.competency}</AccordionTrigger>
+                                                    <AccordionContent className="p-4 border border-t-0 rounded-b-md">
+                                                        <div className="space-y-4">
+                                                            {comp.skills.map((skill, skillIndex) => (
+                                                                <div key={skillIndex}>
+                                                                    <h4 className="font-medium">{skill.skill}</h4>
+                                                                    <p className="text-sm text-muted-foreground">
+                                                                        <strong>Descritores:</strong> {skill.descriptors}
+                                                                    </p>
                                                                 </div>
-                                                            </AccordionContent>
-                                                        </AccordionItem>
-                                                    </Accordion>
-                                                ))}
-                                            </AccordionContent>
-                                        </AccordionItem>
-                                    </Accordion>
+                                                            ))}
+                                                        </div>
+                                                    </AccordionContent>
+                                                </AccordionItem>
+                                            </Accordion>
+                                        ))}
+                                     </div>
                                 )}
 
                                 {learningUnits && learningUnits.length > 0 && (
                                     <FormItem>
+                                        <h3 className="text-lg font-semibold mb-2">Unidades de Aprendizagem</h3>
                                         <Accordion type="multiple" className="w-full">
-                                            <AccordionItem value="learning-units" className="border rounded-md px-4">
-                                                <AccordionTrigger className="text-base font-semibold">Unidades de Aprendizagem</AccordionTrigger>
-                                                <AccordionContent className="pt-4">
-                                                    {learningUnits.map((unit, index) => (
-                                                        <AccordionItem value={`unit-${index}`} key={index}>
-                                                            <AccordionTrigger>{unit.name}</AccordionTrigger>
-                                                            <AccordionContent>
-                                                                <p className="text-muted-foreground whitespace-pre-wrap">{unit.content}</p>
-                                                            </AccordionContent>
-                                                        </AccordionItem>
-                                                    ))}
-                                                </AccordionContent>
-                                            </AccordionItem>
+                                            {learningUnits.map((unit, index) => (
+                                                <AccordionItem value={`unit-${index}`} key={index}>
+                                                    <AccordionTrigger>{unit.name}</AccordionTrigger>
+                                                    <AccordionContent>
+                                                        <p className="text-muted-foreground whitespace-pre-wrap">{unit.content}</p>
+                                                    </AccordionContent>
+                                                </AccordionItem>
+                                            ))}
                                         </Accordion>
                                     </FormItem>
                                 )}
