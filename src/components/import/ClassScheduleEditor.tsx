@@ -9,7 +9,7 @@ import { FormField, FormItem, FormControl, FormMessage, FormLabel } from '@/comp
 import { PlusCircle, Trash2, CalendarIcon, XCircle } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, addDays, parseISO } from 'date-fns';
+import { format, addDays, parseISO, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '../ui/card';
@@ -43,6 +43,13 @@ export function ClassScheduleEditor({ control }: ClassScheduleEditorProps) {
         setValue(`classSchedule.${index}.date`, '');
     });
   }
+  
+  const isValidDateString = (dateString: string | null | undefined): boolean => {
+    if (!dateString) return false;
+    const date = parseISO(dateString);
+    return isValid(date);
+  };
+
 
   const renderDesktopView = () => (
     <div className="rounded-md border">
@@ -77,7 +84,7 @@ export function ClassScheduleEditor({ control }: ClassScheduleEditorProps) {
                                     !field.value && "text-muted-foreground"
                                     )}
                                 >
-                                    {field.value ? (
+                                    {isValidDateString(field.value) ? (
                                     format(parseISO(field.value), "dd/MM/yyyy")
                                     ) : (
                                     <span>Selecione a data</span>
@@ -89,7 +96,7 @@ export function ClassScheduleEditor({ control }: ClassScheduleEditorProps) {
                             <PopoverContent className="w-auto p-0" align="start">
                                 <Calendar
                                     mode="single"
-                                    selected={field.value ? parseISO(field.value) : undefined}
+                                    selected={isValidDateString(field.value) ? parseISO(field.value) : undefined}
                                     onSelect={(date) => {
                                         if (date) {
                                            const formattedDate = format(date, 'yyyy-MM-dd');
@@ -205,7 +212,7 @@ export function ClassScheduleEditor({ control }: ClassScheduleEditorProps) {
                         {`Aula ${index + 1}: ${ (item as any).topic || 'Tópico não definido'}`}
                     </p>
                      <p className='text-xs text-muted-foreground mt-1'>
-                        Data: {(item as any).date ? format(parseISO((item as any).date), "dd/MM/yyyy") : 'Não definida'}
+                        Data: {isValidDateString((item as any).date) ? format(parseISO((item as any).date), "dd/MM/yyyy") : 'Não definida'}
                     </p>
                 </div>
             </AccordionTrigger>
@@ -226,7 +233,7 @@ export function ClassScheduleEditor({ control }: ClassScheduleEditorProps) {
                                     !field.value && "text-muted-foreground"
                                     )}
                                 >
-                                    {field.value ? (
+                                    {isValidDateString(field.value) ? (
                                     format(parseISO(field.value), "dd/MM/yyyy")
                                     ) : (
                                     <span>Selecione a data</span>
@@ -238,7 +245,7 @@ export function ClassScheduleEditor({ control }: ClassScheduleEditorProps) {
                             <PopoverContent className="w-auto p-0" align="start">
                                 <Calendar
                                     mode="single"
-                                    selected={field.value ? parseISO(field.value) : undefined}
+                                    selected={isValidDateString(field.value) ? parseISO(field.value) : undefined}
                                     onSelect={(date) => {
                                         if (date) {
                                            const formattedDate = format(date, 'yyyy-MM-dd');
