@@ -119,28 +119,28 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-6">
       
         <Card>
-            <CardHeader>
-                <div className="flex justify-between items-start">
-                    <div>
-                        <CardTitle className="text-xl text-primary">{welcomeMessage}</CardTitle>
-                        <CardDescription>
-                            Veja um resumo de suas atividades ou siga o guia rápido.
-                        </CardDescription>
-                    </div>
-                </div>
-            </CardHeader>
-            <CardContent>
-                <Accordion type="single" collapsible>
-                    <AccordionItem value="tutorial">
-                        <AccordionTrigger className="text-sm font-semibold">
-                            Mostrar/Ocultar Tutorial
-                        </AccordionTrigger>
-                        <AccordionContent className="pt-4">
-                            <TutorialCard />
-                        </AccordionContent>
-                    </AccordionItem>
-                </Accordion>
-            </CardContent>
+            <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="tutorial" className="border-b-0">
+                    <CardHeader>
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <CardTitle className="text-xl text-primary">{welcomeMessage}</CardTitle>
+                                <CardDescription>
+                                    Veja um resumo de suas atividades ou siga o guia rápido.
+                                </CardDescription>
+                            </div>
+                            <AccordionTrigger className="text-sm font-semibold p-2 -mr-2">
+                                Mostrar/Ocultar Tutorial
+                            </AccordionTrigger>
+                        </div>
+                    </CardHeader>
+                    <AccordionContent>
+                        <CardContent className="pt-2">
+                          <TutorialCard />
+                        </CardContent>
+                    </AccordionContent>
+                </AccordionItem>
+            </Accordion>
         </Card>
 
 
