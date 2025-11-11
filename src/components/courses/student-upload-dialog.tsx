@@ -310,7 +310,7 @@ const handleAIExtraction = () => {
                             </AccordionTrigger>
                             <AccordionContent>
                                 <ol className="list-decimal space-y-2 pl-6 text-sm text-muted-foreground">
-                                    <li>Acesse o <a href="https://classroom.google.com/" target="_blank" rel="noopener noreferrer" className="text-primary underline">UNDB Classroom</a>.</li>
+                                    <li>Acesse o <a href="https://undbclassroom.undb.edu.br/" target="_blank" rel="noopener noreferrer" className="text-primary underline">UNDB Classroom</a>.</li>
                                     <li>Escolha a disciplina desejada.</li>
                                     <li>Vá para a aba <strong>Pessoas</strong>.</li>
                                     <li>No final da lista de alunos, clique em "mostrar todos os alunos".</li>
