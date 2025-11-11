@@ -63,13 +63,6 @@ function CourseInformation({
   const router = useRouter();
   
   const { user } = useUser();
-  const thematicTreeColors = [
-      'bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-800',
-      'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800',
-      'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800',
-      'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800',
-      'bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-800',
-  ];
 
   const groupedSchedule = useMemo(() => {
     if (!course.learningUnits || !course.competencyMatrix || !classroom?.classSchedule) {
@@ -110,7 +103,11 @@ function CourseInformation({
 
   const totalCH = useMemo(() => {
     const total = groupedSchedule.reduce((sum, group) => {
-        return sum + parseInt(group.unitWorkload.replace('h', '') || '0', 10);
+        const groupTotal = group.scheduleItems.reduce((groupSum, item) => {
+             const hoursMatch = item.activity.match(/(\d+)h/);
+             return groupSum + (hoursMatch ? parseInt(hoursMatch[1], 10) : 0);
+        }, 0);
+        return sum + groupTotal;
     }, 0);
     return `${total}H`;
   }, [groupedSchedule]);
@@ -136,21 +133,6 @@ function CourseInformation({
         </div>
       </CardHeader>
       <CardContent className="space-y-8">
-
-        <div className="space-y-6 text-center">
-            <div>
-                <h2 className="font-bold tracking-wider">VISÃO DA UNDB</h2>
-                <p className="text-sm text-muted-foreground max-w-2xl mx-auto mt-1">
-                    Ser uma instituição nacionalmente reconhecida pela sua excelência em todas as sua áreas de atuação.
-                </p>
-            </div>
-            <div>
-                <h2 className="font-bold tracking-wider">MISSÃO DA UNDB</h2>
-                <p className="text-sm text-muted-foreground max-w-3xl mx-auto mt-1">
-                    Promover o conhecimento alicerçado em princípios éticos, científicos e tecnológicos, através de metodologias de vanguarda, visando à formação e ao aperfeiçoamento humano de profissionais comprometidos com o processo de desenvolvimento e mudança nos seus campos de atuação.
-                </p>
-            </div>
-        </div>
         
         <div className="space-y-0 rounded-lg border overflow-hidden">
              <h2 className="text-center font-bold text-lg bg-gray-200 dark:bg-gray-700 py-2">PLANO DE ENSINO</h2>
@@ -171,42 +153,47 @@ function CourseInformation({
             </table>
         </div>
 
-        {course.competencyMatrix && course.competencyMatrix.length > 0 && (
-          <div>
-            <h3 className="font-semibold text-xl mb-4 text-center bg-gray-200 dark:bg-gray-700 p-2 rounded-t-lg">MATRIZ DE COMPETÊNCIAS E HABILIDADES</h3>
-             <Accordion type="multiple" className="w-full border" defaultValue={['ementa', 'competencias-gerais', 'comp-0']}>
-                 <AccordionItem value="ementa" className="border-b">
-                    <AccordionTrigger className="text-base font-medium px-4">EMENTA</AccordionTrigger>
-                    <AccordionContent className="p-4 bg-muted/20">
-                        <p className="text-muted-foreground whitespace-pre-wrap">{course.syllabus}</p>
-                    </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="competencias-gerais" className="border-b">
-                    <AccordionTrigger className="text-base font-medium px-4">COMPETÊNCIAS</AccordionTrigger>
-                    <AccordionContent className="p-4 bg-muted/20">
-                         <p className="text-muted-foreground whitespace-pre-wrap">{course.competencies}</p>
-                    </AccordionContent>
-                </AccordionItem>
-                {course.competencyMatrix.map((comp, compIndex) => (
-                    <AccordionItem key={compIndex} value={`comp-${compIndex}`} className="border-b last:border-b-0">
-                        <AccordionTrigger className="text-base font-medium px-4">{comp.competency}</AccordionTrigger>
-                        <AccordionContent className="p-4 bg-muted/20">
-                            <div className="space-y-4">
-                                {comp.skills.map((skill, skillIndex) => (
-                                    <div key={skillIndex}>
-                                        <h4 className="font-medium text-primary">{skill.skill}</h4>
-                                        <p className="text-sm text-muted-foreground">
-                                            <strong>Descritores:</strong> {skill.descriptors}
-                                        </p>
-                                    </div>
-                                ))}
-                            </div>
-                        </AccordionContent>
-                    </AccordionItem>
-                ))}
-            </Accordion>
-          </div>
-        )}
+        <div>
+            <h2 className="text-center font-bold text-lg bg-gray-200 dark:bg-gray-700 py-2 rounded-t-lg border border-b-0">MATRIZ DE COMPETÊNCIAS</h2>
+            <div className="border border-b-0">
+                <table className="w-full text-sm">
+                    <tbody>
+                        <tr>
+                            <td className="p-2 w-1/2 border-r align-top">
+                                <h3 className="font-bold mb-2">EMENTA</h3>
+                                <p className="text-muted-foreground whitespace-pre-wrap">{course.syllabus}</p>
+                            </td>
+                            <td className="p-2 w-1/2 align-top">
+                                <h3 className="font-bold mb-2">COMPETÊNCIAS</h3>
+                                <p className="text-muted-foreground whitespace-pre-wrap">{course.competencies}</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            {course.competencyMatrix && course.competencyMatrix.length > 0 && (
+                <Accordion type="multiple" className="w-full border" defaultValue={['comp-0']}>
+                    {course.competencyMatrix.map((comp, compIndex) => (
+                        <AccordionItem key={compIndex} value={`comp-${compIndex}`} className="border-b last:border-b-0">
+                            <AccordionTrigger className="text-base font-medium px-4">{comp.competency}</AccordionTrigger>
+                            <AccordionContent className="p-4 bg-muted/20">
+                                <div className="space-y-4">
+                                    {comp.skills.map((skill, skillIndex) => (
+                                        <div key={skillIndex}>
+                                            <h4 className="font-medium text-primary">{skill.skill}</h4>
+                                            <p className="text-sm text-muted-foreground">
+                                                <strong>Descritores:</strong> {skill.descriptors}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </AccordionContent>
+                        </AccordionItem>
+                    ))}
+                </Accordion>
+            )}
+        </div>
 
         {groupedSchedule && groupedSchedule.length > 0 && (
              <div className="border rounded-lg overflow-hidden">
@@ -221,53 +208,53 @@ function CourseInformation({
                         </tr>
                     </thead>
                     <tbody>
-                        {groupedSchedule.map((group) => (
-                            <React.Fragment key={group.unit.name}>
-                                {group.scheduleItems.map((item, itemIndex) => (
-                                    <tr key={itemIndex} className="border-b">
-                                        {itemIndex === 0 && (
-                                            <>
-                                                <td className="p-2 border-r align-top" rowSpan={group.scheduleItems.length || 1}>
-                                                    {group.unit.name}
-                                                </td>
-                                                <td className="p-2 border-r align-top" rowSpan={group.scheduleItems.length || 1}>
-                                                    <ul className="list-disc pl-4 space-y-1">
-                                                        {group.competency?.skills?.map((skill, skillIdx) => (
-                                                          <li key={skillIdx}>{skill.skill}</li>
-                                                        ))}
-                                                    </ul>
-                                                </td>
-                                                <td className="p-2 border-r align-top text-center" rowSpan={group.scheduleItems.length || 1}>
-                                                    {group.unitWorkload}
-                                                </td>
-                                            </>
-                                        )}
-                                        <td className="p-2 border-r align-top">{item.content}</td>
-                                        <td className="p-2 text-center align-top">{item.activity.match(/(\d+h)/)?.[0]}</td>
-                                    </tr>
-                                ))}
-                                {group.scheduleItems.length === 0 && (
-                                     <tr className="border-b">
-                                        <td className="p-2 border-r align-top">
-                                            {group.unit.name}
-                                        </td>
-                                        <td className="p-2 border-r align-top">
-                                            <ul className="list-disc pl-4 space-y-1">
-                                                {group.competency?.skills?.map((skill, skillIdx) => (
-                                                    <li key={skillIdx}>{skill.skill}</li>
-                                                ))}
-                                            </ul>
-                                        </td>
-                                        <td className="p-2 border-r align-top text-center">
-                                            {group.unitWorkload}
-                                        </td>
-                                        <td className="p-2 border-r align-top text-center text-muted-foreground" colSpan={2}>
-                                            Nenhuma aula agendada para esta unidade.
-                                        </td>
-                                    </tr>
-                                )}
-                            </React.Fragment>
-                        ))}
+                        {groupedSchedule.map((group) => {
+                             const rowCount = group.scheduleItems.length || 1;
+                             return (
+                                <React.Fragment key={group.unit.name}>
+                                    {group.scheduleItems.length > 0 ? (
+                                        group.scheduleItems.map((item, itemIndex) => (
+                                            <tr key={itemIndex} className="border-b">
+                                                {itemIndex === 0 && (
+                                                    <>
+                                                        <td className="p-2 border-r align-top" rowSpan={rowCount}>
+                                                            {group.unit.name}
+                                                        </td>
+                                                        <td className="p-2 border-r align-top" rowSpan={rowCount}>
+                                                            <ul className="list-disc pl-4 space-y-1">
+                                                                {group.competency?.skills?.map((skill, skillIdx) => (
+                                                                <li key={skillIdx}>{skill.skill}</li>
+                                                                ))}
+                                                            </ul>
+                                                        </td>
+                                                        <td className="p-2 border-r align-top text-center" rowSpan={rowCount}>
+                                                            {group.unitWorkload}
+                                                        </td>
+                                                    </>
+                                                )}
+                                                <td className="p-2 border-r align-top">{item.content}</td>
+                                                <td className="p-2 text-center align-top">{item.activity.match(/(\d+h)/)?.[0]}</td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr className="border-b">
+                                            <td className="p-2 border-r align-top">{group.unit.name}</td>
+                                            <td className="p-2 border-r align-top">
+                                                <ul className="list-disc pl-4 space-y-1">
+                                                    {group.competency?.skills?.map((skill, skillIdx) => (
+                                                        <li key={skillIdx}>{skill.skill}</li>
+                                                    ))}
+                                                </ul>
+                                            </td>
+                                            <td className="p-2 border-r align-top text-center">{group.unitWorkload}</td>
+                                            <td className="p-2 border-r align-top text-center text-muted-foreground" colSpan={2}>
+                                                Nenhuma aula agendada para esta unidade.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </React.Fragment>
+                            )
+                        })}
                         <tr className="bg-gray-200 dark:bg-gray-700 font-bold">
                             <td colSpan={4} className="p-2 text-right border-r">TOTAL CH</td>
                             <td className="p-2 text-center">{totalCH}</td>
@@ -277,25 +264,6 @@ function CourseInformation({
             </div>
         )}
 
-        {course.thematicTree && course.thematicTree.length > 0 && (
-          <div>
-            <h3 className="font-semibold text-xl mb-4">Árvore Temática</h3>
-            <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {course.thematicTree.map((item, index) => (
-                <Card key={index} className={cn(thematicTreeColors[index % thematicTreeColors.length])}>
-                  <CardHeader>
-                    <CardTitle className='text-lg'>{item.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">
-                      {item.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
         {course.bibliography && (course.bibliography.basic || course.bibliography.complementary || course.bibliography.recommended) && (
           <div>
             <h3 className="font-semibold text-xl mb-4">Bibliografia</h3>
