@@ -28,59 +28,71 @@ interface RecentCoursesProps {
     isLoading: boolean;
 }
 
+type CourseStatus = 'Ativa' | 'Lecionada' | 'Agendada';
+
 export function RecentCourses({ courses, classroomsByCourse, isLoading }: RecentCoursesProps) {
   
   const recentCourses = useMemo(() => {
     if (!courses) return [];
 
-    const isSemesterActive = (classroom: Classroom): boolean => {
-        if (!classroom || !classroom.year || !classroom.semester) return false;
+    const getCourseStatus = (classroom?: Classroom): CourseStatus => {
+        if (!classroom || !classroom.year || !classroom.semester) return 'Agendada';
         
         const year = parseInt(classroom.year, 10);
         const sem = parseInt(classroom.semester, 10);
 
-        if (isNaN(year) || isNaN(sem)) return false;
+        if (isNaN(year) || isNaN(sem)) return 'Agendada';
 
         const today = new Date();
         const currentYear = today.getFullYear();
         const currentMonth = today.getMonth() + 1; // 1-12
+        const currentSemester = currentMonth >= 2 && currentMonth <= 7 ? 1 : 2;
 
-        if (year !== currentYear) return false;
+        if (year < currentYear) return 'Lecionada';
+        if (year > currentYear) return 'Agendada';
+        // If same year, check semester
+        if (sem < currentSemester) return 'Lecionada';
+        if (sem > currentSemester) return 'Agendada';
         
-        return sem === 1 ? currentMonth >= 2 && currentMonth <= 7 : currentMonth >= 8 && currentMonth <= 12;
+        return 'Ativa';
     }
 
     return courses
       .map(course => {
         const classroom = classroomsByCourse[course.id]?.[0];
-        const isActive = classroom ? isSemesterActive(classroom) : false;
+        const status = getCourseStatus(classroom);
         
         return {
           ...course,
           classroom,
-          isActive,
+          status,
         };
       })
       .sort((a, b) => {
-        if (a.isActive && !b.isActive) return -1;
-        if (!a.isActive && b.isActive) return 1;
-        // Fallback sort by year then semester if available
-        const yearA = a.classroom?.year || '0';
-        const yearB = b.classroom?.year || '0';
-        const semA = a.classroom?.semester || '0';
-        const semB = b.classroom?.semester || '0';
-        if (yearA !== yearB) return yearB.localeCompare(yearA);
-        return semB.localeCompare(semA);
+        // Sort by status: Ativa > Agendada > Lecionada
+        if (a.status === 'Ativa' && b.status !== 'Ativa') return -1;
+        if (a.status !== 'Ativa' && b.status === 'Ativa') return 1;
+        if (a.status === 'Agendada' && b.status === 'Lecionada') return -1;
+        if (a.status === 'Lecionada' && b.status === 'Agendada') return 1;
+        
+        // Fallback sort by year/semester
+        return (b.classroom?.semester || '0').localeCompare(a.classroom?.semester || '0');
       })
       .slice(0, 5);
   }, [courses, classroomsByCourse]);
+
+  const statusStyles: Record<CourseStatus, string> = {
+    Ativa: 'bg-green-100 text-green-800 border-green-300 dark:bg-green-900/50 dark:text-green-300',
+    Lecionada: 'bg-gray-100 text-gray-800 border-gray-300 dark:bg-gray-900/50 dark:text-gray-400',
+    Agendada: 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/50 dark:text-blue-300',
+  }
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Disciplinas Recentes</CardTitle>
         <CardDescription>
-          As disciplinas que você adicionou recentemente. As ativas aparecem com mais destaque.
+          As disciplinas mais recentes, destacando as ativas.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -89,7 +101,7 @@ export function RecentCourses({ courses, classroomsByCourse, isLoading }: Recent
             <TableRow>
               <TableHead>Disciplina</TableHead>
               <TableHead>Ano</TableHead>
-              <TableHead className="text-right">Semestre</TableHead>
+              <TableHead className="text-right">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -114,7 +126,7 @@ export function RecentCourses({ courses, classroomsByCourse, isLoading }: Recent
                     return (
                         <TableRow
                           key={course.id}
-                          className={cn(!course.isActive && 'text-muted-foreground')}
+                          className={cn(course.status !== 'Ativa' && 'text-muted-foreground')}
                         >
                           <TableCell>
                             <Link
@@ -126,7 +138,7 @@ export function RecentCourses({ courses, classroomsByCourse, isLoading }: Recent
                           </TableCell>
                           <TableCell>
                             {year ? (
-                              <Badge variant={course.isActive ? 'secondary' : 'outline'}>
+                              <Badge variant={course.status === 'Ativa' ? 'secondary' : 'outline'}>
                                 {year}
                               </Badge>
                             ) : (
@@ -134,11 +146,9 @@ export function RecentCourses({ courses, classroomsByCourse, isLoading }: Recent
                             )}
                           </TableCell>
                           <TableCell className="text-right">
-                            {semesterNumber ? (
-                              `${semesterNumber}º`
-                            ) : (
-                              <span className="text-muted-foreground">N/A</span>
-                            )}
+                             <Badge variant="outline" className={cn(statusStyles[course.status])}>
+                                {course.status}
+                             </Badge>
                           </TableCell>
                         </TableRow>
                     );
