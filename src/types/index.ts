@@ -169,3 +169,29 @@ export interface IdeaComment {
   text: string;
   createdAt: string; // ISO 8601 string
 }
+
+export type ForumThreadType = 'Estúdio' | 'Turmas correlatas' | 'Tema transversal' | 'Apoio pedagógico' | 'Outro';
+
+export interface ForumThread {
+    id: string;
+    title: string;
+    description: string;
+    type: ForumThreadType;
+    participantIds: string[];
+    authorId: string;
+    authorName: string;
+    course: string;
+    createdAt: string; // ISO 8601
+    lastActivityAt: string; // ISO 8601
+    participantCount: number;
+}
+
+export interface ForumReply {
+    id: string;
+    authorId: string;
+    authorName: string;
+    text: string;
+    createdAt: string; // ISO 8601
+}
+
+    

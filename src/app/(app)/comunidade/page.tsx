@@ -12,6 +12,7 @@ import { IdeaDetailsSheet } from '@/components/community/idea-details-sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Idea } from '@/types';
 import { MaterialsTab } from '@/components/community/materials-tab';
+import { CoffeeChatTab } from '@/components/community/coffee-chat-tab';
 
 
 const IdeasClubTab = () => {
@@ -54,21 +55,6 @@ const IdeasClubTab = () => {
         </>
     );
 };
-
-const CoffeeChatTab = () => (
-  <Card>
-    <CardHeader>
-      <CardTitle>Café Pedagógico</CardTitle>
-      <CardDescription>Grupos de conversa para integração entre disciplinas, estúdios e turmas.</CardDescription>
-    </CardHeader>
-    <CardContent className="space-y-4">
-        <Button>Criar Grupo de Conversa</Button>
-        <div className="border-2 border-dashed rounded-lg p-8 text-center text-muted-foreground">
-            <p>Em breve: Grupos de conversa, chat integrado e mini agenda.</p>
-        </div>
-    </CardContent>
-  </Card>
-);
 
 const FacultyAgendaTab = () => (
   <Card>
@@ -158,3 +144,5 @@ export default function CommunityPage() {
     </div>
   );
 }
+
+    

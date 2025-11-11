@@ -343,31 +343,32 @@
         "course": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" },
-        "supportCount": { "type": "number" }
+        "supportCount": { "type": "number" },
+        "commentCount": { "type": "number" }
       },
-      "required": ["id", "title", "description", "category", "status", "authorId", "authorName", "course", "createdAt", "updatedAt", "supportCount"]
+      "required": ["id", "title", "description", "category", "status", "authorId", "authorName", "course", "createdAt", "updatedAt", "supportCount", "commentCount"]
     },
     "IdeaSupport": {
         "title": "IdeaSupport",
         "type": "object",
         "description": "Represents a user's support for an idea.",
         "properties": {
-            "userId": { "type": "string" },
             "supportedAt": { "type": "string", "format": "date-time" }
         },
-        "required": ["userId", "supportedAt"]
+        "required": ["supportedAt"]
     },
     "IdeaComment": {
         "title": "IdeaComment",
         "type": "object",
         "description": "A comment on an idea.",
         "properties": {
+            "id": { "type": "string" },
             "userId": { "type": "string" },
             "userName": { "type": "string" },
             "text": { "type": "string" },
             "createdAt": { "type": "string", "format": "date-time" }
         },
-        "required": ["userId", "userName", "text", "createdAt"]
+        "required": ["id", "userId", "userName", "text", "createdAt"]
     },
     "CommunityEvent": {
         "title": "CommunityEvent",
@@ -411,33 +412,34 @@
     "ForumThread": {
         "title": "ForumThread",
         "type": "object",
-        "description": "A thread in the 'Café das Ideias' forum.",
+        "description": "A thread in the 'Café das Ideias' forum, representing a conversation group.",
         "properties": {
             "id": { "type": "string" },
-            "title": { "type": "string" },
-            "body": { "type": "string" },
-            "tags": { "type": "array", "items": { "type": "string" } },
+            "title": { "type": "string", "description": "Name of the group." },
+            "description": { "type": "string", "description": "Short description of the group's purpose." },
+            "type": { "type": "string", "enum": ["Estúdio", "Turmas correlatas", "Tema transversal", "Apoio pedagógico", "Outro"] },
+            "participantIds": { "type": "array", "items": { "type": "string" }, "description": "List of professor UIDs participating in the group." },
             "authorId": { "type": "string" },
             "authorName": { "type": "string" },
             "course": { "type": "string" },
             "createdAt": { "type": "string", "format": "date-time" },
-            "updatedAt": { "type": "string", "format": "date-time" },
-            "replyCount": { "type": "number" }
+            "lastActivityAt": { "type": "string", "format": "date-time" },
+            "participantCount": { "type": "number" }
         },
-        "required": ["id", "title", "body", "authorId", "authorName", "course", "createdAt", "updatedAt", "replyCount"]
+        "required": ["id", "title", "description", "type", "participantIds", "authorId", "authorName", "course", "createdAt", "lastActivityAt", "participantCount"]
     },
     "ForumReply": {
         "title": "ForumReply",
         "type": "object",
-        "description": "A reply to a forum thread.",
+        "description": "A reply (message) to a forum thread.",
         "properties": {
+            "id": { "type": "string" },
             "authorId": { "type": "string" },
             "authorName": { "type": "string" },
-            "course": { "type": "string" },
             "text": { "type": "string" },
             "createdAt": { "type": "string", "format": "date-time" }
         },
-        "required": ["authorId", "authorName", "course", "text", "createdAt"]
+        "required": ["id", "authorId", "authorName", "text", "createdAt"]
     }
   },
   "auth": {
@@ -616,7 +618,7 @@
         "definition": { "entityName": "Idea", "schema": { "$ref": "#/backend/entities/Idea" } }
       },
       {
-        "path": "/ideas/{ideaId}/supports/{supportId}",
+        "path": "/ideas/{ideaId}/supports/{userId}",
         "definition": { "entityName": "IdeaSupport", "schema": { "$ref": "#/backend/entities/IdeaSupport" } }
       },
       {
@@ -643,3 +645,5 @@
     "reasoning": "The Firestore data structure is designed to support the UNDB ProfAssist application, focusing on secure access, efficient data management, and AI integration for lesson plan imports. Authorization Independence is achieved by structuring professor-owned data under their respective user IDs and by denormalizing the 'professorId' into subcollections where professor authorization is required. This eliminates the need for `get()` calls in security rules, enabling atomic operations. QAPs (Rules are not Filters) are supported through structural segregation and dedicated collections. User roles are implicitly managed via path-based ownership, and course/classroom associations are secured by including the relevant professorId in each document. The structure supports secure list operations by scoping data to specific professor's or courses. Explicit state modeling would be incorporated into fields like status to improve the clarity and maintainability. This design ensures that each collection maintains a homogeneous security posture, simplifying rules and enhancing debuggability. Added collections for the Community module, with public read access for authenticated professors and ownership-based write access. The 'documents' collection is now top-level for community sharing."
   }
 }
+
+    

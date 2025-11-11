@@ -156,19 +156,21 @@ service cloud.firestore {
     }
 
     /**
-     * @description Forum Threads collection.
+     * @description Forum Threads collection (Café Pedagógico groups).
      */
     match /forumThreads/{threadId} {
-      allow read: if isProfessor();
+      allow read: if isProfessor() && request.auth.uid in resource.data.participantIds;
       allow create: if isProfessor() && request.resource.data.authorId == request.auth.uid;
       allow update, delete: if isProfessor() && resource.data.authorId == request.auth.uid;
 
-      // Replies subcollection
+      // Replies subcollection (messages in the group)
       match /replies/{replyId} {
-        allow read: if isProfessor();
-        allow create: if isProfessor() && request.resource.data.authorId == request.auth.uid;
+        allow read: if isProfessor() && request.auth.uid in get(/databases/$(database)/documents/forumThreads/$(threadId)).data.participantIds;
+        allow create: if isProfessor() && request.resource.data.authorId == request.auth.uid && request.auth.uid in get(/databases/$(database)/documents/forumThreads/$(threadId)).data.participantIds;
         allow update, delete: if isProfessor() && resource.data.authorId == request.auth.uid;
       }
     }
   }
 }
+
+    
