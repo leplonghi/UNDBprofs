@@ -37,8 +37,7 @@ const LearningUnitSchema = z.object({
 const ImportCourseFromLessonPlanOutputSchema = z.object({
   courseName: z.string().describe('The name of the course, extracted from the "UNIDADE CURRICULAR" field.').optional(),
   courseCode: z.string().describe('The code of the course.').optional(),
-  syllabus: z.string().describe('The syllabus of the course (Ementa). Transcribe it exactly as it appears. This field often contains the objectives within it.').optional(),
-  objectives: z.string().describe('The objectives of the course (Objetivos). This is often a subsection within the "Ementa". If it is not a separate field, extract it from the "Ementa" or leave it empty.').optional(),
+  syllabus: z.string().describe('The syllabus of the course (Ementa). Transcribe it exactly as it appears, including any "Objetivos" subsection within it.').optional(),
   competencies: z.string().describe('The general competencies of the course (Competências).').optional(),
   workload: z.string().describe('The workload of the course (Carga Horária).').optional(),
   semester: z.string().describe('The semester of the course').optional(),
@@ -98,7 +97,6 @@ const prompt = ai.definePrompt({
       - courseName: The name of the discipline, which is located in the "UNIDADE CURRICULAR" field.
       - courseCode: The code of the discipline. If not present, leave it empty.
       - syllabus: The "Ementa". Transcribe it exactly as it appears, word-for-word. It's a general summary of the course. **Crucially, if the "Ementa" section contains a sub-section titled "Objetivos", you must include that text as part of this 'syllabus' field.** Do not separate it.
-      - objectives: **IMPORTANT**: This field should ONLY be populated if there is a completely separate, top-level section in the document titled "Objetivos". If the objectives are listed inside the "Ementa" block, this 'objectives' field MUST be left empty, as the content will be part of the 'syllabus' field.
       - competencies: The general text block under the title "COMPETÊNCIAS". Transcribe it exactly as it appears.
       - workload: The "Carga Horária".
       - semester: The "Semestre".

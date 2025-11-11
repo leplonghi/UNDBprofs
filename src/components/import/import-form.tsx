@@ -43,7 +43,6 @@ const formSchema = z.object({
   courseName: z.string().optional(),
   courseCode: z.string().optional(),
   syllabus: z.string().optional(),
-  objectives: z.string().optional(),
   competencies: z.string().optional(),
   workload: z.string().optional(),
   semester: z.string().optional(),
@@ -82,7 +81,6 @@ export function ImportForm() {
       courseName: '',
       courseCode: '',
       syllabus: '',
-      objectives: '',
       competencies: '',
       workload: '',
       semester: '',
@@ -126,7 +124,6 @@ export function ImportForm() {
         courseName: extractedData.courseName,
         courseCode: extractedData.courseCode,
         syllabus: extractedData.syllabus,
-        objectives: extractedData.objectives,
         competencies: extractedData.competencies,
         workload: extractedData.workload,
         semester: extractedData.semester,
@@ -165,7 +162,6 @@ export function ImportForm() {
         name: values.courseName || 'Nome não definido',
         code: values.courseCode || 'N/A',
         syllabus: values.syllabus || 'Ementa não definida',
-        objectives: values.objectives || 'Objetivos não definidos',
         competencies: values.competencies || 'Competências não definidas',
         competencyMatrix: values.competencyMatrix || [],
         learningUnits: values.learningUnits || [],
@@ -249,7 +245,7 @@ export function ImportForm() {
                     <Accordion type="multiple" defaultValue={['item-1', 'item-2']} className="w-full space-y-4">
                         <AccordionItem value="item-1" className="border rounded-lg">
                            <AccordionTrigger className="px-6 text-lg font-semibold">Dados da Disciplina</AccordionTrigger>
-                           <AccordionContent className="px-6 space-y-6">
+                           <AccordionContent className="px-6 pt-6 space-y-6">
                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <FormField
                                     control={form.control}
@@ -278,34 +274,21 @@ export function ImportForm() {
                                     )}
                                 />
                                 </div>
-                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                    <FormField
-                                        control={form.control}
-                                        name="syllabus"
-                                        render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Ementa</FormLabel>
-                                            <FormControl>
-                                            <Textarea rows={5} {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="objectives"
-                                        render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Objetivos</FormLabel>
-                                            <FormControl>
-                                            <Textarea rows={5} {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                        )}
-                                    />
-                                </div>
+                                
+                                <FormField
+                                    control={form.control}
+                                    name="syllabus"
+                                    render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Ementa</FormLabel>
+                                        <FormControl>
+                                        <Textarea rows={8} {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                    )}
+                                />
+                                
                                  <FormField
                                     control={form.control}
                                     name="competencies"
@@ -313,7 +296,7 @@ export function ImportForm() {
                                     <FormItem>
                                         <FormLabel>Competências Gerais</FormLabel>
                                         <FormControl>
-                                        <Textarea rows={5} {...field} />
+                                        <Textarea rows={8} {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -437,7 +420,7 @@ export function ImportForm() {
 
                         <AccordionItem value="item-2" className="border rounded-lg">
                            <AccordionTrigger className="px-6 text-lg font-semibold">Dados da Turma e Cronograma</AccordionTrigger>
-                           <AccordionContent className="px-6 space-y-6">
+                           <AccordionContent className="px-6 pt-6 space-y-6">
                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                                 <FormField
                                     control={form.control}

@@ -55,7 +55,6 @@ const formSchema = z.object({
   courseName: z.string().optional(),
   courseCode: z.string().optional(),
   syllabus: z.string().optional(),
-  objectives: z.string().optional(),
   competencies: z.string().optional(),
   workload: z.string().optional(),
   semester: z.string().optional(),
@@ -127,7 +126,6 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
       courseName: '',
       courseCode: '',
       syllabus: '',
-      objectives: '',
       competencies: '',
       workload: '',
       semester: '',
@@ -146,7 +144,6 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
         courseName: course.name,
         courseCode: course.code,
         syllabus: course.syllabus,
-        objectives: course.objectives,
         competencies: course.competencies,
         competencyMatrix: course.competencyMatrix || [],
         learningUnits: course.learningUnits || [],
@@ -183,11 +180,10 @@ export function EditCourseForm({ courseId }: { courseId: string }) {
       `professors/${user.uid}/courses/${courseId}/classrooms/${classroom.id}`
     );
 
-    const updatedCourseData: Partial<Course> = {
+    const updatedCourseData: Partial<Omit<Course, 'id'>> = {
       name: values.courseName,
       code: values.courseCode,
       syllabus: values.syllabus,
-      objectives: values.objectives,
       competencies: values.competencies,
       competencyMatrix: values.competencyMatrix || [],
       learningUnits: values.learningUnits || [],

@@ -42,7 +42,6 @@ export interface Course {
   name: string;
   code: string;
   syllabus: string;
-  objectives: string;
   competencies: string;
   learningUnits: LearningUnit[];
   competencyMatrix: Competency[];
