@@ -62,14 +62,16 @@ export default function LoginClient({ initialFrom }: LoginClientProps) {
         <div className="flex w-full flex-col items-center gap-8 text-center">
             <AppLogo />
 
-            <div>
-            <h1 className="text-2xl font-bold text-primary">
-                Bem-vindo ao UNDBProf!
-            </h1>
-            <p className="mt-2 text-muted-foreground">
-                Seu assistente para organizar a rotina docente e colaborar com colegas.
+            <div className='space-y-4'>
+              <h1 className="text-2xl font-bold text-primary">
+                  Bem-vindo ao UNDBProf!
+              </h1>
+              <p className="text-muted-foreground">
+                  Seu assistente para organizar a rotina docente e colaborar com colegas.
+              </p>
+               <div className="mt-4 rounded-md border bg-accent/50 p-3 text-sm font-medium text-accent-foreground">
                 O acesso é exclusivo para contas @undb.edu.br.
-            </p>
+              </div>
             </div>
 
             <Button
