@@ -46,38 +46,46 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function getBackendStats() {
-      if (!user || !firestore || !courses) {
-        setIsLoadingStats(!isLoadingCourses);
+      if (!user || !firestore) return;
+      if (isLoadingCourses) return;
+      if (!courses) {
+        setIsLoadingStats(false);
+        setClassroomsCount(0);
+        setStudentsCount(0);
         return;
-      }
+      };
+
       setIsLoadingStats(true);
       
+      const classroomPromises = courses.map(course => 
+        getDocs(collection(firestore, `professors/${user.uid}/courses/${course.id}/classrooms`))
+      );
+      
+      const classroomSnapshots = await Promise.all(classroomPromises);
+
       let totalClassrooms = 0;
       let totalStudents = 0;
       const classroomsByCourseData: Record<string, Classroom[]> = {};
+      
+      const studentCountPromises = [];
 
-      for (const course of courses) {
-        const classroomsRef = collection(
-          firestore,
-          `professors/${user.uid}/courses/${course.id}/classrooms`
-        );
-        const classroomSnapshot = await getDocs(classroomsRef);
+      for (let i = 0; i < courses.length; i++) {
+        const course = courses[i];
+        const classroomSnapshot = classroomSnapshots[i];
         const courseClassrooms = classroomSnapshot.docs.map(doc => doc.data() as Classroom);
+
         classroomsByCourseData[course.id] = courseClassrooms;
         totalClassrooms += courseClassrooms.length;
 
-        let courseStudentCount = 0;
-        for (const classroomDoc of courseClassrooms) {
-          const studentsRef = collection(
-            firestore,
-            `professors/${user.uid}/courses/${course.id}/classrooms/${classroomDoc.id}/classroomStudents`
-          );
-          const studentsSnapshot = await getDocs(studentsRef);
-          courseStudentCount += studentsSnapshot.size;
+        for (const classroom of courseClassrooms) {
+            const studentsRef = collection(firestore, `professors/${user.uid}/courses/${course.id}/classrooms/${classroom.id}/classroomStudents`);
+            studentCountPromises.push(getDocs(studentsRef));
         }
-        totalStudents += courseStudentCount;
       }
-      
+
+      const studentSnapshots = await Promise.all(studentCountPromises);
+      totalStudents = studentSnapshots.reduce((acc, snap) => acc + snap.size, 0);
+
       setClassroomsByCourse(classroomsByCourseData);
       setClassroomsCount(totalClassrooms);
       setStudentsCount(totalStudents);

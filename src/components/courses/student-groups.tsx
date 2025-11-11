@@ -119,7 +119,6 @@ export function StudentGroups({
         return;
       }
       setIsStudentDataLoading(true);
-      const studentDataMap: Record<string, Student> = {};
       const studentIds = classroomStudents.map(cs => cs.studentId);
       
       const studentPromises = [];
@@ -139,14 +138,8 @@ export function StudentGroups({
       studentDocs.forEach(doc => {
           studentDataById[doc.id] = doc.data() as Student;
       });
-
-      classroomStudents.forEach(cs => {
-          if (studentDataById[cs.studentId]) {
-              studentDataMap[cs.id] = studentDataById[cs.studentId];
-          }
-      });
       
-      setAllStudentsData(studentDataMap);
+      setAllStudentsData(studentDataById);
       setIsStudentDataLoading(false);
     }
     fetchAllStudentData();
@@ -210,8 +203,10 @@ export function StudentGroups({
   const alphabeticallySortedStudents = useMemo(() => {
     if (!classroomStudents || Object.keys(allStudentsData).length === 0) return [];
     return [...classroomStudents].sort((a, b) => {
-        const nameA = allStudentsData[a.id]?.name || '';
-        const nameB = allStudentsData[b.id]?.name || '';
+        const studentA = allStudentsData[a.studentId];
+        const studentB = allStudentsData[b.studentId];
+        const nameA = studentA?.name || '';
+        const nameB = studentB?.name || '';
         return nameA.localeCompare(nameB);
     });
   }, [classroomStudents, allStudentsData]);
@@ -408,7 +403,7 @@ export function StudentGroups({
 
   const getExportData = () => {
     const data = classroomStudents.map(cs => {
-        const studentInfo = allStudentsData[cs.id];
+        const studentInfo = allStudentsData[cs.studentId];
         if (!studentInfo) return null;
 
         const grades = localGrades[cs.id] || [];
@@ -492,14 +487,14 @@ export function StudentGroups({
     
     if (sortBy === 'alphabetical') {
         return alphabeticallySortedStudents.filter(cs => 
-            allStudentsData[cs.id]?.name.toLowerCase().includes(lowerCaseFilter)
+            allStudentsData[cs.studentId]?.name.toLowerCase().includes(lowerCaseFilter)
         );
     }
     
     // Sort by groups
     const filteredGroups = studentGroups
       .map(group => {
-        const filteredMembers = group.members.filter(csId => allStudentsData[csId]?.name.toLowerCase().includes(lowerCaseFilter));
+        const filteredMembers = group.members.filter(csId => allStudentsData[classroomStudents.find(cs => cs.id === csId)?.studentId || '']?.name.toLowerCase().includes(lowerCaseFilter));
         // Show group if name matches OR if any member matches
         if (group.name.toLowerCase().includes(lowerCaseFilter) || filteredMembers.length > 0) {
           // If group name doesn't match, only show filtered members
@@ -515,12 +510,12 @@ export function StudentGroups({
 
 
     const filteredUngrouped = ungroupedStudents.filter(csId => 
-        allStudentsData[csId]?.name.toLowerCase().includes(lowerCaseFilter)
+        allStudentsData[classroomStudents.find(cs => cs.id === csId)?.studentId || '']?.name.toLowerCase().includes(lowerCaseFilter)
     );
 
     return { groups: filteredGroups, ungrouped: filteredUngrouped };
 
-  }, [filter, sortBy, studentGroups, ungroupedStudents, alphabeticallySortedStudents, allStudentsData]);
+  }, [filter, sortBy, studentGroups, ungroupedStudents, alphabeticallySortedStudents, allStudentsData, classroomStudents]);
 
     const renderGradeInputs = (studentOrGroupId: string, isGroup: boolean) => {
     const studentIdForGrades = isGroup 
@@ -669,7 +664,7 @@ export function StudentGroups({
                     <TableCell className="font-bold text-primary text-center">{finalGrade.toFixed(1)}</TableCell>
                 </TableRow>
                 {group.members.map(csId => {
-                   const student = allStudentsData[csId];
+                   const student = allStudentsData[classroomStudents.find(cs => cs.id === csId)?.studentId || ''];
                    const studentGrades = localGrades[csId] || [];
                    const { n1Total, n2Total, finalGrade } = calculateTotals(studentGrades);
                    return(
@@ -709,7 +704,7 @@ export function StudentGroups({
                               onClick={() => handleAddStudentToGroup(group.id, csId)}
                               className="text-left text-sm p-2 hover:bg-accent"
                             >
-                              {allStudentsData[csId]?.name || 'Aluno sem nome'}
+                              {allStudentsData[classroomStudents.find(cs => cs.id === csId)?.studentId || '']?.name || 'Aluno sem nome'}
                             </button>
                           )) : <p className="p-2 text-sm text-muted-foreground">Nenhum aluno disponível.</p>}
                         </div>
@@ -722,7 +717,7 @@ export function StudentGroups({
             )
         })}
         {(filteredData as { groups: Group[], ungrouped: string[] }).ungrouped.map((csId) => {
-             const student = allStudentsData[csId];
+             const student = allStudentsData[classroomStudents.find(cs => cs.id === csId)?.studentId || ''];
              if (!student) return null;
              const grades = localGrades[csId] || [];
              const { n1Total, n2Total, finalGrade } = calculateTotals(grades);
@@ -775,7 +770,7 @@ export function StudentGroups({
   const renderAlphabeticalView = () => (
     <>
       {(filteredData as ClassroomStudent[]).map((cs) => {
-        const student = allStudentsData[cs.id];
+        const student = allStudentsData[cs.studentId];
         if (!student) return null;
         const grades = localGrades[cs.id] || [];
         const { n1Total, n2Total, finalGrade } = calculateTotals(grades);
@@ -917,7 +912,7 @@ export function StudentGroups({
                                    <h4 className="font-semibold text-sm">Membros</h4>
                                    {group.members.map(csId => (
                                      <div key={csId} className="flex items-center justify-between gap-2 p-2 rounded-md bg-background">
-                                       <StudentRowDisplay student={allStudentsData[csId]} />
+                                       <StudentRowDisplay student={allStudentsData[classroomStudents.find(cs => cs.id === csId)?.studentId || '']} />
                                         <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleRemoveStudentFromGroup(csId)}>
                                             <X className="h-4 w-4" />
                                         </Button>
@@ -938,7 +933,7 @@ export function StudentGroups({
                                           onClick={() => handleAddStudentToGroup(group.id, csId)}
                                           className="text-left text-sm p-2 hover:bg-accent"
                                         >
-                                          {allStudentsData[csId]?.name || 'Aluno sem nome'}
+                                          {allStudentsData[classroomStudents.find(cs => cs.id === csId)?.studentId || '']?.name || 'Aluno sem nome'}
                                         </button>
                                       )) : <p className="p-2 text-sm text-muted-foreground">Nenhum aluno disponível.</p>}
                                     </div>
