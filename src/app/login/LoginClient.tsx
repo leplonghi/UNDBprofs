@@ -64,7 +64,7 @@ export default function LoginClient({ initialFrom }: LoginClientProps) {
 
             <div className='space-y-4'>
               <h1 className="text-2xl font-bold text-primary">
-                  Boas-vindas ao UNDBProf!
+                  Bem-vindo(a) ao UNDBProf!
               </h1>
               <p className="text-muted-foreground">
                   Um app de professor para professor, feito para somar eficiência, praticidade e colaboração ao seu dia a dia.
