@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useRef, useTransition } from 'react';
+import React, { useState, useRef, useTransition, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -47,6 +47,7 @@ import { Progress } from '../ui/progress';
 interface AddDocumentDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
+  courseId?: string | null;
 }
 
 const MAX_FILE_SIZE_MB = 1;
@@ -55,6 +56,7 @@ const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 export function AddDocumentDialog({
   isOpen,
   onOpenChange,
+  courseId: preselectedCourseId,
 }: AddDocumentDialogProps) {
   const { user } = useUser();
   const firestore = useFirestore();
@@ -78,6 +80,12 @@ export function AddDocumentDialog({
   const { data: courses, isLoading: isLoadingCourses } =
     useCollection<Course>(coursesQuery);
 
+  useEffect(() => {
+    if (preselectedCourseId) {
+      setCourseId(preselectedCourseId);
+    }
+  }, [preselectedCourseId]);
+
   const resetState = () => {
     setIsProcessing(false);
     setUploadProgress(0);
@@ -85,7 +93,7 @@ export function AddDocumentDialog({
     setDocumentType('file');
     setFile(null);
     setLink('');
-    setCourseId(null);
+    setCourseId(preselectedCourseId || null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -239,25 +247,27 @@ export function AddDocumentDialog({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Associar à Disciplina (Opcional)</Label>
-            <Select
-              onValueChange={(value) => setCourseId(value)}
-              disabled={isLoadingCourses || isProcessing}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione uma disciplina..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Nenhuma</SelectItem>
-                {courses?.map((course) => (
-                  <SelectItem key={course.id} value={course.id}>
-                    {course.name} ({course.code})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {!preselectedCourseId && (
+            <div className="space-y-2">
+                <Label>Associar à Disciplina (Opcional)</Label>
+                <Select
+                onValueChange={(value) => setCourseId(value)}
+                disabled={isLoadingCourses || isProcessing}
+                >
+                <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma disciplina..." />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="none">Nenhuma</SelectItem>
+                    {courses?.map((course) => (
+                    <SelectItem key={course.id} value={course.id}>
+                        {course.name} ({course.code})
+                    </SelectItem>
+                    ))}
+                </SelectContent>
+                </Select>
+            </div>
+          )}
 
           <RadioGroup
             defaultValue="file"

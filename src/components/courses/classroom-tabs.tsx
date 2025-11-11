@@ -40,7 +40,7 @@ function ResourcesTab({ courseId }: { courseId: string }) {
 
   return (
     <>
-      <AddDocumentDialog isOpen={isAddOpen} onOpenChange={setIsAddOpen} />
+      <AddDocumentDialog isOpen={isAddOpen} onOpenChange={setIsAddOpen} courseId={courseId} />
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Documentos e Links</CardTitle>
@@ -50,9 +50,6 @@ function ResourcesTab({ courseId }: { courseId: string }) {
           </Button>
         </CardHeader>
         <CardContent>
-          <CardDescription>
-            Adicione links para avaliações, trabalhos, leituras e outros materiais importantes para a turma.
-          </CardDescription>
             {isLoading ? (
                 <Skeleton className="h-40 w-full mt-4" />
             ) : !documents || documents.length === 0 ? (
