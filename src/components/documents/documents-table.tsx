@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Trash2, Link, File } from 'lucide-react';
+import { MoreHorizontal, Trash2, Link as LinkIcon, File as FileIcon } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,10 +36,10 @@ import {
   useCollection,
   useMemoFirebase,
 } from '@/firebase';
-import { collection, doc, deleteDoc, query, orderBy } from 'firebase/firestore';
+import { collection, doc, deleteDoc, query, where, orderBy } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import type { Document as DocumentType } from '@/types';
+import type { Document as DocumentType, Course } from '@/types';
 import { format } from 'date-fns';
 
 export function DocumentsTable() {
@@ -53,21 +53,23 @@ export function DocumentsTable() {
 
   const documentsQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
+    // Filter documents by the logged-in professor's ID
     return query(
-      collection(firestore, `documents`),
+      collection(firestore, 'documents'),
+      where('professorId', '==', user.uid),
       orderBy('createdAt', 'desc')
     );
   }, [user, firestore]);
 
-  const { data: documents, isLoading } =
-    useCollection<DocumentType>(documentsQuery);
+  const { data: documents, isLoading: isLoadingDocuments } = useCollection<DocumentType>(documentsQuery);
 
   const coursesQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return collection(firestore, `professors/${user.uid}/courses`);
   }, [user, firestore]);
 
-  const { data: courses } = useCollection(coursesQuery);
+  const { data: courses, isLoading: isLoadingCourses } = useCollection<Course>(coursesQuery);
+
   const coursesById = React.useMemo(() => {
     if (!courses) return {};
     return courses.reduce((acc, course) => {
@@ -76,19 +78,16 @@ export function DocumentsTable() {
     }, {} as Record<string, string>);
   }, [courses]);
 
+  const isLoading = isLoadingDocuments || isLoadingCourses;
+
   const handleDelete = async () => {
     if (!docToDelete || !user || !firestore) return;
 
     setIsDeleting(true);
-    const docRef = doc(
-      firestore,
-      `documents/${docToDelete.id}`
-    );
+    const docRef = doc(firestore, `documents/${docToDelete.id}`);
 
     try {
       await deleteDoc(docRef);
-      // Note: This does not delete the file from Firebase Storage.
-      // A Cloud Function would be needed for that.
       toast({
         title: 'Documento Excluído',
         description: `"${docToDelete.name}" foi removido com sucesso.`,
@@ -140,9 +139,9 @@ export function DocumentsTable() {
               <TableRow key={document.id}>
                 <TableCell>
                   {document.uploadType === 'link' ? (
-                    <Link className="h-5 w-5 text-muted-foreground" />
+                    <LinkIcon className="h-5 w-5 text-muted-foreground" />
                   ) : (
-                    <File className="h-5 w-5 text-muted-foreground" />
+                    <FileIcon className="h-5 w-5 text-muted-foreground" />
                   )}
                 </TableCell>
                 <TableCell className="font-medium">
@@ -210,8 +209,7 @@ export function DocumentsTable() {
             <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
             <AlertDialogDescription>
               Esta ação excluirá o registro do documento{' '}
-              <span className="font-bold">"{docToDelete?.name}"</span>. O arquivo
-              associado no armazenamento (se houver) não será excluído.
+              <span className="font-bold">"{docToDelete?.name}"</span>.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
