@@ -109,7 +109,7 @@ service cloud.firestore {
      * @description Documents collection (for community materials).
      */
     match /documents/{documentId} {
-      allow read: if isProfessor();
+      allow get, list: if isProfessor();
       allow create: if isProfessor() && request.resource.data.professorId == request.auth.uid;
       allow update, delete: if isProfessor() && resource.data.professorId == request.auth.uid;
     }
@@ -172,5 +172,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
