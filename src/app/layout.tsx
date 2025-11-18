@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   title: 'UNDBProf',
   description: 'Sistema digital de apoio aos professores da UNDB.',
   icons: {
-    icon: 'https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.appspot.com/o/Branding%2FPublic%2Ficone%20undbprof.png?alt=media&token=7b4f4441-34e1-434a-b805-43f52e91db6a',
+    icon: 'https://firebasestorage.googleapis.com/v0/b/studio-3759592126-ec313.firebasestorage.app/o/Branding%2FPublic%2Ficone%20undbprof.png?alt=media&token=7b4f4441-34e1-434a-b805-43f52e91db6a',
   },
 };
 
