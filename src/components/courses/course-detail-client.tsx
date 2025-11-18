@@ -29,11 +29,12 @@ import { doc, collection, query } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Edit, ArrowLeft } from 'lucide-react';
+import { Edit, ArrowLeft, HelpCircle } from 'lucide-react';
 import { ClassroomTabs } from '@/components/courses/classroom-tabs';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { format, parseISO } from 'date-fns';
+import Link from 'next/link';
 
 function CourseDetailsSkeleton() {
   return (
@@ -330,6 +331,71 @@ function CourseInformation({
   );
 }
 
+function DisciplineTutorial() {
+    return (
+        <Card>
+            <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="tutorial" className="border-b-0">
+                    <CardHeader className="flex-row items-start justify-between">
+                         <div>
+                            <CardTitle className="text-lg flex items-center gap-2">
+                                <HelpCircle className="h-5 w-5 text-primary" />
+                                Guia Rápido da Disciplina
+                            </CardTitle>
+                        </div>
+                        <AccordionTrigger className="text-sm font-semibold p-2 -mr-2 -mt-1 ml-4 whitespace-nowrap">
+                            Mostrar/Ocultar Guia
+                        </AccordionTrigger>
+                    </CardHeader>
+                    <AccordionContent className="px-6 pb-4">
+                        <Accordion type="multiple" className="w-full space-y-2">
+                             <AccordionItem value="plano-ensino" className="border rounded-md px-4">
+                                <AccordionTrigger className="py-3 font-semibold">1. Guia do Plano de Ensino</AccordionTrigger>
+                                <AccordionContent className="pt-2 space-y-2 text-sm text-muted-foreground">
+                                    <p>Esta aba contém todos os dados que foram extraídos do seu Plano de Ensino em PDF. É uma visualização fiel do documento oficial.</p>
+                                    <ul className="list-disc pl-5 space-y-1">
+                                        <li><strong>Editar Dados:</strong> Se precisar corrigir ou atualizar qualquer informação, clique no botão <span className="font-bold text-foreground">"Editar"</span>. Você será levado a um formulário onde todos os campos podem ser modificados, incluindo o cronograma detalhado de aulas.</li>
+                                        <li><strong>Re-importar com IA:</strong> No modo de edição, você pode usar a opção "Re-importar com IA" para enviar um novo PDF e preencher o formulário com dados atualizados, facilitando a correção.</li>
+                                    </ul>
+                                </AccordionContent>
+                             </AccordionItem>
+                             <AccordionItem value="gerenciamento-turma" className="border rounded-md px-4">
+                                <AccordionTrigger className="py-3 font-semibold">2. Guia de Gerenciamento da Turma</AccordionTrigger>
+                                <AccordionContent className="pt-2 space-y-4 text-sm text-muted-foreground">
+                                    <div className="space-y-2">
+                                        <h4 className="font-semibold text-foreground">Aba "Alunos"</h4>
+                                        <p>Para adicionar alunos, clique em <span className="font-bold text-foreground">"Adicionar Alunos"</span> e escolha um método:</p>
+                                        <ul className="list-disc pl-5 space-y-1">
+                                            <li><strong>Importar CSV (Recomendado):</strong> Baixe a lista de participantes do UNDB Classroom e envie o arquivo CSV aqui. O sistema adicionará apenas os estudantes automaticamente.</li>
+                                            <li><strong>Extrair com IA:</strong> Envie um PDF ou imagem com a lista de alunos (nome, e-mail) e a IA tentará extrair os dados para você revisar e salvar.</li>
+                                        </ul>
+                                    </div>
+                                     <div className="space-y-2">
+                                        <h4 className="font-semibold text-foreground">Aba "Lançamento de Notas"</h4>
+                                        <p>Esta é a sua planilha de notas inteligente.</p>
+                                        <ul className="list-disc pl-5 space-y-1">
+                                            <li><strong>Lançar Notas:</strong> Digite as notas diretamente nas células. As notas <span className="font-bold text-foreground">não</span> são salvas automaticamente; clique em <span className="font-bold text-foreground">"Salvar Notas"</span>.</li>
+                                            <li><strong>Criar Grupos:</strong> Marque a caixa de seleção ao lado dos alunos e clique em <span className="font-bold text-foreground">"Agrupar"</span>. Ao lançar a nota para o cabeçalho do grupo, ela será replicada para todos os membros.</li>
+                                            <li><strong>Exportar:</strong> Use o botão "Exportar" para baixar a planilha de notas em formato CSV ou PDF.</li>
+                                        </ul>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <h4 className="font-semibold text-foreground">Outras Abas</h4>
+                                        <ul className="list-disc pl-5 space-y-1">
+                                            <li><strong>Recursos:</strong> Adicione e acesse links para materiais, vídeos e documentos importantes para a disciplina.</li>
+                                            <li><strong>Análise da Turma:</strong> Visualize gráficos e estatísticas sobre o desempenho dos alunos.</li>
+                                            <li><strong>Configurações:</strong> Defina a estrutura de avaliação da turma aplicando os presets (Modular/Integradora) ou personalizando as atividades.</li>
+                                        </ul>
+                                    </div>
+                                </AccordionContent>
+                             </AccordionItem>
+                        </Accordion>
+                    </AccordionContent>
+                </AccordionItem>
+            </Accordion>
+        </Card>
+    );
+}
 
 export function CourseDetailClient({ courseId }: { courseId: string }) {
   const { user } = useUser();
@@ -393,6 +459,8 @@ export function CourseDetailClient({ courseId }: { courseId: string }) {
             <Badge variant="outline">{course.code}</Badge>
         </div>
       </div>
+      
+      <DisciplineTutorial />
 
       <Tabs defaultValue="info" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
