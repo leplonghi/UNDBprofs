@@ -59,6 +59,13 @@ service cloud.firestore {
       allow get, update, delete: if isOwner(professorId);
       allow list: if false; // Prevent listing of all professors.
       allow create: if isOwner(professorId) && request.resource.data.id == professorId;
+
+       /**
+       * @description Documents subcollection for a professor.
+       */
+      match /documents/{documentId} {
+        allow read, write: if isOwner(professorId);
+      }
     }
 
     /**
@@ -104,15 +111,6 @@ service cloud.firestore {
     // Community Module Rules
     // General principle: Read access for all professors, write access restricted to owners.
     // =================================================================
-
-    /**
-     * @description Documents collection (for community materials).
-     */
-    match /documents/{documentId} {
-      allow get, list: if isProfessor();
-      allow create: if isProfessor() && request.resource.data.professorId == request.auth.uid;
-      allow update, delete: if isProfessor() && resource.data.professorId == request.auth.uid;
-    }
 
     /**
      * @description Ideas collection.

@@ -95,7 +95,7 @@ export function AddDocumentDialog({
 
     setIsProcessing(true);
 
-    const docCollectionRef = collection(firestore, 'documents');
+    const docCollectionRef = collection(firestore, `professors/${user.uid}/documents`);
 
     try {
       const documentData = {

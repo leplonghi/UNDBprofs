@@ -36,7 +36,7 @@ import {
   useCollection,
   useMemoFirebase,
 } from '@/firebase';
-import { collection, doc, deleteDoc, query, where, orderBy } from 'firebase/firestore';
+import { collection, doc, deleteDoc, query, orderBy } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import type { Document as DocumentType, Course } from '@/types';
@@ -53,10 +53,8 @@ export function DocumentsTable() {
 
   const documentsQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
-    // Filter documents by the logged-in professor's ID
     return query(
-      collection(firestore, 'documents'),
-      where('professorId', '==', user.uid),
+      collection(firestore, `professors/${user.uid}/documents`),
       orderBy('createdAt', 'desc')
     );
   }, [user, firestore]);
@@ -84,7 +82,7 @@ export function DocumentsTable() {
     if (!docToDelete || !user || !firestore) return;
 
     setIsDeleting(true);
-    const docRef = doc(firestore, `documents/${docToDelete.id}`);
+    const docRef = doc(firestore, `professors/${user.uid}/documents/${docToDelete.id}`);
 
     try {
       await deleteDoc(docRef);

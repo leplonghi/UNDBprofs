@@ -30,8 +30,7 @@ function ResourcesTab({ courseId }: { courseId: string }) {
     const documentsQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
         return query(
-            collection(firestore, 'documents'),
-            where('professorId', '==', user.uid),
+            collection(firestore, `professors/${user.uid}/documents`),
             where('course', '==', courseId)
         );
     }, [user, firestore, courseId]);

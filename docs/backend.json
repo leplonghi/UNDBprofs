@@ -252,14 +252,14 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Document",
       "type": "object",
-      "description": "Represents a document shared in the community.",
+      "description": "Represents a document shared by a professor.",
       "properties": {
         "id": { "type": "string" },
         "professorId": { "type": "string", "description": "Author's user ID." },
         "authorName": { "type": "string" },
         "name": { "type": "string", "description": "Title of the material." },
         "description": { "type": "string" },
-        "course": { "type": "string", "description": "Associated course (e.g., 'Arquitetura e Urbanismo')." },
+        "course": { "type": "string", "description": "Associated course ID." },
         "discipline": { "type": "string", "description": "Associated discipline or thematic area." },
         "documentType": { 
             "type": "string", 
@@ -272,8 +272,6 @@
           "description": "The type of the document (e.g., uploaded file or external link)."
         },
         "fileUrl": { "type": "string", "format": "uri" },
-        "fileType": { "type": "string", "description": "MIME type for uploaded files." },
-        "fileName": { "type": "string", "description": "Original name for uploaded files." },
         "createdAt": { "type": "string", "format": "date-time" },
         "views": { "type": "number", "description": "View count." },
         "favorites": { "type": "number", "description": "Favorite/save count." }
@@ -458,11 +456,31 @@
           "schema": {
             "$ref": "#/backend/entities/Professor"
           },
-          "description": "Stores professor data.  Path-based ownership. professors/{professorId} where professorId is request.auth.uid",
+          "description": "Stores professor data. Path-based ownership. professors/{professorId} where professorId is request.auth.uid",
           "params": [
             {
               "name": "professorId",
               "description": "The unique identifier of the professor, corresponding to the Firebase Auth UID."
+            }
+          ]
+        }
+      },
+       {
+        "path": "/professors/{professorId}/documents/{documentId}",
+        "definition": {
+          "entityName": "Document",
+          "schema": {
+            "$ref": "#/backend/entities/Document"
+          },
+          "description": "Stores documents for a specific professor. Readable and writable only by the owner.",
+          "params": [
+            {
+              "name": "professorId",
+              "description": "The unique identifier of the professor."
+            },
+            {
+              "name": "documentId",
+              "description": "The unique identifier of the document."
             }
           ]
         }
@@ -584,16 +602,6 @@
         }
       },
       {
-        "path": "/documents/{documentId}",
-        "definition": {
-          "entityName": "Document",
-          "schema": {
-            "$ref": "#/backend/entities/Document"
-          },
-          "description": "Stores documents shared by professors in the community. Readable by all professors, writable only by the author."
-        }
-      },
-      {
         "path": "/professors/{professorId}/academicEvents/{academicEventId}",
         "definition": {
           "entityName": "AcademicEvent",
@@ -642,8 +650,6 @@
         "definition": { "entityName": "ForumReply", "schema": { "$ref": "#/backend/entities/ForumReply" } }
       }
     ],
-    "reasoning": "The Firestore data structure is designed to support the UNDB ProfAssist application, focusing on secure access, efficient data management, and AI integration for lesson plan imports. Authorization Independence is achieved by structuring professor-owned data under their respective user IDs and by denormalizing the 'professorId' into subcollections where professor authorization is required. This eliminates the need for `get()` calls in security rules, enabling atomic operations. QAPs (Rules are not Filters) are supported through structural segregation and dedicated collections. User roles are implicitly managed via path-based ownership, and course/classroom associations are secured by including the relevant professorId in each document. The structure supports secure list operations by scoping data to specific professor's or courses. Explicit state modeling would be incorporated into fields like status to improve the clarity and maintainability. This design ensures that each collection maintains a homogeneous security posture, simplifying rules and enhancing debuggability. Added collections for the Community module, with public read access for authenticated professors and ownership-based write access. The 'documents' collection is now top-level for community sharing."
+    "reasoning": "The Firestore data structure is designed to support the UNDB ProfAssist application, focusing on secure access, efficient data management, and AI integration for lesson plan imports. Authorization Independence is achieved by structuring professor-owned data under their respective user IDs and by denormalizing the 'professorId' into subcollections where professor authorization is required. This eliminates the need for `get()` calls in security rules, enabling atomic operations. QAPs (Rules are not Filters) are supported through structural segregation and dedicated collections. User roles are implicitly managed via path-based ownership, and course/classroom associations are secured by including the relevant professorId in each document. The structure supports secure list operations by scoping data to specific professor's or courses. Explicit state modeling would be incorporated into fields like status to improve the clarity and maintainability. This design ensures that each collection maintains a homogeneous security posture, simplifying rules and enhancing debuggability. Added collections for the Community module, with public read access for authenticated professors and ownership-based write access. The 'documents' collection is now a subcollection of professors for proper security scoping."
   }
 }
-
-    
