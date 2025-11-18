@@ -333,7 +333,7 @@ function CourseInformation({
 
 function DisciplineTutorial() {
     return (
-        <Card>
+        <Card className="animated-gradient-background">
             <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="tutorial" className="border-b-0">
                     <CardHeader className="flex-row items-start justify-between">
@@ -349,7 +349,7 @@ function DisciplineTutorial() {
                     </CardHeader>
                     <AccordionContent className="px-6 pb-4">
                         <Accordion type="multiple" className="w-full space-y-2">
-                             <AccordionItem value="plano-ensino" className="border rounded-md px-4">
+                             <AccordionItem value="plano-ensino" className="border rounded-md px-4 bg-background/50">
                                 <AccordionTrigger className="py-3 font-semibold">1. Guia do Plano de Ensino</AccordionTrigger>
                                 <AccordionContent className="pt-2 space-y-2 text-sm text-muted-foreground">
                                     <p>Esta aba contém todos os dados que foram extraídos do seu Plano de Ensino em PDF. É uma visualização fiel do documento oficial.</p>
@@ -359,7 +359,7 @@ function DisciplineTutorial() {
                                     </ul>
                                 </AccordionContent>
                              </AccordionItem>
-                             <AccordionItem value="gerenciamento-turma" className="border rounded-md px-4">
+                             <AccordionItem value="gerenciamento-turma" className="border rounded-md px-4 bg-background/50">
                                 <AccordionTrigger className="py-3 font-semibold">2. Guia de Gerenciamento da Turma</AccordionTrigger>
                                 <AccordionContent className="pt-2 space-y-4 text-sm text-muted-foreground">
                                     <div className="space-y-2">
