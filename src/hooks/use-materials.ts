@@ -26,9 +26,9 @@ export function useMaterials() {
   const [uploadProgress, setUploadProgress] = useState(0); // Kept for now, but unused
 
   const materialsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'documents'), orderBy('createdAt', 'desc'));
-  }, [firestore]);
+    if (!firestore || !user) return null;
+    return query(collection(firestore, `professors/${user.uid}/documents`), orderBy('createdAt', 'desc'));
+  }, [firestore, user]);
 
   const { data: materials, isLoading, error } = useCollection<Document>(materialsQuery);
 
@@ -46,7 +46,7 @@ export function useMaterials() {
         throw new Error("Dados inválidos. Apenas links são permitidos.");
       }
 
-      const docRef = collection(firestore, 'documents');
+      const docRef = collection(firestore, `professors/${user.uid}/documents`);
       await addDoc(docRef, {
         name: data.name,
         description: data.description,

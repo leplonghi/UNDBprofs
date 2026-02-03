@@ -6,47 +6,15 @@
       "type": "object",
       "description": "Represents a professor within the UNDB system.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Professor entity."
-        },
-        "email": {
-          "type": "string",
-          "description": "The professor's UNDB email address.",
-          "format": "email"
-        },
-        "name": {
-          "type": "string",
-          "description": "The professor's full name."
-        },
-        "registrationDate": {
-          "type": "string",
-          "description": "The date the professor registered in the system.",
-          "format": "date-time"
-        },
-        "birthday": {
-          "type": "string",
-          "description": "The professor's birth date.",
-          "format": "date"
-        },
-        "course": {
-          "type": "string",
-          "description": "The course the professor is associated with (e.g., 'Arquitetura e Urbanismo')."
-        },
-        "role": {
-            "type": "string",
-            "description": "The role of the user.",
-            "enum": ["professor", "coordenador"]
-        }
+        "id": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "name": { "type": "string" },
+        "registrationDate": { "type": "string", "format": "date-time" },
+        "birthday": { "type": "string", "format": "date" },
+        "course": { "type": "string" },
+        "role": { "type": "string", "enum": ["professor", "coordenador"] }
       },
-      "required": [
-        "id",
-        "email",
-        "name",
-        "registrationDate",
-        "course",
-        "role"
-      ]
+      "required": ["id", "email", "name", "registrationDate", "course", "role"]
     },
     "Course": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -54,37 +22,15 @@
       "type": "object",
       "description": "Represents a course offered at UNDB.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Course entity."
-        },
-        "professorId": {
-          "type": "string",
-          "description": "Reference to Professor. (Relationship: Professor 1:N Course)"
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the course."
-        },
-        "code": {
-          "type": "string",
-          "description": "The course code (e.g., MAT101)."
-        },
-        "syllabus": {
-          "type": "string",
-          "description": "The course syllabus content."
-        },
-        "objectives": {
-          "type": "string",
-          "description": "The objectives of the course."
-        },
-        "competencies": {
-          "type": "string",
-          "description": "The competencies of the course."
-        },
+        "id": { "type": "string" },
+        "professorId": { "type": "string" },
+        "name": { "type": "string" },
+        "code": { "type": "string" },
+        "syllabus": { "type": "string" },
+        "objectives": { "type": "string" },
+        "competencies": { "type": "string" },
         "thematicTree": {
           "type": "array",
-          "description": "The thematic tree of the course.",
           "items": {
             "type": "object",
             "properties": {
@@ -96,560 +42,79 @@
         },
         "bibliography": {
           "type": "object",
-          "description": "The bibliography of the course, separated into sections.",
           "properties": {
-              "basic": { "type": "string", "description": "Basic bibliography." },
-              "complementary": { "type": "string", "description": "Complementary bibliography." },
-              "recommended": { "type": "string", "description": "Recommended bibliography." }
+              "basic": { "type": "string" },
+              "complementary": { "type": "string" },
+              "recommended": { "type": "string" }
           }
         }
       },
-      "required": [
-        "id",
-        "professorId",
-        "name",
-        "code",
-        "syllabus",
-        "objectives"
-      ]
+      "required": ["id", "professorId", "name", "code", "syllabus", "objectives"]
     },
     "Classroom": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Classroom",
       "type": "object",
-      "description": "Represents a specific class group for a course.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Classroom entity."
-        },
-        "courseId": {
-          "type": "string",
-          "description": "Reference to Course. (Relationship: Course 1:N Classroom)"
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the classroom (e.g., Class A)."
-        },
-        "semester": {
-          "type": "string",
-          "description": "The semester the classroom is active in."
-        },
-        "workload": {
-          "type": "string",
-          "description": "The workload of the course for this specific classroom."
-        },
-        "classType": {
-          "type": "string",
-          "description": "The type of class (e.g., Regular, Intensive)."
-        },
-        "gradingRule": {
-          "type": "string",
-          "description": "The grading rules for the classroom."
-        }
+        "id": { "type": "string" },
+        "courseId": { "type": "string" },
+        "name": { "type": "string" },
+        "semester": { "type": "string" },
+        "workload": { "type": "string" },
+        "classType": { "type": "string" },
+        "gradingRule": { "type": "string" }
       },
-      "required": [
-        "id",
-        "courseId",
-        "name",
-        "semester"
-      ]
+      "required": ["id", "courseId", "name", "semester"]
     },
     "Student": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Student",
       "type": "object",
-      "description": "Represents a student enrolled at UNDB.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Student entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The student's full name."
-        },
-        "email": {
-          "type": "string",
-          "description": "The student's email address.",
-          "format": "email"
-        }
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" }
       },
-      "required": [
-        "id",
-        "name",
-        "email"
-      ]
+      "required": ["id", "name", "email"]
     },
     "ClassroomStudent": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "ClassroomStudent",
       "type": "object",
-      "description": "Represents the association between a classroom and a student (many-to-many relationship).",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the ClassroomStudent entity."
-        },
-        "classroomId": {
-          "type": "string",
-          "description": "Reference to Classroom. (Relationship: Classroom 1:N ClassroomStudent)"
-        },
-        "studentId": {
-          "type": "string",
-          "description": "Reference to Student. (Relationship: Student 1:N ClassroomStudent)"
-        },
-        "groupId": {
-            "type": ["string", "null"],
-            "description": "Reference to the Group this student belongs to. (Relationship: Group 1:N ClassroomStudent)"
-        },
-        "grades": {
-          "type": "array",
-          "description": "An array of grades for the student in this classroom.",
-          "items": {
-            "type": "object",
-            "properties": {
-              "id": { "type": "string" },
-              "description": { "type": "string" },
-              "score": { "type": "number" }
-            },
-            "required": ["id", "description", "score"]
-          }
-        }
+        "id": { "type": "string" },
+        "classroomId": { "type": "string" },
+        "studentId": { "type": "string" },
+        "groupId": { "type": ["string", "null"] },
+        "grades": { "type": "array" }
       },
-      "required": [
-        "id",
-        "classroomId",
-        "studentId"
-      ]
-    },
-     "Group": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Group",
-      "type": "object",
-      "description": "Represents a group of students within a classroom.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Group entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the group."
-        },
-        "classroomId": {
-          "type": "string",
-          "description": "Reference to Classroom. (Relationship: Classroom 1:N Group)"
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "classroomId"
-      ]
+      "required": ["id", "classroomId", "studentId"]
     },
     "Document": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Document",
       "type": "object",
-      "description": "Represents a document shared by a professor.",
       "properties": {
         "id": { "type": "string" },
-        "professorId": { "type": "string", "description": "Author's user ID." },
+        "professorId": { "type": "string" },
         "authorName": { "type": "string" },
-        "name": { "type": "string", "description": "Title of the material." },
+        "name": { "type": "string" },
         "description": { "type": "string" },
-        "course": { "type": "string", "description": "Associated course ID." },
-        "discipline": { "type": "string", "description": "Associated discipline or thematic area." },
-        "documentType": { 
-            "type": "string", 
-            "enum": ["aula expositiva", "atividade em grupo", "avaliação", "projeto", "estudo de caso", "extensão", "guia", "outro"],
-            "description": "Type of the shared material."
-        },
-        "uploadType": {
-          "type": "string",
-          "enum": ["file", "link"],
-          "description": "The type of the document (e.g., uploaded file or external link)."
-        },
-        "fileUrl": { "type": "string", "format": "uri" },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "views": { "type": "number", "description": "View count." },
-        "favorites": { "type": "number", "description": "Favorite/save count." }
-      },
-      "required": [
-        "id", "professorId", "authorName", "name", "description", "course", "discipline", "documentType", "uploadType", "fileUrl", "createdAt", "views", "favorites"
-      ]
-    },
-    "AcademicEvent": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "AcademicEvent",
-      "type": "object",
-      "description": "Represents an event in the academic calendar.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the AcademicEvent entity."
-        },
-        "professorId": {
-          "type": "string",
-          "description": "Reference to Professor. (Relationship: Professor 1:N AcademicEvent)"
-        },
-        "courseId": {
-          "type": "string",
-          "description": "Reference to Course. (Relationship: Course 1:N AcademicEvent). Can be null if the event is not associated with a specific course."
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the event (e.g., Midterm Exam)."
-        },
-        "dateTime": {
-          "type": "string",
-          "description": "The date and time of the event.",
-          "format": "date-time"
-        },
-        "description": {
-          "type": "string",
-          "description": "A description of the event."
-        },
-        "type": {
-          "type": "string",
-          "description": "The type of event.",
-          "enum": ["aniversario", "academico"]
-        }
-      },
-      "required": [
-        "id",
-        "professorId",
-        "courseId",
-        "name",
-        "dateTime",
-        "description"
-      ]
-    },
-    "Idea": {
-      "title": "Idea",
-      "type": "object",
-      "description": "Represents an idea proposed in the 'Clube das Ideias'.",
-      "properties": {
-        "id": { "type": "string" },
-        "title": { "type": "string" },
-        "description": { "type": "string" },
-        "category": { "type": "string" },
-        "status": { "type": "string", "enum": ["nova", "em_analise", "implementada"] },
-        "authorId": { "type": "string" },
-        "authorName": { "type": "string" },
         "course": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "updatedAt": { "type": "string", "format": "date-time" },
-        "supportCount": { "type": "number" },
-        "commentCount": { "type": "number" }
-      },
-      "required": ["id", "title", "description", "category", "status", "authorId", "authorName", "course", "createdAt", "updatedAt", "supportCount", "commentCount"]
-    },
-    "IdeaSupport": {
-        "title": "IdeaSupport",
-        "type": "object",
-        "description": "Represents a user's support for an idea.",
-        "properties": {
-            "supportedAt": { "type": "string", "format": "date-time" }
-        },
-        "required": ["supportedAt"]
-    },
-    "IdeaComment": {
-        "title": "IdeaComment",
-        "type": "object",
-        "description": "A comment on an idea.",
-        "properties": {
-            "id": { "type": "string" },
-            "userId": { "type": "string" },
-            "userName": { "type": "string" },
-            "text": { "type": "string" },
-            "createdAt": { "type": "string", "format": "date-time" }
-        },
-        "required": ["id", "userId", "userName", "text", "createdAt"]
-    },
-    "CommunityEvent": {
-        "title": "CommunityEvent",
-        "type": "object",
-        "description": "An event in the community timeline.",
-        "properties": {
-            "id": { "type": "string" },
-            "title": { "type": "string" },
-            "description": { "type": "string" },
-            "type": { "type": "string", "enum": ["banca", "seminario", "visita_tecnica", "aula_aberta", "outro"] },
-            "date": { "type": "string", "format": "date-time" },
-            "course": { "type": "string" },
-            "location": { "type": "string" },
-            "createdById": { "type": "string" },
-            "createdByName": { "type": "string" },
-            "createdAt": { "type": "string", "format": "date-time" },
-            "updatedAt": { "type": "string", "format": "date-time" },
-            "isOfficial": { "type": "boolean" }
-        },
-        "required": ["id", "title", "description", "type", "date", "course", "location", "createdById", "createdByName", "createdAt", "updatedAt"]
-    },
-    "Celebration": {
-        "title": "Celebration",
-        "type": "object",
-        "description": "A celebration of a milestone or achievement.",
-        "properties": {
-            "id": { "type": "string" },
-            "type": { "type": "string", "enum": ["birthday", "achievement", "event"] },
-            "title": { "type": "string" },
-            "personId": { "type": "string" },
-            "personName": { "type": "string" },
-            "course": { "type": "string" },
-            "description": { "type": "string" },
-            "date": { "type": "string", "format": "date-time" },
-            "createdById": { "type": "string" },
-            "createdByName": { "type": "string" },
-            "createdAt": { "type": "string", "format": "date-time" }
-        },
-        "required": ["id", "type", "title", "personId", "personName", "course", "description", "date", "createdById", "createdByName", "createdAt"]
-    },
-    "ForumThread": {
-        "title": "ForumThread",
-        "type": "object",
-        "description": "A thread in the 'Café das Ideias' forum, representing a conversation group.",
-        "properties": {
-            "id": { "type": "string" },
-            "title": { "type": "string", "description": "Name of the group." },
-            "description": { "type": "string", "description": "Short description of the group's purpose." },
-            "type": { "type": "string", "enum": ["Estúdio", "Turmas correlatas", "Tema transversal", "Apoio pedagógico", "Outro"] },
-            "participantIds": { "type": "array", "items": { "type": "string" }, "description": "List of professor UIDs participating in the group." },
-            "authorId": { "type": "string" },
-            "authorName": { "type": "string" },
-            "course": { "type": "string" },
-            "createdAt": { "type": "string", "format": "date-time" },
-            "lastActivityAt": { "type": "string", "format": "date-time" },
-            "participantCount": { "type": "number" }
-        },
-        "required": ["id", "title", "description", "type", "participantIds", "authorId", "authorName", "course", "createdAt", "lastActivityAt", "participantCount"]
-    },
-    "ForumReply": {
-        "title": "ForumReply",
-        "type": "object",
-        "description": "A reply (message) to a forum thread.",
-        "properties": {
-            "id": { "type": "string" },
-            "authorId": { "type": "string" },
-            "authorName": { "type": "string" },
-            "text": { "type": "string" },
-            "createdAt": { "type": "string", "format": "date-time" }
-        },
-        "required": ["id", "authorId", "authorName", "text", "createdAt"]
+        "discipline": { "type": "string" },
+        "documentType": { "type": "string" },
+        "uploadType": { "type": "string", "enum": ["link"] },
+        "fileUrl": { "type": "string", "format": "uri" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous",
-      "google.com"
-    ]
+    "providers": ["password", "anonymous", "google.com"]
   },
   "firestore": {
     "structure": [
-      {
-        "path": "/professors/{professorId}",
-        "definition": {
-          "entityName": "Professor",
-          "schema": {
-            "$ref": "#/backend/entities/Professor"
-          },
-          "description": "Stores professor data. Path-based ownership. professors/{professorId} where professorId is request.auth.uid",
-          "params": [
-            {
-              "name": "professorId",
-              "description": "The unique identifier of the professor, corresponding to the Firebase Auth UID."
-            }
-          ]
-        }
-      },
-       {
-        "path": "/professors/{professorId}/documents/{documentId}",
-        "definition": {
-          "entityName": "Document",
-          "schema": {
-            "$ref": "#/backend/entities/Document"
-          },
-          "description": "Stores documents for a specific professor. Readable and writable only by the owner.",
-          "params": [
-            {
-              "name": "professorId",
-              "description": "The unique identifier of the professor."
-            },
-            {
-              "name": "documentId",
-              "description": "The unique identifier of the document."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/professors/{professorId}/courses/{courseId}",
-        "definition": {
-          "entityName": "Course",
-          "schema": {
-            "$ref": "#/backend/entities/Course"
-          },
-          "description": "Stores course data owned by a specific professor. Includes denormalized 'professorId' for authorization independence.",
-          "params": [
-            {
-              "name": "professorId",
-              "description": "The unique identifier of the professor."
-            },
-            {
-              "name": "courseId",
-              "description": "The unique identifier of the course."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/professors/{professorId}/courses/{courseId}/classrooms/{classroomId}",
-        "definition": {
-          "entityName": "Classroom",
-          "schema": {
-            "$ref": "#/backend/entities/Classroom"
-          },
-          "description": "Stores classroom data owned by a specific professor for a specific course. Includes denormalized 'professorId' and 'courseId' for authorization independence.",
-          "params": [
-            {
-              "name": "professorId",
-              "description": "The unique identifier of the professor."
-            },
-            {
-              "name": "courseId",
-              "description": "The unique identifier of the course."
-            },
-            {
-              "name": "classroomId",
-              "description": "The unique identifier of the classroom."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/students/{studentId}",
-        "definition": {
-          "entityName": "Student",
-          "schema": {
-            "$ref": "#/backend/entities/Student"
-          },
-          "description": "Stores student data. This collection is globally accessible, but create/update operations are restricted to admins or the student themselves.",
-          "params": [
-            {
-              "name": "studentId",
-              "description": "The unique identifier of the student."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/professors/{professorId}/courses/{courseId}/classrooms/{classroomId}/classroomStudents/{classRoomStudentId}",
-        "definition": {
-          "entityName": "ClassroomStudent",
-          "schema": {
-            "$ref": "#/backend/entities/ClassroomStudent"
-          },
-          "description": "Represents the association between a classroom and a student. Includes denormalized 'professorId', 'courseId', and 'classroomId' for authorization independence.",
-          "params": [
-            {
-              "name": "professorId",
-              "description": "The unique identifier of the professor."
-            },
-            {
-              "name": "courseId",
-              "description": "The unique identifier of the course."
-            },
-            {
-              "name": "classroomId",
-              "description": "The unique identifier of the classroom."
-            },
-            {
-              "name": "classRoomStudentId",
-              "description": "The unique identifier of the classroomStudent."
-            }
-          ]
-        }
-      },
-       {
-        "path": "/professors/{professorId}/courses/{courseId}/classrooms/{classroomId}/groups/{groupId}",
-        "definition": {
-          "entityName": "Group",
-          "schema": {
-            "$ref": "#/backend/entities/Group"
-          },
-          "description": "Stores student groups within a classroom, owned by the professor.",
-          "params": [
-            {
-              "name": "professorId",
-              "description": "The unique identifier of the professor."
-            },
-            {
-              "name": "courseId",
-              "description": "The unique identifier of the course."
-            },
-            {
-              "name": "classroomId",
-              "description": "The unique identifier of the classroom."
-            },
-            {
-              "name": "groupId",
-              "description": "The unique identifier of the group."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/professors/{professorId}/academicEvents/{academicEventId}",
-        "definition": {
-          "entityName": "AcademicEvent",
-          "schema": {
-            "$ref": "#/backend/entities/AcademicEvent"
-          },
-          "description": "Stores academic events associated with a specific professor. Includes denormalized 'professorId' for authorization independence.",
-          "params": [
-            {
-              "name": "professorId",
-              "description": "The unique identifier of the professor."
-            },
-            {
-              "name": "academicEventId",
-              "description": "The unique identifier of the academic event."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/ideas/{ideaId}",
-        "definition": { "entityName": "Idea", "schema": { "$ref": "#/backend/entities/Idea" } }
-      },
-      {
-        "path": "/ideas/{ideaId}/supports/{userId}",
-        "definition": { "entityName": "IdeaSupport", "schema": { "$ref": "#/backend/entities/IdeaSupport" } }
-      },
-      {
-        "path": "/ideas/{ideaId}/comments/{commentId}",
-        "definition": { "entityName": "IdeaComment", "schema": { "$ref": "#/backend/entities/IdeaComment" } }
-      },
-      {
-        "path": "/communityEvents/{eventId}",
-        "definition": { "entityName": "CommunityEvent", "schema": { "$ref": "#/backend/entities/CommunityEvent" } }
-      },
-      {
-        "path": "/celebrations/{celebrationId}",
-        "definition": { "entityName": "Celebration", "schema": { "$ref": "#/backend/entities/Celebration" } }
-      },
-      {
-        "path": "/forumThreads/{threadId}",
-        "definition": { "entityName": "ForumThread", "schema": { "$ref": "#/backend/entities/ForumThread" } }
-      },
-      {
-        "path": "/forumThreads/{threadId}/replies/{replyId}",
-        "definition": { "entityName": "ForumReply", "schema": { "$ref": "#/backend/entities/ForumReply" } }
-      }
-    ],
-    "reasoning": "The Firestore data structure is designed to support the UNDB ProfAssist application, focusing on secure access, efficient data management, and AI integration for lesson plan imports. Authorization Independence is achieved by structuring professor-owned data under their respective user IDs and by denormalizing the 'professorId' into subcollections where professor authorization is required. This eliminates the need for `get()` calls in security rules, enabling atomic operations. QAPs (Rules are not Filters) are supported through structural segregation and dedicated collections. User roles are implicitly managed via path-based ownership, and course/classroom associations are secured by including the relevant professorId in each document. The structure supports secure list operations by scoping data to specific professor's or courses. Explicit state modeling would be incorporated into fields like status to improve the clarity and maintainability. This design ensures that each collection maintains a homogeneous security posture, simplifying rules and enhancing debuggability. Added collections for the Community module, with public read access for authenticated professors and ownership-based write access. The 'documents' collection is now a subcollection of professors for proper security scoping."
+      { "path": "/professors/{professorId}", "definition": { "entityName": "Professor" } },
+      { "path": "/professors/{professorId}/documents/{docId}", "definition": { "entityName": "Document" } },
+      { "path": "/professors/{professorId}/courses/{courseId}", "definition": { "entityName": "Course" } },
+      { "path": "/professors/{professorId}/courses/{courseId}/classrooms/{classroomId}", "definition": { "entityName": "Classroom" } },
+      { "path": "/professors/{professorId}/courses/{courseId}/classrooms/{classroomId}/classroomStudents/{csId}", "definition": { "entityName": "ClassroomStudent" } }
+    ]
   }
 }

@@ -1,167 +1,93 @@
 /**
  * @fileoverview Firestore Security Rules for UNDB ProfAssist.
- *
- * Core Philosophy:
- * This ruleset enforces a strict user-ownership model for professor-related data,
- * ensuring that professors can only access and modify data associated with their accounts.
- * Students have read access to their own records.
- * Community features are readable by all authenticated professors, with write access restricted by ownership.
- *
- * Data Structure:
- * - /professors/{professorId}: Stores professor profiles, where professorId MUST match the authenticated user's UID.
- * - /professors/{professorId}/...: Subcollections for courses, classrooms, etc., owned by the professor.
- * - /students/{studentId}: Stores student profiles.
- * - /documents/{documentId}: Stores community-shared documents.
- * - /ideas/{ideaId}, /communityEvents/{eventId}, etc.: Community module collections.
- *
- * Key Security Decisions:
- * - Path-based ownership is enforced for all professor-owned data. The professorId in the path MUST match the authenticated user's UID.
- * - Data consistency is enforced by validating that the professorId stored in the document matches the professorId in the path.
- * - Community data is generally readable by any authenticated professor to foster collaboration.
- * - Write operations (create, update, delete) on community data are restricted to the document owner.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /**
-     * @description Checks if the current user is signed in.
-     * @return {boolean} True if the user is signed in, false otherwise.
-     */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * @description Checks if the current user is the owner of the resource, based on the provided userId.
-     * @param {string} userId - The user ID to compare against the request's authentication UID.
-     * @return {boolean} True if the user is the owner, false otherwise.
-     */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
     
-    /**
-     * @description Checks if the user is an authenticated professor.
-     * Assumes a 'professors' collection exists where the document ID is the user's UID.
-     * This is more secure than checking a role on a user's profile, as it requires document existence.
-     * @return {boolean} True if the user is an authenticated professor, false otherwise.
-     */
     function isProfessor() {
         return isSignedIn() && exists(/databases/$(database)/documents/professors/$(request.auth.uid));
     }
 
-    /**
-     * @description
-     * Professors collection: professor profiles are stored here. Only the professor can read/write their own profile.
-     */
     match /professors/{professorId} {
       allow get, update, delete: if isOwner(professorId);
-      allow list: if false; // Prevent listing of all professors.
+      allow list: if false; 
       allow create: if isOwner(professorId) && request.resource.data.id == professorId;
 
-       /**
-       * @description Documents subcollection for a professor.
-       */
       match /documents/{documentId} {
         allow read, write: if isOwner(professorId);
       }
-    }
 
-    /**
-     * @description
-     * Courses subcollection and its nested subcollections. Access is controlled by the root professorId.
-     */
-    match /professors/{professorId}/courses/{courseId} {
-      allow get, list, delete: if isOwner(professorId);
-      allow create: if isOwner(professorId) && request.resource.data.professorId == professorId;
-      allow update: if isOwner(professorId) && request.resource.data.professorId == resource.data.professorId;
+      match /courses/{courseId} {
+        allow get, list, delete: if isOwner(professorId);
+        allow create: if isOwner(professorId) && request.resource.data.professorId == professorId;
+        allow update: if isOwner(professorId) && request.resource.data.professorId == resource.data.professorId;
 
-      match /classrooms/{classroomId} {
-        allow read, write: if isOwner(professorId);
-
-        match /classroomStudents/{classroomStudentId} {
+        match /classrooms/{classroomId} {
           allow read, write: if isOwner(professorId);
-        }
-        
-        match /groups/{groupId} {
-           allow read, write: if isOwner(professorId);
+
+          match /classroomStudents/{classroomStudentId} {
+            allow read, write: if isOwner(professorId);
+          }
+          
+          match /groups/{groupId} {
+             allow read, write: if isOwner(professorId);
+          }
         }
       }
-    }
-    
-     /**
-      * @description
-      * Academic Events collection for a professor.
-      */
-    match /professors/{professorId}/academicEvents/{academicEventId} {
-        allow read, write: if isOwner(professorId);
+      
+      match /academicEvents/{academicEventId} {
+          allow read, write: if isOwner(professorId);
+      }
     }
 
-    /**
-     * @description
-     * Students collection: Allows professors to manage student data.
-     */
     match /students/{studentId} {
         allow read, list: if isProfessor();
         allow write: if isProfessor();
     }
     
-    // =================================================================
-    // Community Module Rules
-    // General principle: Read access for all professors, write access restricted to owners.
-    // =================================================================
-
-    /**
-     * @description Ideas collection.
-     */
     match /ideas/{ideaId} {
       allow read: if isProfessor();
       allow create: if isProfessor() && request.resource.data.authorId == request.auth.uid;
       allow update, delete: if isProfessor() && resource.data.authorId == request.auth.uid;
 
-      // Supports subcollection
       match /supports/{userId} {
         allow read: if isProfessor();
-        // Allow a user to create/delete their own support document
         allow create, delete: if isProfessor() && userId == request.auth.uid;
       }
 
-      // Comments subcollection
       match /comments/{commentId} {
         allow read: if isProfessor();
         allow create: if isProfessor() && request.resource.data.userId == request.auth.uid;
-        allow update, delete: if isProfessor() && resource.data.userId == request.auth.uid;
+        allow update, delete: if isProfessor() && request.resource.data.userId == request.auth.uid;
       }
     }
 
-    /**
-     * @description Community Events collection.
-     */
     match /communityEvents/{eventId} {
       allow read: if isProfessor();
       allow create: if isProfessor() && request.resource.data.createdById == request.auth.uid;
       allow update, delete: if isProfessor() && resource.data.createdById == request.auth.uid;
     }
 
-    /**
-     * @description Celebrations collection (for non-birthday achievements).
-     */
     match /celebrations/{celebrationId} {
       allow read: if isProfessor();
       allow create: if isProfessor() && request.resource.data.createdById == request.auth.uid;
       allow update, delete: if isProfessor() && resource.data.createdById == request.auth.uid;
     }
 
-    /**
-     * @description Forum Threads collection (Café Pedagógico groups).
-     */
     match /forumThreads/{threadId} {
       allow read: if isProfessor() && request.auth.uid in resource.data.participantIds;
       allow create: if isProfessor() && request.resource.data.authorId == request.auth.uid;
       allow update, delete: if isProfessor() && resource.data.authorId == request.auth.uid;
 
-      // Replies subcollection (messages in the group)
       match /replies/{replyId} {
         allow read: if isProfessor() && request.auth.uid in get(/databases/$(database)/documents/forumThreads/$(threadId)).data.participantIds;
         allow create: if isProfessor() && request.resource.data.authorId == request.auth.uid && request.auth.uid in get(/databases/$(database)/documents/forumThreads/$(threadId)).data.participantIds;
