@@ -45,12 +45,13 @@ import { v4 as uuidv4 } from 'uuid';
 import { Skeleton } from '../ui/skeleton';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import debounce from 'lodash.debounce';
-import { Loader2, Users, Trash2, Search, X, PlusCircle, Download, Save } from 'lucide-react';
+import { Loader2, Users, Trash2, Search, X, PlusCircle, Download, Save, Maximize2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Label } from '../ui/label';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
+import { Slider } from '../ui/slider';
 import { cn } from '@/lib/utils';
 
 function StudentRowDisplay({ student }: { student: Student }) {
@@ -58,7 +59,7 @@ function StudentRowDisplay({ student }: { student: Student }) {
 
   return (
     <div className="flex items-center gap-3">
-      <span className="font-medium max-w-[150px] truncate">
+      <span className="font-medium truncate">
         {student.name}
       </span>
     </div>
@@ -99,6 +100,7 @@ export function StudentGroups({
   const [isStudentDataLoading, setIsStudentDataLoading] = useState(true);
   const [filter, setFilter] = useState('');
   const [sortBy, setSortBy] = useState<'groups' | 'alphabetical'>('groups');
+  const [nameColumnWidth, setNameColumnWidth] = useState(250);
 
   const groupsQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -632,7 +634,10 @@ export function StudentGroups({
             return (
             <React.Fragment key={`group-desktop-${group.id}`}>
                 <TableRow className={cn(colorClass, 'font-semibold')}>
-                    <TableCell className={cn("sticky left-0 z-10 font-semibold", colorClass)}>
+                    <TableCell 
+                        className={cn("sticky left-0 z-10 font-semibold", colorClass)}
+                        style={{ width: `${nameColumnWidth}px`, minWidth: `${nameColumnWidth}px` }}
+                    >
                        <div className="flex items-center justify-between">
                           <Input 
                             defaultValue={group.name}
@@ -677,7 +682,10 @@ export function StudentGroups({
                    const { n1Total, n2Total, finalGrade } = calculateTotals(studentGrades);
                    return(
                     <TableRow key={csId} className={cn(colorClass, "bg-opacity-50")}>
-                       <TableCell className={cn("sticky left-0 z-10 pl-8", colorClass)}>
+                       <TableCell 
+                            className={cn("sticky left-0 z-10 pl-8", colorClass)}
+                            style={{ width: `${nameColumnWidth}px`, minWidth: `${nameColumnWidth}px` }}
+                        >
                             <div className="flex items-center justify-between">
                               <StudentRowDisplay student={student} />
                               <Button variant="ghost" size="icon" className="h-6 w-6 opacity-50 hover:opacity-100" onClick={() => handleRemoveStudentFromGroup(csId)}>
@@ -697,7 +705,10 @@ export function StudentGroups({
                    )
                 })}
                 <TableRow className={cn(colorClass)}>
-                  <TableCell className={cn("sticky left-0 z-10 pl-8 py-1", colorClass)}>
+                  <TableCell 
+                    className={cn("sticky left-0 z-10 pl-8 py-1", colorClass)}
+                    style={{ width: `${nameColumnWidth}px`, minWidth: `${nameColumnWidth}px` }}
+                  >
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button variant="outline" size="sm" className="h-7 bg-background">
@@ -731,7 +742,10 @@ export function StudentGroups({
              const { n1Total, n2Total, finalGrade } = calculateTotals(grades);
             return (
                 <TableRow key={csId}>
-                    <TableCell className="sticky left-0 bg-background z-10 w-[250px]">
+                    <TableCell 
+                        className="sticky left-0 bg-background z-10"
+                        style={{ width: `${nameColumnWidth}px`, minWidth: `${nameColumnWidth}px` }}
+                    >
                         <div className="flex items-center gap-2">
                             <Checkbox
                             checked={selectedStudents.includes(csId)}
@@ -788,7 +802,10 @@ export function StudentGroups({
 
         return (
           <TableRow key={cs.id} className={cn(colorClass)}>
-            <TableCell className={cn("sticky left-0 z-10 w-[250px]", colorClass ? colorClass : 'bg-background')}>
+            <TableCell 
+                className={cn("sticky left-0 z-10", colorClass ? colorClass : 'bg-background')}
+                style={{ width: `${nameColumnWidth}px`, minWidth: `${nameColumnWidth}px` }}
+            >
               <div className="flex items-center gap-2">
                 <Checkbox
                   checked={selectedStudents.includes(cs.id)}
@@ -838,7 +855,10 @@ export function StudentGroups({
         <Table>
           <TableHeader className="sticky top-0 z-20 bg-background/95 backdrop-blur">
             <TableRow>
-              <TableHead className="sticky left-0 bg-inherit z-10 w-[250px] min-w-[250px]">
+              <TableHead 
+                className="sticky left-0 bg-inherit z-10"
+                style={{ width: `${nameColumnWidth}px`, minWidth: `${nameColumnWidth}px` }}
+              >
                 Aluno / Grupo
               </TableHead>
               {gradeStructure.map((activity) => (
@@ -961,8 +981,8 @@ export function StudentGroups({
             </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-grow">
+        <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center">
+            <div className="relative flex-grow w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Filtrar por nome do aluno ou grupo..."
@@ -971,16 +991,35 @@ export function StudentGroups({
                 className="pl-10"
               />
             </div>
-            <div className="flex items-center space-x-2">
-                <Label>Organizar por:</Label>
+            
+            {!isMobile && (
+                <div className="flex items-center space-x-4 border rounded-md px-3 py-2 bg-muted/30 min-w-[280px]">
+                    <Label className="whitespace-nowrap flex items-center gap-2">
+                        <Maximize2 className="h-4 w-4" />
+                        Largura Nomes:
+                    </Label>
+                    <Slider
+                        value={[nameColumnWidth]}
+                        onValueChange={(val) => setNameColumnWidth(val[0])}
+                        min={150}
+                        max={500}
+                        step={10}
+                        className="w-32"
+                    />
+                    <span className="text-xs font-mono text-muted-foreground w-10">{nameColumnWidth}px</span>
+                </div>
+            )}
+
+            <div className="flex items-center space-x-2 border rounded-md px-3 py-2 bg-muted/30">
+                <Label className="whitespace-nowrap">Organizar por:</Label>
                 <RadioGroup defaultValue="groups" onValueChange={(value) => setSortBy(value as any)} className="flex items-center">
                     <div className="flex items-center space-x-2">
                         <RadioGroupItem value="groups" id="r-groups" />
-                        <Label htmlFor="r-groups">Grupos</Label>
+                        <Label htmlFor="r-groups" className="cursor-pointer">Grupos</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                         <RadioGroupItem value="alphabetical" id="r-alpha" />
-                        <Label htmlFor="r-alpha">Alfabética</Label>
+                        <Label htmlFor="r-alpha" className="cursor-pointer">Alfabética</Label>
                     </div>
                 </RadioGroup>
             </div>
