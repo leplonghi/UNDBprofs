@@ -25,7 +25,15 @@ export function middleware(req: NextRequest) {
   // validated by Firestore security rules on the client side.
   const sessionCookie = req.cookies.get('session');
 
-  if (!sessionCookie) {
+  if (!sessionCookie || !sessionCookie.value) {
+    const loginUrl = new URL('/login', req.url);
+    loginUrl.searchParams.set('from', pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Basic JWT format check (header.payload.signature)
+  const tokenParts = sessionCookie.value.split('.');
+  if (tokenParts.length !== 3) {
     const loginUrl = new URL('/login', req.url);
     loginUrl.searchParams.set('from', pathname);
     return NextResponse.redirect(loginUrl);

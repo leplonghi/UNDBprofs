@@ -63,12 +63,19 @@
   * {
     @apply border-border;
   }
+  html {
+    scroll-behavior: smooth;
+  }
   body {
     @apply bg-background text-foreground;
   }
 }
 
 @layer utilities {
+  .fill-mode-backwards {
+    animation-fill-mode: backwards;
+  }
+  
   .animated-gradient-background {
     background: linear-gradient(
       -45deg,

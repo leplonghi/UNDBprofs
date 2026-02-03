@@ -13,15 +13,15 @@ const iconMap = {
 };
 
 interface StatsCardsProps {
-    totalDisciplinas: number;
-    totalTurmas: number | null;
-    totalAlunos: number | null;
-    totalAtividades: number;
-    isLoading: boolean;
+  totalDisciplinas: number;
+  totalTurmas: number | null;
+  totalAlunos: number | null;
+  totalAtividades: number;
+  isLoading: boolean;
 }
 
 export function StatsCards({ totalDisciplinas, totalTurmas, totalAlunos, totalAtividades, isLoading }: StatsCardsProps) {
-  
+
   const stats = [
     { title: "Total de Disciplinas", value: totalDisciplinas },
     { title: "Total de Turmas", value: totalTurmas },
@@ -31,38 +31,51 @@ export function StatsCards({ totalDisciplinas, totalTurmas, totalAlunos, totalAt
 
   if (isLoading) {
     return (
-        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, index) => (
-                <Card key={index} className="p-4">
-                    <Skeleton className="h-6 w-full" />
-                </Card>
-            ))}
-        </div>
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <Card key={index} className="hover:bg-accent/50 transition-colors">
+            <CardContent className="p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-6 w-6 rounded-md" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+              <Skeleton className="h-8 w-8 rounded-md" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     )
   }
 
   return (
     <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-      {stats.map((stat) => {
+      {stats.map((stat, index) => {
         const cardInfo = iconMap[stat.title as keyof typeof iconMap];
         const Icon = cardInfo.icon;
         const colorClass = cardInfo.color;
+
+        // Calculate delay for staggered animation
+        const delayClass = index === 0 ? "delay-0" : index === 1 ? "delay-75" : index === 2 ? "delay-100" : "delay-150";
+
         return (
           <Link key={stat.title} href={cardInfo.href} className="hover:no-underline">
-            <Card className="hover:bg-accent transition-colors">
-                <CardContent className="p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <Icon className={cn("h-6 w-6", colorClass)} />
-                        <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
-                    </div>
-                    <div className="text-2xl font-bold">
-                        {stat.value === null ? (
-                            <span className="text-muted-foreground animate-pulse">...</span>
-                        ) : (
-                            stat.value
-                        )}
-                    </div>
-                </CardContent>
+            <Card className={cn(
+              "hover:bg-accent transition-all duration-300 hover:shadow-md animate-in fade-in slide-in-from-bottom-4 fill-mode-backwards",
+              delayClass
+            )}>
+              <CardContent className="p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Icon className={cn("h-6 w-6", colorClass)} />
+                  <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+                </div>
+                <div className="text-2xl font-bold">
+                  {stat.value === null ? (
+                    <span className="text-muted-foreground animate-pulse">...</span>
+                  ) : (
+                    stat.value
+                  )}
+                </div>
+              </CardContent>
             </Card>
           </Link>
         );
