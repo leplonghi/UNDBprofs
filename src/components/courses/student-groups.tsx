@@ -45,7 +45,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Skeleton } from '../ui/skeleton';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import debounce from 'lodash.debounce';
-import { Loader2, Users, Trash2, Search, X, PlusCircle, Download, Save, Maximize2, Filter, LayoutGrid, ListOrdered } from 'lucide-react';
+import { Loader2, Users, Trash2, Search, X, PlusCircle, Download, Save, Maximize2, Filter, LayoutGrid, ListOrdered, FileText } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
 import { Label } from '../ui/label';
