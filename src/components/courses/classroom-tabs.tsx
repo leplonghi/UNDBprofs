@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   useUser,
   useFirestore,
@@ -11,7 +11,17 @@ import { collection, query, where } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Users, Link, PlusCircle, FileText, ExternalLink } from 'lucide-react';
+import { 
+  Users, 
+  PlusCircle, 
+  FileText, 
+  ExternalLink, 
+  GraduationCap, 
+  BarChart3, 
+  Settings2, 
+  Library,
+  Info
+} from 'lucide-react';
 import { StudentUploadDialog } from '@/components/courses/student-upload-dialog';
 import { ClassroomStudentsTable } from '@/components/courses/classroom-students-table';
 import { StudentGroups } from '@/components/courses/student-groups';
@@ -40,41 +50,48 @@ function ResourcesTab({ courseId }: { courseId: string }) {
   return (
     <>
       <AddDocumentDialog isOpen={isAddOpen} onOpenChange={setIsAddOpen} courseId={courseId} />
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Documentos e Links</CardTitle>
-          <Button variant="outline" size="sm" onClick={() => setIsAddOpen(true)}>
+      <Card className="border-none shadow-none bg-transparent">
+        <CardHeader className="flex flex-row items-center justify-between px-0">
+          <div>
+            <CardTitle className="text-xl">Biblioteca da Disciplina</CardTitle>
+            <CardDescription>Links, materiais de apoio e referências salvas para esta turma.</CardDescription>
+          </div>
+          <Button variant="outline" onClick={() => setIsAddOpen(true)}>
             <PlusCircle className="mr-2 h-4 w-4" />
-            Adicionar
+            Adicionar Link
           </Button>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-0">
             {isLoading ? (
                 <Skeleton className="h-40 w-full mt-4" />
             ) : !documents || documents.length === 0 ? (
-                 <div className="mt-4 border-2 border-dashed rounded-lg p-8 text-center text-muted-foreground">
-                    <p>Nenhum documento adicionado para esta disciplina.</p>
+                 <div className="mt-4 border-2 border-dashed rounded-xl p-12 text-center text-muted-foreground bg-muted/20">
+                    <Library className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                    <p className="font-medium">Nenhum recurso compartilhado</p>
+                    <p className="text-sm">Comece adicionando links para aulas ou materiais complementares.</p>
                 </div>
             ) : (
-                <div className="mt-4 rounded-md border">
+                <div className="mt-4 rounded-xl border bg-background shadow-sm overflow-hidden">
                     <Table>
-                        <TableHeader>
+                        <TableHeader className="bg-muted/50">
                             <TableRow>
-                                <TableHead>Nome</TableHead>
-                                <TableHead>Tipo</TableHead>
+                                <TableHead>Material</TableHead>
+                                <TableHead className="w-[150px]">Tipo</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {documents.map(doc => (
-                                <TableRow key={doc.id}>
+                                <TableRow key={doc.id} className="hover:bg-muted/30 transition-colors">
                                     <TableCell className="font-medium">
-                                        <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:underline">
-                                            {doc.uploadType === 'link' ? <ExternalLink className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+                                        <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 hover:text-primary transition-colors">
+                                            <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                                                {doc.uploadType === 'link' ? <ExternalLink className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+                                            </div>
                                             {doc.name}
                                         </a>
                                     </TableCell>
                                     <TableCell>
-                                        <Badge variant="secondary" className="capitalize">{doc.documentType}</Badge>
+                                        <Badge variant="secondary" className="capitalize px-3 py-1 rounded-full">{doc.documentType}</Badge>
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -86,6 +103,46 @@ function ResourcesTab({ courseId }: { courseId: string }) {
       </Card>
     </>
   );
+}
+
+function ClassroomHeader({ classroom, studentCount }: { classroom: Classroom, studentCount: number }) {
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <Card className="bg-primary/5 border-primary/10 shadow-sm">
+                <CardContent className="p-4 flex items-center gap-4">
+                    <div className="p-3 rounded-xl bg-primary/10 text-primary">
+                        <Users className="h-6 w-6" />
+                    </div>
+                    <div>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total de Alunos</p>
+                        <p className="text-2xl font-bold">{studentCount}</p>
+                    </div>
+                </CardContent>
+            </Card>
+            <Card className="bg-accent/5 border-accent/10 shadow-sm">
+                <CardContent className="p-4 flex items-center gap-4">
+                    <div className="p-3 rounded-xl bg-accent/10 text-accent-foreground">
+                        <Info className="h-6 w-6" />
+                    </div>
+                    <div>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tipo de Turma</p>
+                        <p className="text-2xl font-bold">{classroom.classType}</p>
+                    </div>
+                </CardContent>
+            </Card>
+            <Card className="bg-muted/5 border-muted/10 shadow-sm">
+                <CardContent className="p-4 flex items-center gap-4">
+                    <div className="p-3 rounded-xl bg-muted/20 text-muted-foreground">
+                        <GraduationCap className="h-6 w-6" />
+                    </div>
+                    <div>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Semestre Vigente</p>
+                        <p className="text-2xl font-bold">{classroom.semester}</p>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+    )
 }
 
 
@@ -133,13 +190,17 @@ export function ClassroomTabs({
 
   if (!classroom) {
     return (
-      <Card>
+      <Card className="border-dashed">
         <CardHeader>
-          <CardTitle>Nenhuma Turma Encontrada</CardTitle>
+          <CardTitle>Configuração Pendente</CardTitle>
+          <CardDescription>Não há nenhuma turma associada a esta disciplina.</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">Não há nenhuma turma associada a esta disciplina. Você pode criar uma manualmente ou importar um plano de ensino para gerar uma automaticamente.</p>
-          <Button className="mt-4">Criar Turma Manualmente</Button>
+          <p className="text-muted-foreground mb-6 text-sm">Uma turma é necessária para gerenciar alunos, notas e cronogramas. Você pode criar uma automaticamente ao importar um Plano de Ensino ou adicionar uma manualmente.</p>
+          <Button>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Criar Turma Manualmente
+          </Button>
         </CardContent>
       </Card>
     );
@@ -155,19 +216,54 @@ export function ClassroomTabs({
         classroomId={classroom.id}
         courseId={courseId}
       />
-      <div className="flex flex-col gap-6">
-        <Tabs defaultValue="students" className="w-full">
-           <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 h-auto">
-            <TabsTrigger value="students">Alunos</TabsTrigger>
-            <TabsTrigger value="grades">Lançamento de Notas</TabsTrigger>
-            <TabsTrigger value="resources">Recursos</TabsTrigger>
-            <TabsTrigger value="analytics">Análise da Turma</TabsTrigger>
-            <TabsTrigger value="settings">Configurações</TabsTrigger>
+      <div className="flex flex-col gap-2">
+        
+        <ClassroomHeader 
+            classroom={classroom} 
+            studentCount={classroomStudents?.length || 0} 
+        />
+
+        <Tabs defaultValue="grades" className="w-full">
+           <TabsList className="grid w-full grid-cols-3 lg:grid-cols-5 h-auto p-1 bg-muted/50 rounded-xl mb-6">
+            <TabsTrigger value="grades" className="rounded-lg py-2.5 data-[state=active]:shadow-sm">
+                <GraduationCap className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Diário de Notas</span>
+                <span className="sm:hidden">Notas</span>
+            </TabsTrigger>
+            <TabsTrigger value="students" className="rounded-lg py-2.5 data-[state=active]:shadow-sm">
+                <Users className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Alunos</span>
+                <span className="sm:hidden">Alunos</span>
+            </TabsTrigger>
+            <TabsTrigger value="resources" className="rounded-lg py-2.5 data-[state=active]:shadow-sm">
+                <Library className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Recursos</span>
+                <span className="sm:hidden">Links</span>
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="rounded-lg py-2.5 data-[state=active]:shadow-sm">
+                <BarChart3 className="h-4 w-4 mr-2" />
+                <span className="hidden lg:inline">Análise</span>
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="rounded-lg py-2.5 data-[state=active]:shadow-sm">
+                <Settings2 className="h-4 w-4 mr-2" />
+                <span className="hidden lg:inline">Configurar</span>
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="students" className="mt-6">
-            <div className="flex justify-end mb-4">
-              <Button onClick={() => setIsStudentUploadOpen(true)}>
+          <TabsContent value="grades" className="mt-0 outline-none">
+            <StudentGroups
+              courseId={courseId}
+              classroomId={classroom.id}
+              classroomStudents={classroomStudents ?? []}
+              isLoading={isLoadingStudents}
+              activities={activities}
+            />
+          </TabsContent>
+
+          <TabsContent value="students" className="mt-0 outline-none">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">Gestão de Estudantes</h3>
+              <Button onClick={() => setIsStudentUploadOpen(true)} size="sm">
                 <Users className="mr-2 h-4 w-4" />
                 Adicionar Alunos
               </Button>
@@ -180,21 +276,11 @@ export function ClassroomTabs({
             />
           </TabsContent>
 
-          <TabsContent value="grades" className="mt-6">
-            <StudentGroups
-              courseId={courseId}
-              classroomId={classroom.id}
-              classroomStudents={classroomStudents ?? []}
-              isLoading={isLoadingStudents}
-              activities={activities}
-            />
-          </TabsContent>
-
-          <TabsContent value="resources" className="mt-6">
+          <TabsContent value="resources" className="mt-0 outline-none">
             <ResourcesTab courseId={courseId} />
           </TabsContent>
 
-          <TabsContent value="analytics" className="mt-6">
+          <TabsContent value="analytics" className="mt-0 outline-none">
              <ClassAnalytics
               classroomStudents={classroomStudents ?? []}
               isLoading={isLoadingStudents}
@@ -202,7 +288,7 @@ export function ClassroomTabs({
             />
           </TabsContent>
 
-          <TabsContent value="settings" className="mt-6">
+          <TabsContent value="settings" className="mt-0 outline-none">
              <ActivitySettings
                 courseId={courseId}
                 classroomId={classroom.id}

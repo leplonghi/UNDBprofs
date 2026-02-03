@@ -45,7 +45,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Skeleton } from '../ui/skeleton';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import debounce from 'lodash.debounce';
-import { Loader2, Users, Trash2, Search, X, PlusCircle, Download, Save, Maximize2 } from 'lucide-react';
+import { Loader2, Users, Trash2, Search, X, PlusCircle, Download, Save, Maximize2, Filter, LayoutGrid, ListOrdered } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
@@ -124,7 +124,6 @@ export function StudentGroups({
       const studentIds = initialClassroomStudents.map(cs => cs.studentId);
       
       const studentPromises = [];
-      // Firestore 'in' query limit is 30
       for (let i = 0; i < studentIds.length; i += 30) {
           const batchIds = studentIds.slice(i, i + 30);
           if (batchIds.length > 0) {
@@ -173,7 +172,7 @@ export function StudentGroups({
       initialGrades[cs.id] = studentGrades;
     }
     setLocalGrades(initialGrades);
-    setHasChanges(false); // Reset changes when data reloads
+    setHasChanges(false);
   }, [classroomStudents, isLoading, isStudentDataLoading, gradeStructure]);
 
   const { studentGroups, ungroupedStudents } = useMemo(() => {
@@ -485,7 +484,7 @@ export function StudentGroups({
           head: [headers],
           body: body,
           styles: { fontSize: 8 },
-          headStyles: { fillColor: [79, 53, 150] } // Primary color
+          headStyles: { fillColor: [79, 53, 150] }
       });
 
       doc.save('notas.pdf');
@@ -501,17 +500,13 @@ export function StudentGroups({
         );
     }
     
-    // Sort by groups
     const filteredGroups = studentGroups
       .map(group => {
         const filteredMembers = group.members.filter(csId => allStudentsData[classroomStudents.find(cs => cs.id === csId)?.studentId || '']?.name.toLowerCase().includes(lowerCaseFilter));
-        // Show group if name matches OR if any member matches
         if (group.name.toLowerCase().includes(lowerCaseFilter) || filteredMembers.length > 0) {
-          // If group name doesn't match, only show filtered members
           if (!group.name.toLowerCase().includes(lowerCaseFilter)) {
             return { ...group, members: filteredMembers };
           }
-          // If group name matches, show all members
           return group;
         }
         return null;
@@ -555,14 +550,7 @@ export function StudentGroups({
                 const newScore = parseFloat(e.target.value) || 0;
                 handleGradeChange(studentOrGroupId, activity.id, newScore, isGroup)
               }}
-              onBlur={(e) => {
-                const newScore = parseFloat(e.target.value) || 0;
-                const score = Math.max(0, Math.min(activity.maxScore, newScore));
-                 if (newScore !== score) {
-                    e.target.value = String(score);
-                }
-              }}
-              className="w-full"
+              className="w-full h-12 text-lg font-semibold text-center"
             />
           </div>
         ))}
@@ -577,29 +565,29 @@ export function StudentGroups({
         const isModular = modularActivities.length > 0;
 
         return (
-            <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-                <h4 className="font-semibold mb-2">Totais</h4>
-                <div className={`grid ${isModular ? 'grid-cols-1' : 'grid-cols-3'} gap-2 text-center`}>
+            <div className="mt-4 p-4 bg-muted/50 rounded-xl border">
+                <h4 className="font-semibold mb-3 text-sm uppercase tracking-wider text-muted-foreground">Médias Atuais</h4>
+                <div className={`grid ${isModular ? 'grid-cols-1' : 'grid-cols-3'} gap-4 text-center`}>
                     {isModular ? (
                         modularTotals.map((mt, index) => (
-                             <div key={index}>
-                                <p className="text-sm text-muted-foreground">{mt.name}</p>
-                                <p className="font-bold text-lg">{mt.score.toFixed(1)}</p>
+                             <div key={index} className="bg-background rounded-lg p-2 border shadow-sm">
+                                <p className="text-xs text-muted-foreground mb-1">{mt.name}</p>
+                                <p className="font-bold text-xl">{mt.score.toFixed(1)}</p>
                             </div>
                         ))
                     ) : (
                         <>
-                            <div>
-                                <p className="text-sm text-muted-foreground">Total N1</p>
-                                <p className="font-bold text-lg">{n1Total.toFixed(1)}</p>
+                            <div className="bg-background rounded-lg p-2 border shadow-sm">
+                                <p className="text-xs text-muted-foreground mb-1">N1</p>
+                                <p className="font-bold text-xl">{n1Total.toFixed(1)}</p>
                             </div>
-                             <div>
-                                <p className="text-sm text-muted-foreground">Total N2</p>
-                                <p className="font-bold text-lg">{n2Total.toFixed(1)}</p>
+                             <div className="bg-background rounded-lg p-2 border shadow-sm">
+                                <p className="text-xs text-muted-foreground mb-1">N2</p>
+                                <p className="font-bold text-xl">{n2Total.toFixed(1)}</p>
                             </div>
-                             <div>
-                                <p className="text-sm text-muted-foreground">Nota Final</p>
-                                <p className="font-bold text-lg text-primary">{finalGrade.toFixed(1)}</p>
+                             <div className="bg-primary/5 rounded-lg p-2 border border-primary/20 shadow-sm">
+                                <p className="text-xs text-primary/70 mb-1">Final</p>
+                                <p className="font-bold text-xl text-primary">{finalGrade.toFixed(1)}</p>
                             </div>
                         </>
                     )}
@@ -614,8 +602,10 @@ export function StudentGroups({
 
   if (gradeStructure.length === 0) {
     return (
-      <div className="py-10 text-center text-muted-foreground">
-        Nenhuma atividade avaliativa foi definida para esta turma.
+      <div className="py-20 text-center text-muted-foreground border-2 border-dashed rounded-xl">
+        <LayoutGrid className="h-12 w-12 mx-auto mb-4 opacity-20" />
+        <p className="font-medium">Nenhuma atividade avaliativa definida</p>
+        <p className="text-sm">Vá em "Configurar" para definir as atividades desta turma.</p>
       </div>
     );
   }
@@ -633,24 +623,24 @@ export function StudentGroups({
 
             return (
             <React.Fragment key={`group-desktop-${group.id}`}>
-                <TableRow className={cn(colorClass, 'font-semibold')}>
+                <TableRow className={cn(colorClass, 'border-b-2 border-primary/10')}>
                     <TableCell 
-                        className={cn("sticky left-0 z-10 font-semibold", colorClass)}
+                        className={cn("sticky left-0 z-10 font-bold", colorClass)}
                         style={{ width: `${nameColumnWidth}px`, minWidth: `${nameColumnWidth}px` }}
                     >
                        <div className="flex items-center justify-between">
                           <Input 
                             defaultValue={group.name}
                             onChange={(e) => handleGroupNameChange(group.id, e.target.value)}
-                            className="h-8 border-0 bg-transparent font-semibold p-0"
+                            className="h-8 border-0 bg-transparent font-bold p-0 focus-visible:ring-0"
                           />
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteGroup(group.id)}>
-                              <Trash2 className="h-4 w-4 text-destructive" />
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive/50 hover:text-destructive" onClick={() => handleDeleteGroup(group.id)}>
+                              <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                     </TableCell>
                     {gradeStructure.map((activity) => (
-                        <TableCell key={activity.id}>
+                        <TableCell key={activity.id} className="bg-white/40 dark:bg-black/20">
                             <Input
                               type="number"
                               step="0.5"
@@ -661,71 +651,64 @@ export function StudentGroups({
                                 const newScore = parseFloat(e.target.value) || 0;
                                 handleGradeChange(group.id, activity.id, newScore, true);
                               }}
-                              onBlur={(e) => {
-                                const newScore = parseFloat(e.target.value) || 0;
-                                const score = Math.max(0, Math.min(activity.maxScore, newScore));
-                                if (newScore !== score) {
-                                    e.target.value = String(score);
-                                }
-                              }}
-                              className="w-20 mx-auto text-center"
+                              className="w-16 mx-auto text-center font-semibold h-8"
                             />
                         </TableCell>
                     ))}
-                    <TableCell className="font-semibold text-center">{n1Total.toFixed(1)}</TableCell>
-                    <TableCell className="font-semibold text-center">{n2Total.toFixed(1)}</TableCell>
-                    <TableCell className="font-bold text-primary text-center">{finalGrade.toFixed(1)}</TableCell>
+                    <TableCell className="font-bold text-center bg-white/60 dark:bg-black/40">{n1Total.toFixed(1)}</TableCell>
+                    <TableCell className="font-bold text-center bg-white/60 dark:bg-black/40">{n2Total.toFixed(1)}</TableCell>
+                    <TableCell className="font-bold text-primary text-center bg-primary/10">{finalGrade.toFixed(1)}</TableCell>
                 </TableRow>
                 {group.members.map(csId => {
                    const student = allStudentsData[classroomStudents.find(cs => cs.id === csId)?.studentId || ''];
                    const studentGrades = localGrades[csId] || [];
                    const { n1Total, n2Total, finalGrade } = calculateTotals(studentGrades);
                    return(
-                    <TableRow key={csId} className={cn(colorClass, "bg-opacity-50")}>
+                    <TableRow key={csId} className={cn(colorClass, "bg-opacity-30 hover:bg-opacity-50 transition-colors")}>
                        <TableCell 
                             className={cn("sticky left-0 z-10 pl-8", colorClass)}
                             style={{ width: `${nameColumnWidth}px`, minWidth: `${nameColumnWidth}px` }}
                         >
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between group/member">
                               <StudentRowDisplay student={student} />
-                              <Button variant="ghost" size="icon" className="h-6 w-6 opacity-50 hover:opacity-100" onClick={() => handleRemoveStudentFromGroup(csId)}>
-                                <X className="h-4 w-4" />
+                              <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover/member:opacity-100 transition-opacity" onClick={() => handleRemoveStudentFromGroup(csId)}>
+                                <X className="h-3 w-3" />
                               </Button>
                             </div>
                        </TableCell>
                        {gradeStructure.map((activity) => (
-                            <TableCell key={activity.id} className="text-center text-muted-foreground">
+                            <TableCell key={activity.id} className="text-center text-muted-foreground/70 text-xs">
                                 {studentGrades.find(g => g.activityId === activity.id)?.score.toFixed(1) ?? '0.0'}
                             </TableCell>
                         ))}
-                       <TableCell className="font-semibold text-center text-muted-foreground">{n1Total.toFixed(1)}</TableCell>
-                       <TableCell className="font-semibold text-center text-muted-foreground">{n2Total.toFixed(1)}</TableCell>
-                       <TableCell className="font-bold text-primary/80 text-center">{finalGrade.toFixed(1)}</TableCell>
+                       <TableCell className="text-center text-muted-foreground/70 text-xs">{n1Total.toFixed(1)}</TableCell>
+                       <TableCell className="text-center text-muted-foreground/70 text-xs">{n2Total.toFixed(1)}</TableCell>
+                       <TableCell className="text-center text-primary/50 text-xs font-semibold">{finalGrade.toFixed(1)}</TableCell>
                     </TableRow>
                    )
                 })}
-                <TableRow className={cn(colorClass)}>
+                <TableRow className={cn(colorClass, "border-b")}>
                   <TableCell 
-                    className={cn("sticky left-0 z-10 pl-8 py-1", colorClass)}
+                    className={cn("sticky left-0 z-10 pl-8 py-2", colorClass)}
                     style={{ width: `${nameColumnWidth}px`, minWidth: `${nameColumnWidth}px` }}
                   >
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" size="sm" className="h-7 bg-background">
-                          <PlusCircle className="mr-2 h-3 w-3" /> Adicionar Aluno
+                        <Button variant="ghost" size="sm" className="h-7 text-xs font-medium hover:bg-background/50">
+                          <PlusCircle className="mr-2 h-3 w-3" /> Incluir Aluno
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="p-0">
+                      <PopoverContent className="p-1 w-64 shadow-xl border-primary/10">
                         <div className="flex flex-col max-h-60 overflow-y-auto">
                           {ungroupedStudents.length > 0 ? ungroupedStudents.map(csId => (
                             <button 
                               key={csId} 
                               onClick={() => handleAddStudentToGroup(group.id, csId)}
-                              className="text-left text-sm p-2 hover:bg-accent"
+                              className="text-left text-xs p-2.5 rounded hover:bg-primary/5 transition-colors font-medium"
                             >
-                              {allStudentsData[classroomStudents.find(cs => cs.id === csId)?.studentId || '']?.name || 'Aluno sem nome'}
+                              {allStudentsData[classroomStudents.find(cs => cs.id === csId)?.studentId || '']?.name || 'Aluno'}
                             </button>
-                          )) : <p className="p-2 text-sm text-muted-foreground">Nenhum aluno disponível.</p>}
+                          )) : <p className="p-3 text-xs text-muted-foreground text-center italic">Todos os alunos já estão em grupos.</p>}
                         </div>
                       </PopoverContent>
                     </Popover>
@@ -735,18 +718,25 @@ export function StudentGroups({
             </React.Fragment>
             )
         })}
+        {ungroupedStudents.length > 0 && (
+            <TableRow className="bg-muted/30">
+                <TableCell colSpan={gradeStructure.length + 4} className="py-2 px-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                    Alunos sem Grupo
+                </TableCell>
+            </TableRow>
+        )}
         {(filteredData as { groups: Group[], ungrouped: string[] }).ungrouped.map((csId) => {
              const student = allStudentsData[classroomStudents.find(cs => cs.id === csId)?.studentId || ''];
              if (!student) return null;
              const grades = localGrades[csId] || [];
              const { n1Total, n2Total, finalGrade } = calculateTotals(grades);
             return (
-                <TableRow key={csId}>
+                <TableRow key={csId} className="hover:bg-muted/20 transition-colors">
                     <TableCell 
                         className="sticky left-0 bg-background z-10"
                         style={{ width: `${nameColumnWidth}px`, minWidth: `${nameColumnWidth}px` }}
                     >
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3">
                             <Checkbox
                             checked={selectedStudents.includes(csId)}
                             onCheckedChange={(checked) => {
@@ -756,6 +746,7 @@ export function StudentGroups({
                                     : prev.filter((id) => id !== csId)
                                 );
                             }}
+                            className="data-[state=checked]:bg-primary"
                             />
                             <StudentRowDisplay student={student} />
                         </div>
@@ -769,20 +760,13 @@ export function StudentGroups({
                               max={activity.maxScore}
                               value={grades.find(g => g.activityId === activity.id)?.score ?? 0}
                               onChange={(e) => handleGradeChange(csId, activity.id, parseFloat(e.target.value) || 0, false)}
-                               onBlur={(e) => {
-                                const newScore = parseFloat(e.target.value) || 0;
-                                const score = Math.max(0, Math.min(activity.maxScore, newScore));
-                                if (newScore !== score) {
-                                    e.target.value = String(score);
-                                }
-                              }}
-                              className="w-20 mx-auto text-center"
+                              className="w-16 mx-auto text-center h-8"
                             />
                         </TableCell>
                     ))}
-                    <TableCell className="font-semibold text-center">{n1Total.toFixed(1)}</TableCell>
-                    <TableCell className="font-semibold text-center">{n2Total.toFixed(1)}</TableCell>
-                    <TableCell className="font-bold text-primary text-center">{finalGrade.toFixed(1)}</TableCell>
+                    <TableCell className="font-semibold text-center text-muted-foreground">{n1Total.toFixed(1)}</TableCell>
+                    <TableCell className="font-semibold text-center text-muted-foreground">{n2Total.toFixed(1)}</TableCell>
+                    <TableCell className="font-bold text-primary text-center bg-primary/5">{finalGrade.toFixed(1)}</TableCell>
                 </TableRow>
             )
         })}
@@ -801,12 +785,12 @@ export function StudentGroups({
         const colorClass = groupIndex !== -1 ? groupColors[groupIndex % groupColors.length] : '';
 
         return (
-          <TableRow key={cs.id} className={cn(colorClass)}>
+          <TableRow key={cs.id} className={cn(colorClass, "hover:opacity-80 transition-opacity")}>
             <TableCell 
                 className={cn("sticky left-0 z-10", colorClass ? colorClass : 'bg-background')}
                 style={{ width: `${nameColumnWidth}px`, minWidth: `${nameColumnWidth}px` }}
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <Checkbox
                   checked={selectedStudents.includes(cs.id)}
                   onCheckedChange={(checked) => {
@@ -817,7 +801,10 @@ export function StudentGroups({
                     );
                   }}
                 />
-                <StudentRowDisplay student={student} />
+                <div className="flex flex-col">
+                    <StudentRowDisplay student={student} />
+                    {cs.groupId && <span className="text-[10px] font-bold uppercase text-primary/60">{studentGroups.find(g => g.id === cs.groupId)?.name}</span>}
+                </div>
               </div>
             </TableCell>
             {gradeStructure.map((activity) => (
@@ -829,20 +816,13 @@ export function StudentGroups({
                   max={activity.maxScore}
                   value={grades.find(g => g.activityId === activity.id)?.score ?? 0}
                   onChange={(e) => handleGradeChange(cs.id, activity.id, parseFloat(e.target.value) || 0, false)}
-                  onBlur={(e) => {
-                    const newScore = parseFloat(e.target.value) || 0;
-                    const score = Math.max(0, Math.min(activity.maxScore, newScore));
-                    if (newScore !== score) {
-                        e.target.value = String(score);
-                    }
-                  }}
-                  className="w-20 mx-auto text-center"
+                  className="w-16 mx-auto text-center h-8"
                 />
               </TableCell>
             ))}
-            <TableCell className="font-semibold text-center">{n1Total.toFixed(1)}</TableCell>
-            <TableCell className="font-semibold text-center">{n2Total.toFixed(1)}</TableCell>
-            <TableCell className="font-bold text-primary text-center">{finalGrade.toFixed(1)}</TableCell>
+            <TableCell className="font-semibold text-center text-muted-foreground">{n1Total.toFixed(1)}</TableCell>
+            <TableCell className="font-semibold text-center text-muted-foreground">{n2Total.toFixed(1)}</TableCell>
+            <TableCell className="font-bold text-primary text-center bg-primary/5">{finalGrade.toFixed(1)}</TableCell>
           </TableRow>
         );
       })}
@@ -851,24 +831,24 @@ export function StudentGroups({
 
 
   const renderDesktopView = () => (
-     <div className="w-full overflow-x-auto rounded-md border">
+     <div className="w-full overflow-x-auto rounded-xl border shadow-sm">
         <Table>
-          <TableHeader className="sticky top-0 z-20 bg-background/95 backdrop-blur">
+          <TableHeader className="sticky top-0 z-20 bg-muted/90 backdrop-blur-md">
             <TableRow>
               <TableHead 
-                className="sticky left-0 bg-inherit z-10"
+                className="sticky left-0 bg-inherit z-10 font-bold uppercase text-[10px] tracking-widest"
                 style={{ width: `${nameColumnWidth}px`, minWidth: `${nameColumnWidth}px` }}
               >
-                Aluno / Grupo
+                Estudante / Grupo
               </TableHead>
               {gradeStructure.map((activity) => (
-                <TableHead key={activity.id} className="min-w-[120px] text-center">
-                  {activity.name} ({activity.maxScore?.toFixed(1)})
+                <TableHead key={activity.id} className="min-w-[100px] text-center font-bold uppercase text-[10px] tracking-widest">
+                  {activity.name}
                 </TableHead>
               ))}
-               <TableHead className="text-center min-w-[100px]">Total N1</TableHead>
-               <TableHead className="text-center min-w-[100px]">Total N2</TableHead>
-               <TableHead className="text-center min-w-[100px]">Nota Final</TableHead>
+               <TableHead className="text-center min-w-[80px] font-bold uppercase text-[10px] tracking-widest bg-muted/30">N1</TableHead>
+               <TableHead className="text-center min-w-[80px] font-bold uppercase text-[10px] tracking-widest bg-muted/30">N2</TableHead>
+               <TableHead className="text-center min-w-[80px] font-bold uppercase text-[10px] tracking-widest bg-primary/10 text-primary">Final</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -876,9 +856,9 @@ export function StudentGroups({
               <TableRow>
                 <TableCell
                   colSpan={gradeStructure.length + 4}
-                  className="h-24 text-center"
+                  className="h-40 text-center text-muted-foreground italic"
                 >
-                  Nenhum aluno para exibir. Adicione alunos na aba "Alunos".
+                  Nenhum aluno cadastrado. Use a aba "Alunos" para começar.
                 </TableCell>
               </TableRow>
             ) : noStudentsAfterFilter ? (
@@ -887,7 +867,7 @@ export function StudentGroups({
                         colSpan={gradeStructure.length + 4}
                         className="h-24 text-center"
                     >
-                        Nenhum resultado encontrado para "{filter}".
+                        Nenhum resultado para "{filter}".
                     </TableCell>
                 </TableRow>
             ) : (
@@ -899,26 +879,27 @@ export function StudentGroups({
   );
 
   const renderMobileView = () => (
-    <div className="space-y-4">
+    <div className="space-y-3">
         {classroomStudents.length === 0 ? (
-             <div className="py-10 text-center text-muted-foreground border-2 border-dashed rounded-lg">
+             <div className="py-20 text-center text-muted-foreground border-2 border-dashed rounded-xl">
                 Nenhum aluno para exibir.
             </div>
         ) : noStudentsAfterFilter ? (
              <div className="py-10 text-center text-muted-foreground border-2 border-dashed rounded-lg">
-                Nenhum resultado encontrado para "{filter}".
+                Nenhum resultado para "{filter}".
             </div>
         ) : (
-            <Accordion type="multiple" className="w-full">
+            <Accordion type="multiple" className="w-full space-y-2">
               {(filteredData as ClassroomStudent[]).map((cs) => {
                 const student = allStudentsData[cs.studentId];
                 if (!student) return null;
+                const groupName = cs.groupId ? studentGroups.find(g => g.id === cs.groupId)?.name : null;
                 return (
-                  <AccordionItem value={cs.id} key={cs.id}>
-                    <AccordionTrigger>
-                        <div className="flex items-center gap-2">
+                  <AccordionItem value={cs.id} key={cs.id} className="border rounded-xl bg-card overflow-hidden">
+                    <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                        <div className="flex items-center gap-3">
                             <Checkbox
-                                className="mr-2"
+                                className="mr-1"
                                 checked={selectedStudents.includes(cs.id)}
                                 onCheckedChange={(checked) => {
                                     setSelectedStudents((prev) =>
@@ -929,10 +910,13 @@ export function StudentGroups({
                                 }}
                                 onClick={(e) => e.stopPropagation()}
                             />
-                            <StudentRowDisplay student={student} />
+                            <div className="text-left">
+                                <p className="font-semibold text-sm leading-tight">{student.name}</p>
+                                {groupName && <p className="text-[10px] font-bold text-primary uppercase">{groupName}</p>}
+                            </div>
                         </div>
                     </AccordionTrigger>
-                    <AccordionContent>
+                    <AccordionContent className="px-4 pb-4">
                         {renderGradeInputs(cs.id, false)}
                         {renderTotals(cs.id)}
                     </AccordionContent>
@@ -945,94 +929,116 @@ export function StudentGroups({
   )
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-4 rounded-lg border p-4">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div className="space-y-1 flex-grow">
-              <h3 className="text-lg font-semibold">Lançamento de Notas</h3>
-              <p className="text-sm text-muted-foreground">
-                Selecione alunos e clique em "Agrupar" para criar um novo grupo. Clique em "Salvar Notas" para persistir as alterações.
-              </p>
+    <div className="space-y-6">
+      <Card className="shadow-none border-none bg-transparent">
+        <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 px-0 pt-0">
+            <div className="space-y-1">
+              <CardTitle className="text-2xl">Lançamento de Notas</CardTitle>
+              <CardDescription>
+                Gerencie notas individuais ou em grupo. Selecione alunos e clique em "Agrupar" para agilizar o lançamento.
+              </CardDescription>
             </div>
-            <div className="flex items-center gap-2 self-end md:self-center">
-              <Button
-                onClick={handleCreateGroup}
-                disabled={selectedStudents.length === 0}
+            <div className="flex items-center gap-3 w-full md:w-auto">
+              {selectedStudents.length > 0 && (
+                <Button
+                    onClick={handleCreateGroup}
+                    variant="default"
+                    className="flex-1 md:flex-none shadow-lg animate-in zoom-in-95"
+                >
+                    <Users className="mr-2 h-4 w-4" />
+                    Agrupar ({selectedStudents.length})
+                </Button>
+              )}
+              
+              <Button 
+                onClick={handleSaveAllGrades} 
+                disabled={!hasChanges || isSaving}
+                className={cn(
+                    "flex-1 md:flex-none transition-all",
+                    hasChanges ? "bg-green-600 hover:bg-green-700 shadow-md scale-105" : ""
+                )}
               >
-                <Users className="mr-2 h-4 w-4" />
-                Agrupar
-              </Button>
-              <Button onClick={handleSaveAllGrades} disabled={!hasChanges || isSaving}>
                 {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                 Salvar Notas
+                 {hasChanges ? "Salvar Alterações" : "Salvo"}
               </Button>
+
                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline">
-                      <Download className="mr-2 h-4 w-4" />
-                      Exportar
+                    <Button variant="outline" size="icon" className="md:w-auto md:px-4">
+                      <Download className="h-4 w-4 md:mr-2" />
+                      <span className="hidden md:inline">Exportar</span>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onSelect={exportToCSV}>Exportar para CSV</DropdownMenuItem>
-                    <DropdownMenuItem onSelect={exportToPDF}>Exportar para PDF</DropdownMenuItem>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onSelect={exportToCSV} className="gap-2">
+                        <ListOrdered className="h-4 w-4" /> Exportar para CSV
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={exportToPDF} className="gap-2">
+                        <FileText className="h-4 w-4" /> Exportar para PDF
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
             </div>
-        </div>
-
-        <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center">
-            <div className="relative flex-grow w-full">
+        </CardHeader>
+        
+        <div className="flex flex-col lg:flex-row gap-4 mb-2">
+            <div className="relative flex-grow">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Filtrar por nome do aluno ou grupo..."
+                placeholder="Buscar por nome ou grupo..."
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                className="pl-10"
+                className="pl-10 h-11 bg-background shadow-sm"
               />
             </div>
             
-            {!isMobile && (
-                <div className="flex items-center space-x-4 border rounded-md px-3 py-2 bg-muted/30 min-w-[280px]">
-                    <Label className="whitespace-nowrap flex items-center gap-2">
-                        <Maximize2 className="h-4 w-4" />
-                        Largura Nomes:
-                    </Label>
-                    <Slider
-                        value={[nameColumnWidth]}
-                        onValueChange={(val) => setNameColumnWidth(val[0])}
-                        min={150}
-                        max={500}
-                        step={10}
-                        className="w-32"
-                    />
-                    <span className="text-xs font-mono text-muted-foreground w-10">{nameColumnWidth}px</span>
-                </div>
-            )}
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0">
+                {!isMobile && (
+                    <div className="flex items-center space-x-4 border rounded-lg px-4 py-2 bg-muted/30 shadow-sm">
+                        <Label className="whitespace-nowrap flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase">
+                            <Maximize2 className="h-3 w-3" />
+                            Largura:
+                        </Label>
+                        <Slider
+                            value={[nameColumnWidth]}
+                            onValueChange={(val) => setNameColumnWidth(val[0])}
+                            min={150}
+                            max={500}
+                            step={10}
+                            className="w-24"
+                        />
+                    </div>
+                )}
 
-            <div className="flex items-center space-x-2 border rounded-md px-3 py-2 bg-muted/30">
-                <Label className="whitespace-nowrap">Organizar por:</Label>
-                <RadioGroup defaultValue="groups" onValueChange={(value) => setSortBy(value as any)} className="flex items-center">
-                    <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="groups" id="r-groups" />
-                        <Label htmlFor="r-groups" className="cursor-pointer">Grupos</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="alphabetical" id="r-alpha" />
-                        <Label htmlFor="r-alpha" className="cursor-pointer">Alfabética</Label>
-                    </div>
-                </RadioGroup>
+                <div className="flex items-center space-x-2 border rounded-lg px-2 py-1 bg-muted/30 shadow-sm h-11">
+                    <RadioGroup defaultValue="groups" onValueChange={(value) => setSortBy(value as any)} className="flex items-center gap-1">
+                        <div className="flex items-center">
+                            <RadioGroupItem value="groups" id="r-groups" className="peer sr-only" />
+                            <Label htmlFor="r-groups" className="flex items-center gap-2 px-3 py-1.5 rounded-md cursor-pointer transition-all peer-data-[state=checked]:bg-background peer-data-[state=checked]:shadow-sm peer-data-[state=checked]:text-primary text-xs font-medium text-muted-foreground">
+                                <LayoutGrid className="h-3.5 w-3.5" /> Grupos
+                            </Label>
+                        </div>
+                        <div className="flex items-center">
+                            <RadioGroupItem value="alphabetical" id="r-alpha" className="peer sr-only" />
+                            <Label htmlFor="r-alpha" className="flex items-center gap-2 px-3 py-1.5 rounded-md cursor-pointer transition-all peer-data-[state=checked]:bg-background peer-data-[state=checked]:shadow-sm peer-data-[state=checked]:text-primary text-xs font-medium text-muted-foreground">
+                                <ListOrdered className="h-3.5 w-3.5" /> Alfabética
+                            </Label>
+                        </div>
+                    </RadioGroup>
+                </div>
             </div>
         </div>
-      </div>
+      </Card>
       
-      {isMobile === undefined ? (
-        <Skeleton className="w-full h-96" />
-      ) : isMobile ? (
-        renderMobileView()
-      ) : (
-        renderDesktopView()
-      )}
+      <div className="bg-background rounded-xl">
+        {isMobile === undefined ? (
+            <Skeleton className="w-full h-96" />
+        ) : isMobile ? (
+            renderMobileView()
+        ) : (
+            renderDesktopView()
+        )}
+      </div>
 
     </div>
   );
