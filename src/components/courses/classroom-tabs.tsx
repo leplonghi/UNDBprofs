@@ -140,8 +140,9 @@ function ClassroomHeader({ classroom, studentCount }: { classroom: Classroom, st
                         <p className="text-2xl font-bold">{classroom.semester}</p>
                     </div>
                 </CardContent>
-            </div>
-    )
+            </Card>
+        </div>
+    );
 }
 
 
